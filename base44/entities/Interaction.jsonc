@@ -21,6 +21,12 @@
         "Marketing Discussion"
       ]
     },
+    "company_name": {
+      "type": "string"
+    },
+    "company_id": {
+      "type": "string"
+    },
     "company_type": {
       "type": "string",
       "enum": [
@@ -29,75 +35,107 @@
         "OtherPartner"
       ]
     },
-    "company_id": {
-      "type": "string"
-    },
-    "company_name": {
-      "type": "string"
-    },
     "contact_ids": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "IDs of contacts who participated"
+      }
     },
     "contact_names": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Denormalized contact names"
+      }
     },
     "internal_team": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "WDT team members present"
+      }
     },
     "linked_clients": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "IDs of clients this interaction is relevant to"
+      }
     },
     "linked_client_names": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Denormalized client names"
+      }
     },
     "linked_campaigns": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "IDs of campaigns discussed in this interaction"
+      }
     },
     "linked_campaign_names": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Denormalized campaign names"
+      }
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "raw_transcript": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "array",
+      "description": "Structured note blocks \u2014 each typed, assigned to clients, with optional CROSSROADS tag",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "general",
+              "client",
+              "action"
+            ]
+          },
+          "text": {
+            "type": "string"
+          },
+          "assigned_clients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Client IDs this note is assigned to"
+          },
+          "crossroads_tag": {
+            "type": "string",
+            "enum": [
+              "",
+              "Hard Rock",
+              "SAii",
+              "Both (CROSSROADS)"
+            ]
+          }
+        }
+      }
     },
     "general_notes": {
       "type": "string",
-      "description": "General notes applicable across the interaction"
+      "description": "Legacy field"
     },
     "general_notes_assigned_clients": {
       "type": "array",
       "items": {
         "type": "string"
-      },
-      "description": "Client IDs to which the general notes are assigned for reporting"
+      }
     },
     "client_specific_notes": {
       "type": "array",
-      "description": "Notes strictly tied to a single client",
+      "description": "Legacy field",
       "items": {
         "type": "object",
         "properties": {
@@ -118,14 +156,6 @@
           }
         }
       }
-    },
-    "next_action_date": {
-      "type": "string",
-      "format": "date"
-    },
-    "raw_transcript": {
-      "type": "string",
-      "description": "Pasted transcript or dictation \u2014 source material for AI rewrite"
     }
   },
   "required": [
