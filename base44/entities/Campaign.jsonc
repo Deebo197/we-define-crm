@@ -1,0 +1,74 @@
+{
+  "name": "Campaign",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Tour Operator Campaign",
+        "Press Campaign",
+        "Discount Fund",
+        "Training/Event",
+        "WDT-Led",
+        "Other"
+      ]
+    },
+    "linked_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_client_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_partners": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "funding_type": {
+      "type": "string",
+      "enum": [
+        "Cash",
+        "Barter",
+        "Mixed"
+      ]
+    },
+    "budget": {
+      "type": "number"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Planning",
+        "Active",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Planning"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

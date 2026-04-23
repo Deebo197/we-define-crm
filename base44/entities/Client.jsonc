@@ -1,0 +1,48 @@
+{
+  "name": "Client",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Client name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Hotel",
+        "DMC"
+      ],
+      "description": "Client type"
+    },
+    "reporting_group": {
+      "type": "string",
+      "description": "Reporting group e.g. CROSSROADS"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Onboarding",
+        "Paused",
+        "Ended"
+      ],
+      "default": "Active"
+    },
+    "retainer": {
+      "type": "string",
+      "description": "Retainer details"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes"
+    },
+    "internal_notes": {
+      "type": "string",
+      "description": "Internal only notes"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

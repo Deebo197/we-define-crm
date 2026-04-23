@@ -1,0 +1,67 @@
+{
+  "name": "Report",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "client_id": {
+      "type": "string"
+    },
+    "client_name": {
+      "type": "string"
+    },
+    "month": {
+      "type": "string",
+      "description": "YYYY-MM format"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Draft",
+        "Review",
+        "Final"
+      ],
+      "default": "Draft"
+    },
+    "activity_summary": {
+      "type": "string"
+    },
+    "key_interactions": {
+      "type": "string"
+    },
+    "market_insights": {
+      "type": "string"
+    },
+    "client_updates": {
+      "type": "string"
+    },
+    "marketing_activity": {
+      "type": "string"
+    },
+    "opportunities": {
+      "type": "string"
+    },
+    "challenges": {
+      "type": "string"
+    },
+    "actions_next_steps": {
+      "type": "string"
+    },
+    "is_grouped": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this is a grouped report (e.g. CROSSROADS)"
+    },
+    "grouped_client_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "title",
+    "month"
+  ]
+}

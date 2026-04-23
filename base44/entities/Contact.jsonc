@@ -1,0 +1,59 @@
+{
+  "name": "Contact",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "linkedin": {
+      "type": "string"
+    },
+    "birthday": {
+      "type": "string",
+      "format": "date"
+    },
+    "relationship_notes": {
+      "type": "string"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "company_type": {
+      "type": "string",
+      "enum": [
+        "Client",
+        "TradeAccount",
+        "OtherPartner"
+      ]
+    },
+    "company_id": {
+      "type": "string",
+      "description": "ID of linked company"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Denormalized company name"
+    },
+    "linked_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

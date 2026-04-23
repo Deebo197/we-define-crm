@@ -1,0 +1,54 @@
+{
+  "name": "TradeAccount",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Trade account name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Tour Operator",
+        "Travel Agent",
+        "Consortium",
+        "OTA",
+        "Other"
+      ],
+      "description": "Account type"
+    },
+    "region": {
+      "type": "string",
+      "description": "Region"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "relationship_strength": {
+      "type": "string",
+      "enum": [
+        "Strong",
+        "Growing",
+        "New",
+        "At Risk",
+        "Dormant"
+      ],
+      "default": "New"
+    },
+    "linked_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Linked client IDs"
+    },
+    "last_interaction_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

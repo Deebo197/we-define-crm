@@ -1,0 +1,36 @@
+{
+  "name": "OtherPartner",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Press",
+        "Airline",
+        "Tourist Board",
+        "DMO",
+        "Technology",
+        "Other"
+      ]
+    },
+    "notes": {
+      "type": "string"
+    },
+    "linked_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "opportunity_notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

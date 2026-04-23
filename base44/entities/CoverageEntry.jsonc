@@ -1,0 +1,35 @@
+{
+  "name": "CoverageEntry",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string"
+    },
+    "platform_partner": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "url": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "estimated_reach": {
+      "type": "number"
+    },
+    "estimated_value": {
+      "type": "number"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "platform_partner"
+  ]
+}

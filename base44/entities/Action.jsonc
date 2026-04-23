@@ -1,0 +1,65 @@
+{
+  "name": "Action",
+  "type": "object",
+  "properties": {
+    "description": {
+      "type": "string"
+    },
+    "owner": {
+      "type": "string"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "To Do",
+        "In Progress",
+        "Completed",
+        "Waiting on Partner",
+        "Waiting on Client",
+        "Cancelled"
+      ],
+      "default": "To Do"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "Low",
+        "Medium",
+        "High",
+        "Urgent"
+      ],
+      "default": "Medium"
+    },
+    "linked_interaction": {
+      "type": "string"
+    },
+    "linked_client": {
+      "type": "string"
+    },
+    "linked_client_name": {
+      "type": "string"
+    },
+    "linked_company_id": {
+      "type": "string"
+    },
+    "linked_company_name": {
+      "type": "string"
+    },
+    "linked_contact_id": {
+      "type": "string"
+    },
+    "linked_contact_name": {
+      "type": "string"
+    },
+    "linked_campaign": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "description"
+  ]
+}

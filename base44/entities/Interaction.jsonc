@@ -1,0 +1,121 @@
+{
+  "name": "Interaction",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string",
+      "format": "date"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Meeting (In-Person)",
+        "Meeting (Virtual)",
+        "Call",
+        "Email",
+        "Event",
+        "FAM Feedback",
+        "Marketing Discussion"
+      ]
+    },
+    "company_type": {
+      "type": "string",
+      "enum": [
+        "Client",
+        "TradeAccount",
+        "OtherPartner"
+      ]
+    },
+    "company_id": {
+      "type": "string"
+    },
+    "company_name": {
+      "type": "string"
+    },
+    "contact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contact_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "internal_team": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_client_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "linked_campaigns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "general_notes": {
+      "type": "string"
+    },
+    "client_specific_notes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "notes": {
+            "type": "string"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "general_notes_assigned_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Client IDs that general notes are assigned to"
+    },
+    "next_action_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "raw_transcript": {
+      "type": "string",
+      "description": "Pasted transcript or dictation"
+    }
+  },
+  "required": [
+    "title",
+    "date",
+    "type"
+  ]
+}
