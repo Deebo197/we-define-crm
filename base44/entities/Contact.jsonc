@@ -65,6 +65,69 @@
         "type": "string"
       },
       "description": "Denormalized client names for display"
+    },
+    "home_postcode": {
+      "type": "string",
+      "description": "Home postcode for location-based filtering"
+    },
+    "home_address_line1": {
+      "type": "string",
+      "description": "Home address line 1"
+    },
+    "home_city": {
+      "type": "string",
+      "description": "Home city"
+    },
+    "working_pattern": {
+      "type": "object",
+      "description": "Working pattern per day of the week",
+      "properties": {
+        "monday": {
+          "type": "string",
+          "enum": [
+            "Office",
+            "Home",
+            "Flexible",
+            "Not working"
+          ]
+        },
+        "tuesday": {
+          "type": "string",
+          "enum": [
+            "Office",
+            "Home",
+            "Flexible",
+            "Not working"
+          ]
+        },
+        "wednesday": {
+          "type": "string",
+          "enum": [
+            "Office",
+            "Home",
+            "Flexible",
+            "Not working"
+          ]
+        },
+        "thursday": {
+          "type": "string",
+          "enum": [
+            "Office",
+            "Home",
+            "Flexible",
+            "Not working"
+          ]
+        },
+        "friday": {
+          "type": "string",
+          "enum": [
+            "Office",
+            "Home",
+            "Flexible",
+            "Not working"
+          ]
+        }
+      }
     }
   },
   "required": [

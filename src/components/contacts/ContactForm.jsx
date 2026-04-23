@@ -15,6 +15,16 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
   const { data: tradeAccounts = [] } = useQuery({ queryKey: ["tradeaccounts"], queryFn: () => base44.entities.TradeAccount.list() });
   const { data: otherPartners = [] } = useQuery({ queryKey: ["otherpartners"], queryFn: () => base44.entities.OtherPartner.list() });
 
+  const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"];
+  const DAY_LABELS = { monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri" };
+  const PATTERN_OPTIONS = ["Office", "Home", "Flexible", "Not working"];
+  const PATTERN_COLORS = {
+    "Office": "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30",
+    "Home": "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30",
+    "Flexible": "bg-[#FFB547]/20 text-[#FFB547] border-[#FFB547]/30",
+    "Not working": "bg-white/[0.03] text-[#6C6C80] border-white/[0.06]",
+  };
+
   const [form, setForm] = useState({
     name: contact?.name || "",
     role: contact?.role || "",
@@ -30,6 +40,10 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     linked_client_names: contact?.linked_client_names || [],
     relationship_notes: contact?.relationship_notes || "",
     tags: contact?.tags || [],
+    home_postcode: contact?.home_postcode || "",
+    home_address_line1: contact?.home_address_line1 || "",
+    home_city: contact?.home_city || "",
+    working_pattern: contact?.working_pattern || {},
   });
   const [tagInput, setTagInput] = useState("");
 
@@ -169,6 +183,54 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
         <div>
           <Label className="text-[#A1A1B5] text-xs mb-1.5">Relationship Notes</Label>
           <Textarea value={form.relationship_notes} onChange={(e) => setForm({ ...form, relationship_notes: e.target.value })} className={`${inputClass} min-h-[80px]`} />
+        </div>
+
+        {/* Home Address */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-3">
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Home Address</p>
+          <p className="text-[#6C6C80] text-xs -mt-1">Used for location-based visit planning</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Postcode *</Label>
+              <Input value={form.home_postcode} onChange={(e) => setForm({ ...form, home_postcode: e.target.value })} className={inputClass} placeholder="e.g. SW1A 1AA" />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">City</Label>
+              <Input value={form.home_city} onChange={(e) => setForm({ ...form, home_city: e.target.value })} className={inputClass} placeholder="e.g. London" />
+            </div>
+            <div className="sm:col-span-2">
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Address Line 1</Label>
+              <Input value={form.home_address_line1} onChange={(e) => setForm({ ...form, home_address_line1: e.target.value })} className={inputClass} placeholder="e.g. 12 High Street" />
+            </div>
+          </div>
+        </div>
+
+        {/* Working Pattern */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-3">
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Working Pattern</p>
+          <div className="space-y-2">
+            {DAYS.map(day => (
+              <div key={day} className="flex items-center gap-3">
+                <span className="text-[#A1A1B5] text-xs font-medium w-8 shrink-0">{DAY_LABELS[day]}</span>
+                <div className="flex gap-1.5 flex-wrap">
+                  {PATTERN_OPTIONS.map(opt => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => setForm(prev => ({ ...prev, working_pattern: { ...prev.working_pattern, [day]: prev.working_pattern[day] === opt ? "" : opt } }))}
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
+                        form.working_pattern[day] === opt
+                          ? PATTERN_COLORS[opt]
+                          : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+                      }`}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-2">

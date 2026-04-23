@@ -16,6 +16,10 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
     relationship_strength: account?.relationship_strength || "New",
     notes: account?.notes || "",
     linked_clients: account?.linked_clients || [],
+    address_line1: account?.address_line1 || "",
+    address_city: account?.address_city || "",
+    address_postcode: account?.address_postcode || "",
+    address_country: account?.address_country || "",
   });
 
   const handleSubmit = (e) => {
@@ -62,6 +66,30 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
           <Label className="text-[#A1A1B5] text-xs mb-1.5">Notes</Label>
           <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={`${inputClass} min-h-[80px]`} />
         </div>
+
+        {/* Head Office Address */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-3">
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Head Office Address</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Address Line 1</Label>
+              <Input value={form.address_line1} onChange={(e) => setForm({ ...form, address_line1: e.target.value })} className={inputClass} placeholder="e.g. 10 Kuoni House" />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">City</Label>
+              <Input value={form.address_city} onChange={(e) => setForm({ ...form, address_city: e.target.value })} className={inputClass} placeholder="e.g. London" />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Postcode</Label>
+              <Input value={form.address_postcode} onChange={(e) => setForm({ ...form, address_postcode: e.target.value })} className={inputClass} placeholder="e.g. SW1A 1AA" />
+            </div>
+            <div className="sm:col-span-2">
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Country</Label>
+              <Input value={form.address_country} onChange={(e) => setForm({ ...form, address_country: e.target.value })} className={inputClass} placeholder="e.g. United Kingdom" />
+            </div>
+          </div>
+        </div>
+
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="ghost" onClick={onCancel} className="text-[#A1A1B5] hover:text-white">Cancel</Button>
           <Button type="submit" disabled={isLoading} className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-6">
