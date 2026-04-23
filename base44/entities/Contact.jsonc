@@ -6,7 +6,12 @@
       "type": "string"
     },
     "role": {
-      "type": "string"
+      "type": "string",
+      "description": "Job title / general role"
+    },
+    "client_role": {
+      "type": "string",
+      "description": "Role for this client, e.g. GM, DOSM, Reservations, Accounts"
     },
     "email": {
       "type": "string"
@@ -52,7 +57,7 @@
       "items": {
         "type": "string"
       },
-      "description": "IDs of clients this contact is associated with (can span multiple)"
+      "description": "IDs of clients this contact is associated with"
     },
     "linked_client_names": {
       "type": "array",

@@ -115,11 +115,11 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   const queryClient = useQueryClient();
   const [aiLoading, setAiLoading] = useState(false);
   const [showTranscript, setShowTranscript] = useState(!interaction);
-  const [teamInput, setTeamInput] = useState("");
 
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
   const { data: contacts = [] } = useQuery({ queryKey: ["contacts"], queryFn: () => base44.entities.Contact.list() });
   const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });
+  const { data: teamMembers = [] } = useQuery({ queryKey: ["team-members"], queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }) });
 
   const [form, setForm] = useState({
     title: interaction?.title || "",
@@ -190,13 +190,6 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
       linked_campaigns: isLinked ? prev.linked_campaigns.filter(id => id !== campaign.id) : [...prev.linked_campaigns, campaign.id],
       linked_campaign_names: isLinked ? prev.linked_campaign_names.filter(n => n !== campaign.name) : [...prev.linked_campaign_names, campaign.name],
     }));
-  };
-
-  const addTeamMember = () => {
-    if (teamInput.trim()) {
-      setForm(prev => ({ ...prev, internal_team: [...prev.internal_team, teamInput.trim()] }));
-      setTeamInput("");
-    }
   };
 
   const handleAiRewrite = async () => {
@@ -358,19 +351,25 @@ Return a JSON array of note objects. Each object must have:
         {/* Internal Team */}
         <div>
           <Label className="text-[#A1A1B5] text-xs mb-1.5">WDT Team</Label>
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {form.internal_team.map((name, idx) => (
-              <span key={idx} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">
-                {name}
-                <button type="button" onClick={() => setForm(prev => ({ ...prev, internal_team: prev.internal_team.filter((_, i) => i !== idx) }))}><X className="w-3 h-3" /></button>
-              </span>
+          <div className="flex flex-wrap gap-2">
+            {teamMembers.map(m => (
+              <button key={m.id} type="button" onClick={() => {
+                const isIn = form.internal_team.includes(m.full_name);
+                setForm(prev => ({
+                  ...prev,
+                  internal_team: isIn
+                    ? prev.internal_team.filter(n => n !== m.full_name)
+                    : [...prev.internal_team, m.full_name],
+                }));
+              }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+                  form.internal_team.includes(m.full_name)
+                    ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30"
+                    : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+                }`}>
+                {m.full_name}
+              </button>
             ))}
-          </div>
-          <div className="flex gap-2">
-            <Input value={teamInput} onChange={(e) => setTeamInput(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTeamMember(); }}}
-              className={`${inputClass} flex-1`} placeholder="Add name…" />
-            <Button type="button" onClick={addTeamMember} variant="ghost" className="text-[#7F5BFF] text-xs">Add</Button>
           </div>
         </div>
 

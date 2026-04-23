@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  LayoutDashboard, Building2, Handshake, Globe, Users,
+  LayoutDashboard, Building2, Handshake, Globe, Users, Users2,
   MessageSquare, CheckSquare, Megaphone, FileText, Menu, X
 } from "lucide-react";
 
@@ -15,6 +15,7 @@ const navItems = [
   { label: "Actions", icon: CheckSquare, path: "/actions" },
   { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
   { label: "Reports", icon: FileText, path: "/reports" },
+  { label: "Team Members", icon: Users2, path: "/team" },
 ];
 
 export default function MobileNav() {

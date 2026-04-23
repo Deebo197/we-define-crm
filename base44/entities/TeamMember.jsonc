@@ -1,0 +1,34 @@
+{
+  "name": "TeamMember",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "description": "Full name"
+    },
+    "job_title": {
+      "type": "string",
+      "description": "Job title"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Active",
+        "Inactive"
+      ],
+      "default": "Active"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "full_name"
+  ]
+}

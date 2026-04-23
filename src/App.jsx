@@ -17,6 +17,7 @@ import InteractionDetail from '@/pages/InteractionDetail';
 import Actions from '@/pages/Actions';
 import Campaigns from '@/pages/Campaigns';
 import Reports from '@/pages/Reports';
+import TeamMembers from '@/pages/TeamMembers';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -56,6 +57,7 @@ const AuthenticatedApp = () => {
         <Route path="/actions" element={<Actions />} />
         <Route path="/campaigns" element={<Campaigns />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/team" element={<TeamMembers />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

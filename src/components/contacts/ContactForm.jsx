@@ -18,6 +18,7 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
   const [form, setForm] = useState({
     name: contact?.name || "",
     role: contact?.role || "",
+    client_role: contact?.client_role || "",
     email: contact?.email || "",
     phone: contact?.phone || "",
     linkedin: contact?.linkedin || "",
@@ -83,6 +84,10 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Role / Title</Label>
             <Input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputClass} />
+          </div>
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Role for Client</Label>
+            <Input value={form.client_role} onChange={(e) => setForm({ ...form, client_role: e.target.value })} className={inputClass} placeholder="e.g. GM, DOSM, Reservations, Accounts" />
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Email</Label>

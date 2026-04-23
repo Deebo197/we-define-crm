@@ -28,9 +28,27 @@
       ],
       "default": "Active"
     },
-    "retainer": {
+    "lead_team_member_id": {
       "type": "string",
-      "description": "Retainer details"
+      "description": "ID of lead WDT team member"
+    },
+    "lead_team_member_name": {
+      "type": "string",
+      "description": "Denormalized lead team member name"
+    },
+    "supporting_team_member_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "IDs of supporting WDT team members"
+    },
+    "supporting_team_member_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized supporting team member names"
     },
     "notes": {
       "type": "string",

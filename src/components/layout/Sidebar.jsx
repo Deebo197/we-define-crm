@@ -6,6 +6,7 @@ import {
   Handshake,
   Globe,
   Users,
+  Users2,
   MessageSquare,
   CheckSquare,
   Megaphone,
@@ -26,6 +27,7 @@ const navItems = [
   { label: "Actions", icon: CheckSquare, path: "/actions" },
   { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
   { label: "Reports", icon: FileText, path: "/reports" },
+  { label: "Team Members", icon: Users2, path: "/team" },
 ];
 
 export default function Sidebar() {

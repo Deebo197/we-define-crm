@@ -18,6 +18,7 @@ export default function ActionForm({ action, onSubmit, onCancel, isLoading }) {
   const { data: contacts = [] } = useQuery({ queryKey: ["contacts"], queryFn: () => base44.entities.Contact.list() });
   const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });
   const { data: interactions = [] } = useQuery({ queryKey: ["interactions"], queryFn: () => base44.entities.Interaction.list("-date", 100) });
+  const { data: teamMembers = [] } = useQuery({ queryKey: ["team-members"], queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }) });
 
   const [form, setForm] = useState({
     description: action?.description || "",
@@ -63,7 +64,13 @@ export default function ActionForm({ action, onSubmit, onCancel, isLoading }) {
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Owner</Label>
-            <Input value={form.owner} onChange={(e) => setForm({ ...form, owner: e.target.value })} className={inputClass} />
+            <Select value={form.owner || NONE} onValueChange={(v) => setForm({ ...form, owner: v === NONE ? "" : v })}>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Assign to…" /></SelectTrigger>
+              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                <SelectItem value={NONE}>Unassigned</SelectItem>
+                {teamMembers.map(m => <SelectItem key={m.id} value={m.full_name}>{m.full_name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Due Date</Label>
