@@ -82,6 +82,7 @@ export default function Clients() {
   const [showForm, setShowForm] = useState(searchParams.get("new") === "true");
   const [editingClient, setEditingClient] = useState(null);
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState("All");
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading } = useQuery({
