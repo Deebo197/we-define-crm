@@ -47,7 +47,7 @@ export default function Contacts() {
   };
 
   const openEdit = (contact) => {
-    setViewing(contact);
+    navigateToContact(contact);
   };
 
   const handleDelete = (e, contact) => {
@@ -61,15 +61,20 @@ export default function Contacts() {
     c.role?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const navigateToContact = (c) => {
+    window.scrollTo({ top: 0, behavior: "instant" });
+    setViewing(c);
+  };
+
   if (viewing) {
     return (
       <AnimatePresence mode="wait">
         <ContactDetail
           key={viewing.id}
           contact={viewing}
-          onBack={() => setViewing(null)}
+          onBack={() => { window.scrollTo({ top: 0, behavior: "instant" }); setViewing(null); }}
           onDeleted={() => setViewing(null)}
-          onViewContact={(c) => setViewing(c)}
+          onViewContact={navigateToContact}
         />
       </AnimatePresence>
     );
