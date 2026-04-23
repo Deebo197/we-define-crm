@@ -6,14 +6,17 @@ import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import ContactForm from "@/components/contacts/ContactForm";
+import ContactDetail from "@/components/contacts/ContactDetail";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, Link } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
 
 export default function Contacts() {
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(searchParams.get("new") === "true");
   const [editing, setEditing] = useState(null);
+  const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
   const [view, setView] = useState("grid"); // "grid" | "list"
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -44,9 +47,7 @@ export default function Contacts() {
   };
 
   const openEdit = (contact) => {
-    setEditing(contact);
-    setShowForm(true);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    setViewing(contact);
   };
 
   const handleDelete = (e, contact) => {
@@ -60,9 +61,22 @@ export default function Contacts() {
     c.role?.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (viewing) {
+    return (
+      <AnimatePresence mode="wait">
+        <ContactDetail
+          key={viewing.id}
+          contact={viewing}
+          onBack={() => setViewing(null)}
+          onDeleted={() => setViewing(null)}
+        />
+      </AnimatePresence>
+    );
+  }
+
   return (
     <div>
-      <PageHeader title="Contacts" subtitle="People across your network" action={() => { setEditing(null); setShowForm(true); window.scrollTo({ top: 0, behavior: "smooth" }); }} actionLabel="Add Contact" />
+      <PageHeader title="Contacts" subtitle="People across your network" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Contact" />
       <div className="flex justify-end mb-2 -mt-4">
         <Link to="/import-contacts">
           <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
