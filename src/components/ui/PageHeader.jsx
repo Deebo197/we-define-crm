@@ -12,6 +12,7 @@ export default function PageHeader({ title, subtitle, action, actionLabel, actio
       </div>
       {action && (
         <Button
+          type="button"
           onClick={action}
           className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] hover:from-[#6F3BFF] hover:to-[#3A1DFF] text-white border-0 rounded-xl px-5 h-10 text-sm font-medium shadow-lg shadow-[#7F5BFF]/20 transition-all duration-200"
         >

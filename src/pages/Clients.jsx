@@ -126,18 +126,19 @@ export default function Clients() {
       <PageHeader
         title="Clients"
         subtitle="Hotels and DMC partners"
-        action={() => { setEditingClient(null); setShowForm(true); }}
+        action={() => { setEditingClient(null); setShowForm(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
         actionLabel="Add Client"
       />
 
-      {showForm && (
+      {showForm ? (
         <ClientForm
+          key={editingClient?.id || "new"}
           client={editingClient}
           onSubmit={handleSubmit}
           onCancel={() => { setShowForm(false); setEditingClient(null); }}
           isLoading={createMutation.isPending || updateMutation.isPending}
         />
-      )}
+      ) : null}
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         <div className="relative flex-1">
