@@ -126,26 +126,6 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   const [companyOpen, setCompanyOpen] = useState(false);
   const companyRef = useRef(null);
 
-  const companySuggestions = (() => {
-    const q = form.company_name.toLowerCase().trim();
-    if (!q) return [];
-    const tas = tradeAccounts
-      .filter(a => a.name?.toLowerCase().includes(q))
-      .map(a => ({ id: a.id, name: a.name, label: a.type || "Trade Account", source: "trade" }));
-    const ops = otherPartners
-      .filter(p => p.name?.toLowerCase().includes(q))
-      .map(p => ({ id: p.id, name: p.name, label: p.type || "Partner", source: "partner" }));
-    return [...tas, ...ops].slice(0, 8);
-  })();
-
-  useEffect(() => {
-    function handleClickOutside(e) {
-      if (companyRef.current && !companyRef.current.contains(e.target)) setCompanyOpen(false);
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
   const [form, setForm] = useState({
     title: interaction?.title || "",
     date: interaction?.date || new Date().toISOString().split("T")[0],
@@ -167,6 +147,26 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     general_notes_assigned_clients: interaction?.general_notes_assigned_clients || [],
     client_specific_notes: interaction?.client_specific_notes || [],
   });
+
+  const companySuggestions = (() => {
+    const q = form.company_name.toLowerCase().trim();
+    if (!q) return [];
+    const tas = tradeAccounts
+      .filter(a => a.name?.toLowerCase().includes(q))
+      .map(a => ({ id: a.id, name: a.name, label: a.type || "Trade Account", source: "trade" }));
+    const ops = otherPartners
+      .filter(p => p.name?.toLowerCase().includes(q))
+      .map(p => ({ id: p.id, name: p.name, label: p.type || "Partner", source: "partner" }));
+    return [...tas, ...ops].slice(0, 8);
+  })();
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (companyRef.current && !companyRef.current.contains(e.target)) setCompanyOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const createMutation = useMutation({
     mutationFn: (data) => interaction
