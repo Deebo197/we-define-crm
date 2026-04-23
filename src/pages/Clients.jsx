@@ -109,11 +109,17 @@ export default function Clients() {
     editingClient ? updateMutation.mutate({ id: editingClient.id, data }) : createMutation.mutate(data);
   };
 
-  const filtered = clients.filter(c =>
-    c.name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.type?.toLowerCase().includes(search.toLowerCase()) ||
-    c.reporting_group?.toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = clients.filter(c => {
+    const matchesSearch =
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.type?.toLowerCase().includes(search.toLowerCase()) ||
+      c.reporting_group?.toLowerCase().includes(search.toLowerCase());
+    const matchesType =
+      typeFilter === "All" ||
+      (typeFilter === "Hotels" && c.type === "Hotel") ||
+      (typeFilter === "DMC" && c.type === "DMC");
+    return matchesSearch && matchesType;
+  });
 
   return (
     <div>
@@ -133,14 +139,31 @@ export default function Clients() {
         />
       )}
 
-      <div className="relative mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
-        <Input
-          placeholder="Search clients..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10"
-        />
+      <div className="flex flex-col sm:flex-row gap-3 mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
+          <Input
+            placeholder="Search clients..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10"
+          />
+        </div>
+        <div className="flex gap-2">
+          {["All", "Hotels", "DMC"].map(f => (
+            <button
+              key={f}
+              onClick={() => setTypeFilter(f)}
+              className={`px-4 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+                typeFilter === f
+                  ? "bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white border-transparent shadow-lg shadow-[#7F5BFF]/20"
+                  : "bg-white/[0.03] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.16] hover:text-white"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
       </div>
 
       {isLoading ? <ShimmerCard count={4} /> : filtered.length === 0 ? (
