@@ -72,7 +72,7 @@ export default function Contacts() {
       </div>
 
       {showForm && (
-        <ContactForm contact={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} isLoading={createMutation.isPending || updateMutation.isPending} />
+        <ContactForm key={editing?.id || "new"} contact={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} isLoading={createMutation.isPending || updateMutation.isPending} />
       )}
 
       {/* Delete confirmation */}
