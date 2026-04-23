@@ -61,8 +61,14 @@ export default function Contacts() {
     c.role?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const scrollToTop = () => {
+    window.scrollTo(0, 0);
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
   const navigateToContact = (c) => {
-    window.scrollTo({ top: 0, behavior: "instant" });
+    scrollToTop();
     setViewing(c);
   };
 
@@ -72,7 +78,7 @@ export default function Contacts() {
         <ContactDetail
           key={viewing.id}
           contact={viewing}
-          onBack={() => { window.scrollTo({ top: 0, behavior: "instant" }); setViewing(null); }}
+          onBack={() => { setViewing(null); setTimeout(scrollToTop, 0); }}
           onDeleted={() => setViewing(null)}
           onViewContact={navigateToContact}
         />
