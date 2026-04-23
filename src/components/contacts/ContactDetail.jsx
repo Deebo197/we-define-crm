@@ -2,9 +2,8 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Tag, Globe, Pencil, Trash2, Calendar } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2, Calendar, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import StatusBadge from "@/components/ui/StatusBadge";
 import ContactForm from "@/components/contacts/ContactForm";
 
 const DEST_LABELS = [
@@ -29,15 +28,22 @@ function InfoRow({ icon: Icon, label, value }) {
   );
 }
 
-export default function ContactDetail({ contact, onBack, onDeleted }) {
+export default function ContactDetail({ contact, onBack, onDeleted, onViewContact }) {
   const [editing, setEditing] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: tradeAccounts = [] } = useQuery({
-    queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+  const { data: allContacts = [] } = useQuery({
+    queryKey: ["contacts"],
+    queryFn: () => base44.entities.Contact.list(),
   });
+
+  // Colleagues: same company_id (if set), excluding self
+  const colleagues = allContacts.filter(c =>
+    c.id !== contact.id &&
+    contact.company_id &&
+    c.company_id === contact.company_id
+  );
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Contact.update(id, data),
@@ -211,6 +217,33 @@ export default function ContactDetail({ contact, onBack, onDeleted }) {
               </div>
             )}
           </div>
+
+          {/* Colleagues at same company */}
+          {colleagues.length > 0 && (
+            <div className="mt-5 bg-surface rounded-2xl border border-white/[0.06] p-5">
+              <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+                <Users className="w-3.5 h-3.5" /> Colleagues at {contact.company_name}
+              </h2>
+              <div className="grid sm:grid-cols-2 gap-3">
+                {colleagues.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => onViewContact && onViewContact(c)}
+                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.14] hover:bg-white/[0.04] transition-all text-left group"
+                  >
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#7F5BFF]/20 to-[#3A1DFF]/10 flex items-center justify-center shrink-0">
+                      <span className="text-[#7F5BFF] font-medium text-sm">{c.name?.charAt(0)?.toUpperCase()}</span>
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{c.name}</p>
+                      <p className="text-[#6C6C80] text-xs truncate">{c.role || c.client_role || "—"}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </motion.div>
       )}
 

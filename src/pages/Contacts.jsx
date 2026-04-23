@@ -69,6 +69,7 @@ export default function Contacts() {
           contact={viewing}
           onBack={() => setViewing(null)}
           onDeleted={() => setViewing(null)}
+          onViewContact={(c) => setViewing(c)}
         />
       </AnimatePresence>
     );
