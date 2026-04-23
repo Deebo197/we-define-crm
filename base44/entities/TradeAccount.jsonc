@@ -4,25 +4,63 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Trade account name"
+      "description": "Account Name (must be unique)"
     },
     "type": {
       "type": "string",
       "enum": [
         "Tour Operator",
         "Travel Agent",
-        "Consortium",
-        "OTA",
-        "Other"
+        "Parent Company"
       ],
       "description": "Account type"
     },
-    "region": {
+    "parent_company_id": {
       "type": "string",
-      "description": "Region"
+      "description": "ID of parent Trade Account"
+    },
+    "parent_company_name": {
+      "type": "string",
+      "description": "Denormalized parent company name"
+    },
+    "website": {
+      "type": "string",
+      "description": "Website URL"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number"
+    },
+    "address_line1": {
+      "type": "string",
+      "description": "Address line 1"
+    },
+    "city": {
+      "type": "string",
+      "description": "City"
+    },
+    "county": {
+      "type": "string",
+      "description": "County"
+    },
+    "address_postcode": {
+      "type": "string",
+      "description": "Postcode"
+    },
+    "address_country": {
+      "type": "string",
+      "description": "Country"
+    },
+    "key_destinations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key destinations e.g. Maldives, Mauritius"
     },
     "notes": {
-      "type": "string"
+      "type": "string",
+      "description": "General notes"
     },
     "relationship_strength": {
       "type": "string",
@@ -35,32 +73,20 @@
       ],
       "default": "New"
     },
+    "region": {
+      "type": "string",
+      "description": "Region"
+    },
+    "last_interaction_date": {
+      "type": "string",
+      "format": "date"
+    },
     "linked_clients": {
       "type": "array",
       "items": {
         "type": "string"
       },
       "description": "Linked client IDs"
-    },
-    "last_interaction_date": {
-      "type": "string",
-      "format": "date"
-    },
-    "address_line1": {
-      "type": "string",
-      "description": "Head office address line 1"
-    },
-    "address_city": {
-      "type": "string",
-      "description": "Head office city"
-    },
-    "address_postcode": {
-      "type": "string",
-      "description": "Head office postcode"
-    },
-    "address_country": {
-      "type": "string",
-      "description": "Head office country"
     }
   },
   "required": [

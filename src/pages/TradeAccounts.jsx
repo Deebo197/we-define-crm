@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Handshake, Search } from "lucide-react";
+import { Handshake, Search, Upload } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
@@ -9,7 +9,8 @@ import ShimmerCard from "@/components/ui/ShimmerCard";
 import TradeAccountForm from "@/components/trade/TradeAccountForm";
 import TradeAccountDetail from "@/components/trade/TradeAccountDetail";
 import { Input } from "@/components/ui/input";
-import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useSearchParams, Link } from "react-router-dom";
 import { format } from "date-fns";
 
 export default function TradeAccounts() {
@@ -58,6 +59,13 @@ export default function TradeAccounts() {
   return (
     <div>
       <PageHeader title="Trade Accounts" subtitle="Tour operators and travel agents" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Account" />
+      <div className="flex justify-end mb-2 -mt-4">
+        <Link to="/import-trade-accounts">
+          <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
+            <Upload className="w-3.5 h-3.5" /> Import CSV
+          </Button>
+        </Link>
+      </div>
 
       {showForm && (
         <TradeAccountForm account={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} isLoading={createMutation.isPending || updateMutation.isPending} />

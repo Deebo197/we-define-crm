@@ -2,25 +2,106 @@
   "name": "Contact",
   "type": "object",
   "properties": {
+    "first_name": {
+      "type": "string",
+      "description": "First name"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Last name"
+    },
     "name": {
-      "type": "string"
+      "type": "string",
+      "description": "Full name (computed or manually set)"
     },
     "role": {
       "type": "string",
-      "description": "Job title / general role"
+      "description": "Job title"
     },
     "client_role": {
       "type": "string",
-      "description": "Role for this client, e.g. GM, DOSM, Reservations, Accounts"
+      "description": "Role for this client e.g. GM, DOSM"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "ID of linked Trade Account"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Account Name of linked Trade Account (must match exactly)"
+    },
+    "company_type": {
+      "type": "string",
+      "enum": [
+        "Client",
+        "TradeAccount",
+        "OtherPartner"
+      ],
+      "description": "Type of company this contact primarily belongs to"
     },
     "email": {
-      "type": "string"
+      "type": "string",
+      "description": "Email address"
     },
     "phone": {
-      "type": "string"
+      "type": "string",
+      "description": "Phone number"
+    },
+    "mobile": {
+      "type": "string",
+      "description": "Mobile number"
+    },
+    "home_address_line1": {
+      "type": "string",
+      "description": "Home address line 1"
+    },
+    "home_address_line2": {
+      "type": "string",
+      "description": "Home address line 2"
+    },
+    "home_city": {
+      "type": "string",
+      "description": "Home city"
+    },
+    "home_county": {
+      "type": "string",
+      "description": "Home county"
+    },
+    "home_postcode": {
+      "type": "string",
+      "description": "Home postcode"
+    },
+    "home_country": {
+      "type": "string",
+      "description": "Home country"
+    },
+    "dest_maldives": {
+      "type": "boolean",
+      "description": "Interested in Maldives",
+      "default": false
+    },
+    "dest_mauritius": {
+      "type": "boolean",
+      "description": "Interested in Mauritius",
+      "default": false
+    },
+    "dest_uae": {
+      "type": "boolean",
+      "description": "Interested in UAE",
+      "default": false
+    },
+    "dest_far_east": {
+      "type": "boolean",
+      "description": "Interested in Far East",
+      "default": false
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes"
     },
     "linkedin": {
-      "type": "string"
+      "type": "string",
+      "description": "LinkedIn URL"
     },
     "birthday": {
       "type": "string",
@@ -35,23 +116,6 @@
         "type": "string"
       }
     },
-    "company_type": {
-      "type": "string",
-      "enum": [
-        "Client",
-        "TradeAccount",
-        "OtherPartner"
-      ],
-      "description": "Type of company this contact primarily belongs to"
-    },
-    "company_id": {
-      "type": "string",
-      "description": "ID of primary linked company"
-    },
-    "company_name": {
-      "type": "string",
-      "description": "Denormalized primary company name"
-    },
     "linked_clients": {
       "type": "array",
       "items": {
@@ -64,19 +128,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Denormalized client names for display"
-    },
-    "home_postcode": {
-      "type": "string",
-      "description": "Home postcode for location-based filtering"
-    },
-    "home_address_line1": {
-      "type": "string",
-      "description": "Home address line 1"
-    },
-    "home_city": {
-      "type": "string",
-      "description": "Home city"
+      "description": "Denormalized client names"
     },
     "working_pattern": {
       "type": "object",

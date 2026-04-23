@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Users, Search, Mail, Phone } from "lucide-react";
+import { Users, Search, Mail, Upload } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import ContactForm from "@/components/contacts/ContactForm";
 import { Input } from "@/components/ui/input";
-import { useSearchParams } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import { useSearchParams, Link } from "react-router-dom";
 
 export default function Contacts() {
   const [searchParams] = useSearchParams();
@@ -44,6 +45,13 @@ export default function Contacts() {
   return (
     <div>
       <PageHeader title="Contacts" subtitle="People across your network" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Contact" />
+      <div className="flex justify-end mb-2 -mt-4">
+        <Link to="/import-contacts">
+          <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
+            <Upload className="w-3.5 h-3.5" /> Import CSV
+          </Button>
+        </Link>
+      </div>
 
       {showForm && (
         <ContactForm contact={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} isLoading={createMutation.isPending || updateMutation.isPending} />

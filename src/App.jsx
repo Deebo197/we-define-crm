@@ -18,6 +18,8 @@ import Actions from '@/pages/Actions';
 import Campaigns from '@/pages/Campaigns';
 import Reports from '@/pages/Reports';
 import TeamMembers from '@/pages/TeamMembers';
+import ImportTradeAccounts from '@/pages/ImportTradeAccounts';
+import ImportContacts from '@/pages/ImportContacts';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -58,6 +60,8 @@ const AuthenticatedApp = () => {
         <Route path="/campaigns" element={<Campaigns />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/team" element={<TeamMembers />} />
+        <Route path="/import-trade-accounts" element={<ImportTradeAccounts />} />
+        <Route path="/import-contacts" element={<ImportContacts />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

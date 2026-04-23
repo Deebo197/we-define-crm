@@ -9,72 +9,89 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { X } from "lucide-react";
 
 const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
+const NONE = "__none__";
+
+const DEST_FIELDS = [
+  { key: "dest_maldives", label: "Maldives" },
+  { key: "dest_mauritius", label: "Mauritius" },
+  { key: "dest_uae", label: "UAE" },
+  { key: "dest_far_east", label: "Far East" },
+];
 
 export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) {
-  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
-  const { data: tradeAccounts = [] } = useQuery({ queryKey: ["tradeaccounts"], queryFn: () => base44.entities.TradeAccount.list() });
-  const { data: otherPartners = [] } = useQuery({ queryKey: ["otherpartners"], queryFn: () => base44.entities.OtherPartner.list() });
-
-  const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"];
-  const DAY_LABELS = { monday: "Mon", tuesday: "Tue", wednesday: "Wed", thursday: "Thu", friday: "Fri" };
-  const PATTERN_OPTIONS = ["Office", "Home", "Flexible", "Not working"];
-  const PATTERN_COLORS = {
-    "Office": "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30",
-    "Home": "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30",
-    "Flexible": "bg-[#FFB547]/20 text-[#FFB547] border-[#FFB547]/30",
-    "Not working": "bg-white/[0.03] text-[#6C6C80] border-white/[0.06]",
-  };
+  const { data: tradeAccounts = [] } = useQuery({
+    queryKey: ["trade-accounts"],
+    queryFn: () => base44.entities.TradeAccount.list(),
+  });
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => base44.entities.Client.list(),
+  });
 
   const [form, setForm] = useState({
-    name: contact?.name || "",
-    role: contact?.role || "",
-    client_role: contact?.client_role || "",
-    email: contact?.email || "",
-    phone: contact?.phone || "",
-    linkedin: contact?.linkedin || "",
-    birthday: contact?.birthday || "",
-    company_type: contact?.company_type || "",
-    company_id: contact?.company_id || "",
-    company_name: contact?.company_name || "",
-    linked_clients: contact?.linked_clients || [],
-    linked_client_names: contact?.linked_client_names || [],
-    relationship_notes: contact?.relationship_notes || "",
-    tags: contact?.tags || [],
-    home_postcode: contact?.home_postcode || "",
-    home_address_line1: contact?.home_address_line1 || "",
-    home_city: contact?.home_city || "",
-    working_pattern: contact?.working_pattern || {},
+    first_name: contact?.first_name ?? "",
+    last_name: contact?.last_name ?? "",
+    name: contact?.name ?? "",
+    role: contact?.role ?? "",
+    client_role: contact?.client_role ?? "",
+    company_id: contact?.company_id ?? "",
+    company_name: contact?.company_name ?? "",
+    company_type: contact?.company_type ?? "TradeAccount",
+    email: contact?.email ?? "",
+    phone: contact?.phone ?? "",
+    mobile: contact?.mobile ?? "",
+    home_address_line1: contact?.home_address_line1 ?? "",
+    home_address_line2: contact?.home_address_line2 ?? "",
+    home_city: contact?.home_city ?? "",
+    home_county: contact?.home_county ?? "",
+    home_postcode: contact?.home_postcode ?? "",
+    home_country: contact?.home_country ?? "",
+    dest_maldives: contact?.dest_maldives ?? false,
+    dest_mauritius: contact?.dest_mauritius ?? false,
+    dest_uae: contact?.dest_uae ?? false,
+    dest_far_east: contact?.dest_far_east ?? false,
+    notes: contact?.notes ?? "",
+    linkedin: contact?.linkedin ?? "",
+    birthday: contact?.birthday ?? "",
+    relationship_notes: contact?.relationship_notes ?? "",
+    tags: contact?.tags ?? [],
+    linked_clients: contact?.linked_clients ?? [],
+    linked_client_names: contact?.linked_client_names ?? [],
+    working_pattern: contact?.working_pattern ?? {},
   });
+
   const [tagInput, setTagInput] = useState("");
 
-  const companyOptions = form.company_type === "Client" ? clients
-    : form.company_type === "TradeAccount" ? tradeAccounts
-    : form.company_type === "OtherPartner" ? otherPartners
-    : [];
-
-  const handleCompanyTypeChange = (type) => {
-    setForm({ ...form, company_type: type, company_id: "", company_name: "" });
+  const handleTradeAccountChange = (v) => {
+    if (v === NONE) {
+      setForm(f => ({ ...f, company_id: "", company_name: "", company_type: "TradeAccount" }));
+      return;
+    }
+    const a = tradeAccounts.find(x => x.id === v);
+    setForm(f => ({ ...f, company_id: v, company_name: a?.name ?? "", company_type: "TradeAccount" }));
   };
 
-  const handleCompanyChange = (id) => {
-    const company = companyOptions.find(c => c.id === id);
-    setForm({ ...form, company_id: id, company_name: company?.name || "" });
+  const handleNameChange = (field, value) => {
+    const updates = { [field]: value };
+    const fn = field === "first_name" ? value : form.first_name;
+    const ln = field === "last_name" ? value : form.last_name;
+    if (fn || ln) updates.name = `${fn} ${ln}`.trim();
+    setForm(f => ({ ...f, ...updates }));
   };
 
   const toggleClient = (client) => {
     const isLinked = form.linked_clients.includes(client.id);
-    setForm({
-      ...form,
-      linked_clients: isLinked ? form.linked_clients.filter(id => id !== client.id) : [...form.linked_clients, client.id],
-      linked_client_names: isLinked ? form.linked_client_names.filter(n => n !== client.name) : [...form.linked_client_names, client.name],
-    });
+    setForm(f => ({
+      ...f,
+      linked_clients: isLinked ? f.linked_clients.filter(id => id !== client.id) : [...f.linked_clients, client.id],
+      linked_client_names: isLinked ? f.linked_client_names.filter(n => n !== client.name) : [...f.linked_client_names, client.name],
+    }));
   };
 
   const addTag = () => {
-    if (tagInput.trim() && !form.tags.includes(tagInput.trim())) {
-      setForm({ ...form, tags: [...form.tags, tagInput.trim()] });
-      setTagInput("");
-    }
+    const t = tagInput.trim();
+    if (t && !form.tags.includes(t)) setForm(f => ({ ...f, tags: [...f.tags, t] }));
+    setTagInput("");
   };
 
   const handleSubmit = (e) => {
@@ -86,150 +103,146 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     <div className="bg-surface rounded-2xl border border-white/[0.06] p-6 mb-6 animate-fade-in-up">
       <div className="flex items-center justify-between mb-5">
         <h2 className="text-white font-medium">{contact ? "Edit Contact" : "New Contact"}</h2>
-        <button onClick={onCancel} className="text-[#6C6C80] hover:text-white"><X className="w-5 h-5" /></button>
+        <button type="button" onClick={onCancel} className="text-[#6C6C80] hover:text-white"><X className="w-5 h-5" /></button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Personal details */}
+
+        {/* Personal */}
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Name *</Label>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} required />
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">First Name</Label>
+            <Input value={form.first_name} onChange={e => handleNameChange("first_name", e.target.value)} className={inputClass} />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Role / Title</Label>
-            <Input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} className={inputClass} />
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Last Name</Label>
+            <Input value={form.last_name} onChange={e => handleNameChange("last_name", e.target.value)} className={inputClass} />
+          </div>
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Full Name *</Label>
+            <Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className={inputClass} required placeholder="Auto-filled from first + last" />
+          </div>
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Job Title</Label>
+            <Input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={inputClass} />
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Role for Client</Label>
-            <Input value={form.client_role} onChange={(e) => setForm({ ...form, client_role: e.target.value })} className={inputClass} placeholder="e.g. GM, DOSM, Reservations, Accounts" />
+            <Input value={form.client_role} onChange={e => setForm(f => ({ ...f, client_role: e.target.value }))} className={inputClass} placeholder="e.g. GM, DOSM" />
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Email</Label>
-            <Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputClass} />
+            <Input type="email" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} className={inputClass} />
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Phone</Label>
-            <Input value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} className={inputClass} />
+            <Input value={form.phone} onChange={e => setForm(f => ({ ...f, phone: e.target.value }))} className={inputClass} />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">LinkedIn URL</Label>
-            <Input value={form.linkedin} onChange={(e) => setForm({ ...form, linkedin: e.target.value })} className={inputClass} placeholder="https://linkedin.com/in/..." />
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Mobile</Label>
+            <Input value={form.mobile} onChange={e => setForm(f => ({ ...f, mobile: e.target.value }))} className={inputClass} />
+          </div>
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">LinkedIn</Label>
+            <Input value={form.linkedin} onChange={e => setForm(f => ({ ...f, linkedin: e.target.value }))} className={inputClass} placeholder="https://linkedin.com/in/..." />
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Birthday</Label>
-            <Input type="date" value={form.birthday} onChange={(e) => setForm({ ...form, birthday: e.target.value })} className={inputClass} />
+            <Input type="date" value={form.birthday} onChange={e => setForm(f => ({ ...f, birthday: e.target.value }))} className={inputClass} />
           </div>
         </div>
 
-        {/* Company linkage */}
+        {/* Company */}
         <div className="border-t border-white/[0.06] pt-4 space-y-3">
-          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Company</p>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Company Type</Label>
-              <Select value={form.company_type} onValueChange={handleCompanyTypeChange}>
-                <SelectTrigger className={inputClass}><SelectValue placeholder="Select type..." /></SelectTrigger>
-                <SelectContent className="bg-surface-elevated border-white/[0.06]">
-                  <SelectItem value="Client">Client</SelectItem>
-                  <SelectItem value="TradeAccount">Trade Account</SelectItem>
-                  <SelectItem value="OtherPartner">Other Partner</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Company</Label>
-              <Select value={form.company_id} onValueChange={handleCompanyChange} disabled={!form.company_type}>
-                <SelectTrigger className={inputClass}><SelectValue placeholder="Select company..." /></SelectTrigger>
-                <SelectContent className="bg-surface-elevated border-white/[0.06]">
-                  {companyOptions.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Company (Trade Account)</p>
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Company Name</Label>
+            <Select value={form.company_id || NONE} onValueChange={handleTradeAccountChange}>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Select trade account..." /></SelectTrigger>
+              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                <SelectItem value={NONE}>None</SelectItem>
+                {tradeAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
         {/* Linked Clients */}
-        <div>
-          <Label className="text-[#A1A1B5] text-xs mb-1 block">Linked Clients</Label>
-          <p className="text-[#6C6C80] text-xs mb-2">Clients this contact is relevant to (for reporting)</p>
+        {clients.length > 0 && (
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1 block">Linked WDT Clients</Label>
+            <div className="flex flex-wrap gap-2">
+              {clients.map(client => (
+                <button key={client.id} type="button" onClick={() => toggleClient(client)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.linked_clients.includes(client.id) ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                  {client.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Destinations */}
+        <div className="border-t border-white/[0.06] pt-4">
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider mb-3">Destination Interest</p>
           <div className="flex flex-wrap gap-2">
-            {clients.map(client => (
-              <button key={client.id} type="button" onClick={() => toggleClient(client)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.linked_clients.includes(client.id) ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
-                {client.name}
+            {DEST_FIELDS.map(({ key, label }) => (
+              <button key={key} type="button" onClick={() => setForm(f => ({ ...f, [key]: !f[key] }))}
+                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form[key] ? "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                {label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Tags */}
+        {/* Home Address */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-3">
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Home Address</p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Address Line 1</Label>
+              <Input value={form.home_address_line1} onChange={e => setForm(f => ({ ...f, home_address_line1: e.target.value }))} className={inputClass} />
+            </div>
+            <div className="sm:col-span-2">
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Address Line 2</Label>
+              <Input value={form.home_address_line2} onChange={e => setForm(f => ({ ...f, home_address_line2: e.target.value }))} className={inputClass} />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">City</Label>
+              <Input value={form.home_city} onChange={e => setForm(f => ({ ...f, home_city: e.target.value }))} className={inputClass} />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">County</Label>
+              <Input value={form.home_county} onChange={e => setForm(f => ({ ...f, home_county: e.target.value }))} className={inputClass} />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Postcode</Label>
+              <Input value={form.home_postcode} onChange={e => setForm(f => ({ ...f, home_postcode: e.target.value }))} className={inputClass} />
+            </div>
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Country</Label>
+              <Input value={form.home_country} onChange={e => setForm(f => ({ ...f, home_country: e.target.value }))} className={inputClass} />
+            </div>
+          </div>
+        </div>
+
+        {/* Notes & Tags */}
+        <div>
+          <Label className="text-[#A1A1B5] text-xs mb-1.5">Notes</Label>
+          <Textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} className={`${inputClass} min-h-[80px]`} />
+        </div>
         <div>
           <Label className="text-[#A1A1B5] text-xs mb-1.5">Tags</Label>
           <div className="flex flex-wrap gap-1.5 mb-2">
             {form.tags.map(tag => (
               <span key={tag} className="flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">
                 {tag}
-                <button type="button" onClick={() => setForm({ ...form, tags: form.tags.filter(t => t !== tag) })} className="hover:text-white"><X className="w-3 h-3" /></button>
+                <button type="button" onClick={() => setForm(f => ({ ...f, tags: f.tags.filter(t => t !== tag) }))} className="hover:text-white"><X className="w-3 h-3" /></button>
               </span>
             ))}
           </div>
           <div className="flex gap-2">
-            <Input value={tagInput} onChange={(e) => setTagInput(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); }}} className={`${inputClass} flex-1`} placeholder="Add tag..." />
+            <Input value={tagInput} onChange={e => setTagInput(e.target.value)} onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTag(); }}} className={`${inputClass} flex-1`} placeholder="Add tag..." />
             <Button type="button" onClick={addTag} variant="ghost" className="text-[#7F5BFF] text-xs">Add</Button>
-          </div>
-        </div>
-
-        {/* Relationship Notes */}
-        <div>
-          <Label className="text-[#A1A1B5] text-xs mb-1.5">Relationship Notes</Label>
-          <Textarea value={form.relationship_notes} onChange={(e) => setForm({ ...form, relationship_notes: e.target.value })} className={`${inputClass} min-h-[80px]`} />
-        </div>
-
-        {/* Home Address */}
-        <div className="border-t border-white/[0.06] pt-4 space-y-3">
-          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Home Address</p>
-          <p className="text-[#6C6C80] text-xs -mt-1">Used for location-based visit planning</p>
-          <div className="grid sm:grid-cols-2 gap-3">
-            <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Postcode *</Label>
-              <Input value={form.home_postcode} onChange={(e) => setForm({ ...form, home_postcode: e.target.value })} className={inputClass} placeholder="e.g. SW1A 1AA" />
-            </div>
-            <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">City</Label>
-              <Input value={form.home_city} onChange={(e) => setForm({ ...form, home_city: e.target.value })} className={inputClass} placeholder="e.g. London" />
-            </div>
-            <div className="sm:col-span-2">
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Address Line 1</Label>
-              <Input value={form.home_address_line1} onChange={(e) => setForm({ ...form, home_address_line1: e.target.value })} className={inputClass} placeholder="e.g. 12 High Street" />
-            </div>
-          </div>
-        </div>
-
-        {/* Working Pattern */}
-        <div className="border-t border-white/[0.06] pt-4 space-y-3">
-          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Working Pattern</p>
-          <div className="space-y-2">
-            {DAYS.map(day => (
-              <div key={day} className="flex items-center gap-3">
-                <span className="text-[#A1A1B5] text-xs font-medium w-8 shrink-0">{DAY_LABELS[day]}</span>
-                <div className="flex gap-1.5 flex-wrap">
-                  {PATTERN_OPTIONS.map(opt => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => setForm(prev => ({ ...prev, working_pattern: { ...prev.working_pattern, [day]: prev.working_pattern[day] === opt ? "" : opt } }))}
-                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition-all ${
-                        form.working_pattern[day] === opt
-                          ? PATTERN_COLORS[opt]
-                          : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
-                      }`}
-                    >
-                      {opt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
