@@ -84,9 +84,10 @@ export default function ImportContacts() {
     setImporting(true);
     const results = { created: 0, skipped: 0, errors: [] };
 
-    // Build name→id map for trade accounts
     const accountMap = {};
     tradeAccounts.forEach(a => { accountMap[a.name?.toLowerCase()] = a.id; });
+
+    const toCreate = [];
 
     for (const row of preview.rows) {
       const mapped = {};
@@ -94,7 +95,6 @@ export default function ImportContacts() {
         if (row[csvCol] !== undefined) mapped[field] = row[csvCol];
       }
 
-      // Derive full name
       if (!mapped.name && (mapped.first_name || mapped.last_name)) {
         mapped.name = `${mapped.first_name ?? ""} ${mapped.last_name ?? ""}`.trim();
       }
@@ -104,17 +104,16 @@ export default function ImportContacts() {
         continue;
       }
 
-      // Link trade account
       const companyName = mapped.company_name?.trim();
       let company_id = "";
       if (companyName) {
         company_id = accountMap[companyName.toLowerCase()] ?? "";
         if (!company_id) {
-          results.errors.push(`Contact "${mapped.name}" — Company "${companyName}" not found, contact saved without company link`);
+          results.errors.push(`Contact "${mapped.name}" — Company "${companyName}" not found, saved without company link`);
         }
       }
 
-      const record = {
+      toCreate.push({
         name: mapped.name.trim(),
         first_name: mapped.first_name ?? "",
         last_name: mapped.last_name ?? "",
@@ -137,10 +136,12 @@ export default function ImportContacts() {
         company_id,
         company_name: companyName ?? "",
         company_type: company_id ? "TradeAccount" : "",
-      };
+      });
+    }
 
-      await base44.entities.Contact.create(record);
-      results.created++;
+    if (toCreate.length > 0) {
+      await base44.entities.Contact.bulkCreate(toCreate);
+      results.created = toCreate.length;
     }
 
     queryClient.invalidateQueries({ queryKey: ["contacts"] });

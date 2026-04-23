@@ -74,6 +74,8 @@ export default function ImportTradeAccounts() {
     const existingNames = new Set(existingAccounts.map(a => a.name?.toLowerCase()));
     const results = { created: 0, skipped: 0, errors: [] };
 
+    const toCreate = [];
+
     for (const row of preview.rows) {
       const mapped = {};
       for (const [csvCol, entityField] of Object.entries(FIELD_MAP)) {
@@ -99,19 +101,20 @@ export default function ImportTradeAccounts() {
         notes: mapped.notes || "",
       };
 
-      // key_destinations as array
       if (mapped.key_destinations_raw) {
         record.key_destinations = mapped.key_destinations_raw.split(/[;|,]/).map(d => d.trim()).filter(Boolean);
       }
-
-      // parent_company_name stored for later linking
       if (mapped.parent_company_name) {
         record.parent_company_name = mapped.parent_company_name;
       }
 
-      await base44.entities.TradeAccount.create(record);
+      toCreate.push(record);
       existingNames.add(name.toLowerCase());
-      results.created++;
+    }
+
+    if (toCreate.length > 0) {
+      await base44.entities.TradeAccount.bulkCreate(toCreate);
+      results.created = toCreate.length;
     }
 
     // Second pass: link parent companies
@@ -119,12 +122,11 @@ export default function ImportTradeAccounts() {
     const nameToId = {};
     refreshed.forEach(a => { nameToId[a.name?.toLowerCase()] = a.id; });
 
-    for (const acc of refreshed) {
-      if (acc.parent_company_name && !acc.parent_company_id) {
-        const parentId = nameToId[acc.parent_company_name.toLowerCase()];
-        if (parentId) {
-          await base44.entities.TradeAccount.update(acc.id, { parent_company_id: parentId });
-        }
+    const parentUpdates = refreshed.filter(acc => acc.parent_company_name && !acc.parent_company_id);
+    for (const acc of parentUpdates) {
+      const parentId = nameToId[acc.parent_company_name.toLowerCase()];
+      if (parentId) {
+        await base44.entities.TradeAccount.update(acc.id, { parent_company_id: parentId });
       }
     }
 
