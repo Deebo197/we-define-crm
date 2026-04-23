@@ -101,27 +101,27 @@
   --card-foreground: 240 14% 10%;
   --popover: 0 0% 100%;
   --popover-foreground: 240 14% 10%;
-  --primary: 255 80% 60%;
+  --primary: 255 80% 55%;
   --primary-foreground: 0 0% 100%;
   --secondary: 220 15% 92%;
   --secondary-foreground: 240 14% 25%;
   --muted: 220 15% 94%;
-  --muted-foreground: 240 10% 45%;
+  --muted-foreground: 240 10% 40%;
   --accent: 255 80% 55%;
   --accent-foreground: 0 0% 100%;
-  --destructive: 348 90% 60%;
+  --destructive: 348 90% 55%;
   --destructive-foreground: 0 0% 100%;
-  --border: 220 15% 88%;
-  --input: 220 15% 88%;
-  --ring: 255 80% 60%;
+  --border: 220 15% 85%;
+  --input: 220 15% 85%;
+  --ring: 255 80% 55%;
   --sidebar-background: 220 20% 96%;
   --sidebar-foreground: 240 14% 15%;
-  --sidebar-primary: 255 80% 60%;
+  --sidebar-primary: 255 80% 55%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 220 15% 90%;
   --sidebar-accent-foreground: 240 14% 15%;
-  --sidebar-border: 220 15% 87%;
-  --sidebar-ring: 255 80% 60%;
+  --sidebar-border: 220 15% 85%;
+  --sidebar-ring: 255 80% 55%;
 }
 
 .light-theme body {
@@ -129,24 +129,45 @@
   color: hsl(240 14% 10%);
 }
 
-.light-theme .bg-surface {
-  background-color: hsl(0 0% 100%) !important;
-}
-.light-theme .bg-surface-secondary {
+/* Surfaces */
+.light-theme .bg-surface { background-color: hsl(0 0% 100%) !important; }
+.light-theme .bg-surface-secondary { background-color: hsl(220 15% 94%) !important; }
+.light-theme .bg-surface-elevated { background-color: hsl(0 0% 100%) !important; }
+
+/* Borders */
+.light-theme [class*="border-white/"] { border-color: hsl(220 15% 85%) !important; }
+
+/* Muted/secondary text — make dark */
+.light-theme .text-\[\#6C6C80\] { color: hsl(240 8% 38%) !important; }
+.light-theme .text-\[\#A1A1B5\] { color: hsl(240 8% 28%) !important; }
+
+/* White text — make dark */
+.light-theme .text-white { color: hsl(240 14% 10%) !important; }
+
+/* White backgrounds used for subtle fills */
+.light-theme [class*="bg-white/"] { background-color: hsl(220 15% 92%) !important; }
+.light-theme [class*="hover:bg-white/"] { background-color: transparent !important; }
+
+/* Inputs */
+.light-theme input, .light-theme textarea, .light-theme select {
+  color: hsl(240 14% 10%) !important;
   background-color: hsl(220 15% 94%) !important;
+  border-color: hsl(220 15% 82%) !important;
 }
-.light-theme .bg-surface-elevated {
-  background-color: hsl(0 0% 100%) !important;
+.light-theme input::placeholder, .light-theme textarea::placeholder {
+  color: hsl(240 8% 50%) !important;
 }
-.light-theme .border-white\/\[0\.06\] {
-  border-color: hsl(220 15% 88%) !important;
-}
-.light-theme .text-\[\#6C6C80\] {
-  color: hsl(240 10% 45%) !important;
-}
-.light-theme .text-\[\#A1A1B5\] {
-  color: hsl(240 10% 35%) !important;
-}
+
+/* Sidebar nav text */
+.light-theme aside .text-\[\#A1A1B5\] { color: hsl(240 8% 30%) !important; }
+.light-theme aside .text-\[\#6C6C80\] { color: hsl(240 8% 40%) !important; }
+.light-theme aside .hover\:text-white:hover { color: hsl(240 14% 10%) !important; }
+
+/* Card / panel headings */
+.light-theme h1, .light-theme h2, .light-theme h3 { color: hsl(240 14% 10%) !important; }
+
+/* Gradient text backgrounds won't look right — override link-style text */
+.light-theme .group-hover\:text-\[\#7F5BFF\]:hover { color: hsl(255 80% 50%) !important; }
 
 /* Custom scrollbar */
 ::-webkit-scrollbar {
