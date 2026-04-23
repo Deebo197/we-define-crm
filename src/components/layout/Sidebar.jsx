@@ -13,9 +13,12 @@ import {
   FileText,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  Sun,
+  Moon
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useTheme } from "@/lib/ThemeContext";
 
 const navItems = [
   { label: "Dashboard", icon: LayoutDashboard, path: "/" },
@@ -33,6 +36,7 @@ const navItems = [
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { theme, toggle } = useTheme();
 
   return (
     <aside
@@ -82,6 +86,17 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-3 py-4 border-t border-white/[0.06] space-y-1">
+        <button
+          onClick={toggle}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#A1A1B5] hover:text-white hover:bg-white/[0.04] transition-all w-full"
+        >
+          {theme === "dark" ? (
+            <Sun className="w-[18px] h-[18px] flex-shrink-0 text-[#6C6C80]" />
+          ) : (
+            <Moon className="w-[18px] h-[18px] flex-shrink-0 text-[#6C6C80]" />
+          )}
+          {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
+        </button>
         <button
           onClick={() => base44.auth.logout()}
           className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#A1A1B5] hover:text-white hover:bg-white/[0.04] transition-all w-full`}

@@ -93,6 +93,61 @@
   }
 }
 
+/* Light theme overrides */
+.light-theme {
+  --background: 220 20% 97%;
+  --foreground: 240 14% 10%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 14% 10%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 14% 10%;
+  --primary: 255 80% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 15% 92%;
+  --secondary-foreground: 240 14% 25%;
+  --muted: 220 15% 94%;
+  --muted-foreground: 240 10% 45%;
+  --accent: 255 80% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 348 90% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 15% 88%;
+  --input: 220 15% 88%;
+  --ring: 255 80% 60%;
+  --sidebar-background: 220 20% 96%;
+  --sidebar-foreground: 240 14% 15%;
+  --sidebar-primary: 255 80% 60%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 15% 90%;
+  --sidebar-accent-foreground: 240 14% 15%;
+  --sidebar-border: 220 15% 87%;
+  --sidebar-ring: 255 80% 60%;
+}
+
+.light-theme body {
+  background-color: hsl(220 20% 97%);
+  color: hsl(240 14% 10%);
+}
+
+.light-theme .bg-surface {
+  background-color: hsl(0 0% 100%) !important;
+}
+.light-theme .bg-surface-secondary {
+  background-color: hsl(220 15% 94%) !important;
+}
+.light-theme .bg-surface-elevated {
+  background-color: hsl(0 0% 100%) !important;
+}
+.light-theme .border-white\/\[0\.06\] {
+  border-color: hsl(220 15% 88%) !important;
+}
+.light-theme .text-\[\#6C6C80\] {
+  color: hsl(240 10% 45%) !important;
+}
+.light-theme .text-\[\#A1A1B5\] {
+  color: hsl(240 10% 35%) !important;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
