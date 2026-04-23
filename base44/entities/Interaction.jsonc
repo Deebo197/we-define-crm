@@ -39,43 +39,65 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IDs of contacts who participated"
     },
     "contact_names": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Denormalized contact names"
     },
     "internal_team": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "WDT team members present"
     },
     "linked_clients": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IDs of clients this interaction is relevant to"
     },
     "linked_client_names": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Denormalized client names"
     },
     "linked_campaigns": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IDs of campaigns discussed in this interaction"
+    },
+    "linked_campaign_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized campaign names"
     },
     "general_notes": {
-      "type": "string"
+      "type": "string",
+      "description": "General notes applicable across the interaction"
+    },
+    "general_notes_assigned_clients": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Client IDs to which the general notes are assigned for reporting"
     },
     "client_specific_notes": {
       "type": "array",
+      "description": "Notes strictly tied to a single client",
       "items": {
         "type": "object",
         "properties": {
@@ -97,20 +119,13 @@
         }
       }
     },
-    "general_notes_assigned_clients": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Client IDs that general notes are assigned to"
-    },
     "next_action_date": {
       "type": "string",
       "format": "date"
     },
     "raw_transcript": {
       "type": "string",
-      "description": "Pasted transcript or dictation"
+      "description": "Pasted transcript or dictation \u2014 source material for AI rewrite"
     }
   },
   "required": [

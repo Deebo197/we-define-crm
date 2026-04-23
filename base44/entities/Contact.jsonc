@@ -36,21 +36,30 @@
         "Client",
         "TradeAccount",
         "OtherPartner"
-      ]
+      ],
+      "description": "Type of company this contact primarily belongs to"
     },
     "company_id": {
       "type": "string",
-      "description": "ID of linked company"
+      "description": "ID of primary linked company"
     },
     "company_name": {
       "type": "string",
-      "description": "Denormalized company name"
+      "description": "Denormalized primary company name"
     },
     "linked_clients": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IDs of clients this contact is associated with (can span multiple)"
+    },
+    "linked_client_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized client names for display"
     }
   },
   "required": [

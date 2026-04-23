@@ -11,12 +11,13 @@ import { X } from "lucide-react";
 const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
 const statuses = ["To Do", "In Progress", "Completed", "Waiting on Partner", "Waiting on Client", "Cancelled"];
 const priorities = ["Low", "Medium", "High", "Urgent"];
+const NONE = "__none__";
 
 export default function ActionForm({ action, onSubmit, onCancel, isLoading }) {
-  const { data: clients = [] } = useQuery({
-    queryKey: ["clients"],
-    queryFn: () => base44.entities.Client.list(),
-  });
+  const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
+  const { data: contacts = [] } = useQuery({ queryKey: ["contacts"], queryFn: () => base44.entities.Contact.list() });
+  const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });
+  const { data: interactions = [] } = useQuery({ queryKey: ["interactions"], queryFn: () => base44.entities.Interaction.list("-date", 100) });
 
   const [form, setForm] = useState({
     description: action?.description || "",
@@ -24,15 +25,27 @@ export default function ActionForm({ action, onSubmit, onCancel, isLoading }) {
     due_date: action?.due_date || "",
     status: action?.status || "To Do",
     priority: action?.priority || "Medium",
+    linked_interaction: action?.linked_interaction || "",
+    linked_interaction_title: action?.linked_interaction_title || "",
     linked_client: action?.linked_client || "",
     linked_client_name: action?.linked_client_name || "",
+    linked_company_id: action?.linked_company_id || "",
     linked_company_name: action?.linked_company_name || "",
+    linked_contact_id: action?.linked_contact_id || "",
     linked_contact_name: action?.linked_contact_name || "",
+    linked_campaign: action?.linked_campaign || "",
+    linked_campaign_name: action?.linked_campaign_name || "",
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(form);
+    // Clean NONE sentinels before saving
+    const cleaned = { ...form };
+    if (cleaned.linked_interaction === NONE) { cleaned.linked_interaction = ""; cleaned.linked_interaction_title = ""; }
+    if (cleaned.linked_client === NONE) { cleaned.linked_client = ""; cleaned.linked_client_name = ""; }
+    if (cleaned.linked_contact_id === NONE) { cleaned.linked_contact_id = ""; cleaned.linked_contact_name = ""; }
+    if (cleaned.linked_campaign === NONE) { cleaned.linked_campaign = ""; cleaned.linked_campaign_name = ""; }
+    onSubmit(cleaned);
   };
 
   return (
@@ -46,6 +59,7 @@ export default function ActionForm({ action, onSubmit, onCancel, isLoading }) {
           <Label className="text-[#A1A1B5] text-xs mb-1.5">Description *</Label>
           <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className={`${inputClass} min-h-[60px]`} required placeholder="What needs to be done?" />
         </div>
+
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Owner</Label>
@@ -73,20 +87,84 @@ export default function ActionForm({ action, onSubmit, onCancel, isLoading }) {
               </SelectContent>
             </Select>
           </div>
-          <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Linked Client</Label>
-            <Select value={form.linked_client} onValueChange={(v) => {
-              const client = clients.find(c => c.id === v);
-              setForm({ ...form, linked_client: v, linked_client_name: client?.name || "" });
-            }}>
-              <SelectTrigger className={inputClass}><SelectValue placeholder="None" /></SelectTrigger>
-              <SelectContent className="bg-surface-elevated border-white/[0.06]">
-                <SelectItem value="none">None</SelectItem>
-                {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
+        </div>
+
+        {/* Relationships */}
+        <div className="border-t border-white/[0.06] pt-4 space-y-3">
+          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Link To</p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            {/* Linked Client */}
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Client</Label>
+              <Select value={form.linked_client || NONE} onValueChange={(v) => {
+                if (v === NONE) return setForm({ ...form, linked_client: "", linked_client_name: "" });
+                const c = clients.find(x => x.id === v);
+                setForm({ ...form, linked_client: v, linked_client_name: c?.name || "" });
+              }}>
+                <SelectTrigger className={inputClass}><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Linked Contact */}
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Contact</Label>
+              <Select value={form.linked_contact_id || NONE} onValueChange={(v) => {
+                if (v === NONE) return setForm({ ...form, linked_contact_id: "", linked_contact_name: "" });
+                const c = contacts.find(x => x.id === v);
+                setForm({ ...form, linked_contact_id: v, linked_contact_name: c?.name || "" });
+              }}>
+                <SelectTrigger className={inputClass}><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {contacts.map(c => <SelectItem key={c.id} value={c.id}>{c.name}{c.company_name ? ` — ${c.company_name}` : ""}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Linked Campaign */}
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Campaign</Label>
+              <Select value={form.linked_campaign || NONE} onValueChange={(v) => {
+                if (v === NONE) return setForm({ ...form, linked_campaign: "", linked_campaign_name: "" });
+                const c = campaigns.find(x => x.id === v);
+                setForm({ ...form, linked_campaign: v, linked_campaign_name: c?.name || "" });
+              }}>
+                <SelectTrigger className={inputClass}><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {campaigns.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Linked Interaction */}
+            <div>
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Interaction</Label>
+              <Select value={form.linked_interaction || NONE} onValueChange={(v) => {
+                if (v === NONE) return setForm({ ...form, linked_interaction: "", linked_interaction_title: "" });
+                const i = interactions.find(x => x.id === v);
+                setForm({ ...form, linked_interaction: v, linked_interaction_title: i?.title || "" });
+              }}>
+                <SelectTrigger className={inputClass}><SelectValue placeholder="None" /></SelectTrigger>
+                <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectItem value={NONE}>None</SelectItem>
+                  {interactions.map(i => <SelectItem key={i.id} value={i.id}>{i.title}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Company (free text) */}
+            <div className="sm:col-span-2">
+              <Label className="text-[#A1A1B5] text-xs mb-1.5">Company (free text)</Label>
+              <Input value={form.linked_company_name} onChange={(e) => setForm({ ...form, linked_company_name: e.target.value })} className={inputClass} placeholder="e.g. Kuoni, Destinology" />
+            </div>
           </div>
         </div>
+
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="ghost" onClick={onCancel} className="text-[#A1A1B5] hover:text-white">Cancel</Button>
           <Button type="submit" disabled={isLoading} className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-6">

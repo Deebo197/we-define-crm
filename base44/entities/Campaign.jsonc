@@ -20,19 +20,29 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IDs of clients involved in this campaign"
     },
     "linked_client_names": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "Denormalized client names"
     },
     "linked_partners": {
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IDs of OtherPartner records (press, airlines, etc.) involved"
+    },
+    "linked_partner_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized partner names"
     },
     "funding_type": {
       "type": "string",

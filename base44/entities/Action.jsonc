@@ -35,28 +35,44 @@
       "default": "Medium"
     },
     "linked_interaction": {
-      "type": "string"
+      "type": "string",
+      "description": "ID of the source interaction"
+    },
+    "linked_interaction_title": {
+      "type": "string",
+      "description": "Denormalized interaction title"
     },
     "linked_client": {
-      "type": "string"
+      "type": "string",
+      "description": "ID of linked client"
     },
     "linked_client_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Denormalized client name"
     },
     "linked_company_id": {
-      "type": "string"
+      "type": "string",
+      "description": "ID of linked company (any type)"
     },
     "linked_company_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Denormalized company name"
     },
     "linked_contact_id": {
-      "type": "string"
+      "type": "string",
+      "description": "ID of linked contact"
     },
     "linked_contact_name": {
-      "type": "string"
+      "type": "string",
+      "description": "Denormalized contact name"
     },
     "linked_campaign": {
-      "type": "string"
+      "type": "string",
+      "description": "ID of linked campaign"
+    },
+    "linked_campaign_name": {
+      "type": "string",
+      "description": "Denormalized campaign name"
     }
   },
   "required": [

@@ -22,17 +22,46 @@ export default function Campaigns() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Campaign.create(data),
+    mutationFn: async ({ campaignData, coverageEntries }) => {
+      const campaign = await base44.entities.Campaign.create(campaignData);
+      // Save coverage entries linked to this campaign
+      for (const entry of coverageEntries) {
+        if (entry.platform_partner) {
+          await base44.entities.CoverageEntry.create({
+            ...entry,
+            campaign_id: campaign.id,
+            estimated_reach: entry.estimated_reach ? Number(entry.estimated_reach) : undefined,
+            estimated_value: entry.estimated_value ? Number(entry.estimated_value) : undefined,
+          });
+        }
+      }
+      return campaign;
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["campaigns"] }); setShowForm(false); },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Campaign.update(id, data),
+    mutationFn: async ({ id, campaignData, coverageEntries }) => {
+      await base44.entities.Campaign.update(id, campaignData);
+      // Save new coverage entries (existing ones are managed separately)
+      for (const entry of coverageEntries) {
+        if (entry.platform_partner && !entry.id) {
+          await base44.entities.CoverageEntry.create({
+            ...entry,
+            campaign_id: id,
+            estimated_reach: entry.estimated_reach ? Number(entry.estimated_reach) : undefined,
+            estimated_value: entry.estimated_value ? Number(entry.estimated_value) : undefined,
+          });
+        }
+      }
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["campaigns"] }); setEditing(null); setShowForm(false); },
   });
 
-  const handleSubmit = (data) => {
-    editing ? updateMutation.mutate({ id: editing.id, data }) : createMutation.mutate(data);
+  const handleSubmit = (campaignData, coverageEntries = []) => {
+    editing
+      ? updateMutation.mutate({ id: editing.id, campaignData, coverageEntries })
+      : createMutation.mutate({ campaignData, coverageEntries });
   };
 
   const filtered = campaigns.filter(c =>
@@ -81,10 +110,13 @@ export default function Campaigns() {
                   </span>
                 )}
               </div>
-              {campaign.linked_client_names?.length > 0 && (
+              {(campaign.linked_client_names?.length > 0 || campaign.linked_partner_names?.length > 0) && (
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {campaign.linked_client_names.map(name => (
+                  {campaign.linked_client_names?.map(name => (
                     <span key={name} className="px-2 py-0.5 rounded-full text-[10px] bg-[#7F5BFF]/10 text-[#7F5BFF]">{name}</span>
+                  ))}
+                  {campaign.linked_partner_names?.map(name => (
+                    <span key={name} className="px-2 py-0.5 rounded-full text-[10px] bg-[#3DDC97]/10 text-[#3DDC97]">{name}</span>
                   ))}
                 </div>
               )}
