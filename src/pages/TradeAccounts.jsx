@@ -7,6 +7,7 @@ import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import TradeAccountForm from "@/components/trade/TradeAccountForm";
+import TradeAccountDetail from "@/components/trade/TradeAccountDetail";
 import { Input } from "@/components/ui/input";
 import { useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -15,6 +16,7 @@ export default function TradeAccounts() {
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(searchParams.get("new") === "true");
   const [editing, setEditing] = useState(null);
+  const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
   const queryClient = useQueryClient();
 
@@ -30,7 +32,7 @@ export default function TradeAccounts() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.TradeAccount.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }); setEditing(null); setShowForm(false); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }); setEditing(null); setShowForm(false); setViewing(null); },
   });
 
   const handleSubmit = (data) => {
@@ -42,6 +44,16 @@ export default function TradeAccounts() {
     a.type?.toLowerCase().includes(search.toLowerCase()) ||
     a.region?.toLowerCase().includes(search.toLowerCase())
   );
+
+  if (viewing && !showForm) {
+    return (
+      <TradeAccountDetail
+        account={viewing}
+        onBack={() => setViewing(null)}
+        onEdit={() => { setEditing(viewing); setShowForm(true); }}
+      />
+    );
+  }
 
   return (
     <div>
@@ -61,7 +73,7 @@ export default function TradeAccounts() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((account, i) => (
-            <div key={account.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group" style={{ animationDelay: `${0.05 + i * 0.03}s` }} onClick={() => { setEditing(account); setShowForm(true); }}>
+            <div key={account.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group" style={{ animationDelay: `${0.05 + i * 0.03}s` }} onClick={() => setViewing(account)}>
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <h3 className="text-white font-medium text-sm group-hover:text-[#7F5BFF] transition-colors">{account.name}</h3>
