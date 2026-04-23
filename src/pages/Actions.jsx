@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { CheckSquare, Search, Clock, Filter } from "lucide-react";
+import { CheckSquare, Search, Clock, Filter, Trash2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import ActionForm from "@/components/actions/ActionForm";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearchParams } from "react-router-dom";
 import { format, isPast } from "date-fns";
@@ -18,6 +19,7 @@ export default function Actions() {
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("open");
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: actions = [], isLoading } = useQuery({
@@ -33,6 +35,11 @@ export default function Actions() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Action.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["actions"] }); setEditing(null); setShowForm(false); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.Action.delete(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["actions"] }); setConfirmDelete(null); },
   });
 
   const handleSubmit = (data) => {
@@ -57,6 +64,21 @@ export default function Actions() {
 
       {showForm && (
         <ActionForm action={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} isLoading={createMutation.isPending || updateMutation.isPending} />
+      )}
+
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface rounded-2xl border border-white/[0.08] p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className="text-white font-medium mb-2">Delete Action</h3>
+            <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete this action? This cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <Button type="button" variant="ghost" onClick={() => setConfirmDelete(null)} className="text-[#6C6C80] hover:text-white">Cancel</Button>
+              <Button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="bg-[#FF5C7A] hover:bg-[#FF5C7A]/80 text-white rounded-xl px-5">
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
 
       <div className="flex flex-col sm:flex-row gap-3 mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
@@ -109,6 +131,9 @@ export default function Actions() {
                 </div>
               </div>
               <StatusBadge status={action.status} />
+              <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDelete(action); }} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all shrink-0">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
             </div>
           ))}
         </div>

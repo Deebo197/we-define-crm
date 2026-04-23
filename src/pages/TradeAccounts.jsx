@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Handshake, Search, Upload } from "lucide-react";
+import { Handshake, Search, Upload, Trash2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
@@ -20,6 +20,7 @@ export default function TradeAccounts() {
   const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery({
@@ -35,6 +36,11 @@ export default function TradeAccounts() {
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.TradeAccount.update(id, data),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }); setEditing(null); setShowForm(false); setViewing(null); },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => base44.entities.TradeAccount.delete(id),
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }); setConfirmDelete(null); setViewing(null); },
   });
 
   const handleSubmit = (data) => {
@@ -71,6 +77,21 @@ export default function TradeAccounts() {
   return (
     <div>
       <PageHeader title="Trade Accounts" subtitle="Tour operators and travel agents" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Account" />
+      {confirmDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-surface rounded-2xl border border-white/[0.08] p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className="text-white font-medium mb-2">Delete Trade Account</h3>
+            <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete <span className="text-white font-medium">{confirmDelete.name}</span>? This cannot be undone.</p>
+            <div className="flex gap-3 justify-end">
+              <button type="button" onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-[#6C6C80] hover:text-white transition-colors">Cancel</button>
+              <button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="px-5 py-2 text-sm bg-[#FF5C7A] hover:bg-[#FF5C7A]/80 text-white rounded-xl">
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex justify-end mb-2 -mt-4">
         <Link to="/import-trade-accounts">
           <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
@@ -102,9 +123,12 @@ export default function TradeAccounts() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((account, i) => (
-            <div key={account.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group" style={{ animationDelay: `${0.05 + i * 0.03}s` }} onClick={() => setViewing(account)}>
+            <div key={account.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${0.05 + i * 0.03}s` }} onClick={() => setViewing(account)}>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDelete(account); }} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
               <div className="flex items-start justify-between mb-2">
-                <div className="min-w-0 flex-1 pr-2">
+                <div className="min-w-0 flex-1 pr-8">
                   <h3 className="text-white font-medium text-sm group-hover:text-[#7F5BFF] transition-colors">{account.name}</h3>
                   {account.region && <p className="text-[#6C6C80] text-xs mt-0.5">{account.region}</p>}
                 </div>
