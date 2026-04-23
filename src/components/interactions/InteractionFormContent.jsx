@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
@@ -120,6 +120,31 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   const { data: contacts = [] } = useQuery({ queryKey: ["contacts"], queryFn: () => base44.entities.Contact.list() });
   const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });
   const { data: teamMembers = [] } = useQuery({ queryKey: ["team-members"], queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }) });
+  const { data: tradeAccounts = [] } = useQuery({ queryKey: ["trade-accounts"], queryFn: () => base44.entities.TradeAccount.list() });
+  const { data: otherPartners = [] } = useQuery({ queryKey: ["otherpartners"], queryFn: () => base44.entities.OtherPartner.list() });
+
+  const [companyOpen, setCompanyOpen] = useState(false);
+  const companyRef = useRef(null);
+
+  const companySuggestions = (() => {
+    const q = form.company_name.toLowerCase().trim();
+    if (!q) return [];
+    const tas = tradeAccounts
+      .filter(a => a.name?.toLowerCase().includes(q))
+      .map(a => ({ id: a.id, name: a.name, label: a.type || "Trade Account", source: "trade" }));
+    const ops = otherPartners
+      .filter(p => p.name?.toLowerCase().includes(q))
+      .map(p => ({ id: p.id, name: p.name, label: p.type || "Partner", source: "partner" }));
+    return [...tas, ...ops].slice(0, 8);
+  })();
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (companyRef.current && !companyRef.current.contains(e.target)) setCompanyOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [form, setForm] = useState({
     title: interaction?.title || "",
@@ -315,9 +340,32 @@ Return a JSON array of note objects. Each object must have:
               </SelectContent>
             </Select>
           </div>
-          <div>
+          <div ref={companyRef} className="relative">
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Company / Organisation</Label>
-            <Input value={form.company_name} onChange={(e) => setForm({ ...form, company_name: e.target.value })} className={inputClass} placeholder="e.g. Kuoni, Audley Travel…" />
+            <Input
+              value={form.company_name}
+              onChange={(e) => { setForm({ ...form, company_name: e.target.value }); setCompanyOpen(true); }}
+              onFocus={() => setCompanyOpen(true)}
+              className={inputClass}
+              placeholder="e.g. Kuoni, Audley Travel…"
+              autoComplete="off"
+            />
+            {companyOpen && companySuggestions.length > 0 && (
+              <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1C1C26] border border-white/[0.10] rounded-xl shadow-xl overflow-hidden">
+                {companySuggestions.map(s => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => { setForm(prev => ({ ...prev, company_name: s.name, company_id: s.id, company_type: s.source === "trade" ? "TradeAccount" : "OtherPartner" })); setCompanyOpen(false); }}
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-white/[0.04] transition-colors group"
+                  >
+                    <span className="text-white text-sm group-hover:text-[#7F5BFF] transition-colors">{s.name}</span>
+                    <span className="text-[#6C6C80] text-[10px] bg-white/[0.04] px-2 py-0.5 rounded-full">{s.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Next Action Date</Label>
