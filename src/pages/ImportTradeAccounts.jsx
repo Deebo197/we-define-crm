@@ -71,10 +71,14 @@ export default function ImportTradeAccounts() {
   const handleImport = async () => {
     if (!preview) return;
     setImporting(true);
-    const existingNames = new Set(existingAccounts.map(a => a.name?.toLowerCase()));
-    const results = { created: 0, skipped: 0, errors: [] };
 
+    // Build a case-insensitive map of existing accounts: name -> record
+    const existingMap = {};
+    existingAccounts.forEach(a => { if (a.name) existingMap[a.name.trim().toLowerCase()] = a; });
+
+    const results = { created: 0, updated: 0, skipped: 0, unlinked: 0, errors: [] };
     const toCreate = [];
+    const toUpdate = []; // { id, data }
 
     for (const row of preview.rows) {
       const mapped = {};
@@ -83,10 +87,10 @@ export default function ImportTradeAccounts() {
       }
 
       const name = mapped.name?.trim();
-      if (!name) { results.errors.push(`Row skipped: missing Account Name`); continue; }
-      if (existingNames.has(name.toLowerCase())) { results.skipped++; continue; }
+      if (!name) { results.errors.push(`Row skipped: missing Account Name`); results.skipped++; continue; }
 
-      const type = VALID_TYPES.includes(mapped.type) ? mapped.type : "Tour Operator";
+      const type = VALID_TYPES.includes(mapped.type) ? mapped.type : null;
+      if (!type) { results.errors.push(`Row "${name}" skipped: invalid Type "${mapped.type}"`); results.skipped++; continue; }
 
       const record = {
         name,
@@ -108,23 +112,33 @@ export default function ImportTradeAccounts() {
         record.parent_company_name = mapped.parent_company_name;
       }
 
-      toCreate.push(record);
-      existingNames.add(name.toLowerCase());
+      const existing = existingMap[name.toLowerCase()];
+      if (existing) {
+        toUpdate.push({ id: existing.id, data: record });
+      } else {
+        toCreate.push(record);
+        // add to map so duplicate rows within the same CSV don't both create
+        existingMap[name.toLowerCase()] = { name };
+      }
     }
 
     if (toCreate.length > 0) {
       await base44.entities.TradeAccount.bulkCreate(toCreate);
       results.created = toCreate.length;
     }
+    for (const { id, data } of toUpdate) {
+      await base44.entities.TradeAccount.update(id, data);
+    }
+    results.updated = toUpdate.length;
 
     // Second pass: link parent companies
     const refreshed = await base44.entities.TradeAccount.list();
     const nameToId = {};
-    refreshed.forEach(a => { nameToId[a.name?.toLowerCase()] = a.id; });
+    refreshed.forEach(a => { nameToId[a.name?.trim().toLowerCase()] = a.id; });
 
     const parentUpdates = refreshed.filter(acc => acc.parent_company_name && !acc.parent_company_id);
     for (const acc of parentUpdates) {
-      const parentId = nameToId[acc.parent_company_name.toLowerCase()];
+      const parentId = nameToId[acc.parent_company_name.trim().toLowerCase()];
       if (parentId) {
         await base44.entities.TradeAccount.update(acc.id, { parent_company_id: parentId });
       }
@@ -167,7 +181,7 @@ export default function ImportTradeAccounts() {
                 <span key={f} className="px-2.5 py-1 rounded-lg text-xs bg-white/[0.04] text-[#A1A1B5] border border-white/[0.06] font-mono">{f}</span>
               ))}
             </div>
-            <p className="text-[#6C6C80] text-xs mt-3">Type must be one of: <span className="text-white">Tour Operator, Travel Agent, Parent Company</span>. Duplicate Account Names are skipped. Key Destinations can be semicolon-separated.</p>
+            <p className="text-[#6C6C80] text-xs mt-3">Type must be one of: <span className="text-white">Tour Operator, Travel Agent, Parent Company</span>. If an Account Name already exists, the record will be <span className="text-white">updated</span> rather than duplicated. Key Destinations can be semicolon-separated.</p>
           </div>
           <Button type="button" onClick={downloadTemplate} variant="outline" className="shrink-0 text-[#A1A1B5] border-white/[0.10] hover:text-white text-xs gap-2">
             <Download className="w-4 h-4" /> Template
@@ -235,19 +249,27 @@ export default function ImportTradeAccounts() {
       {results && (
         <div className="bg-surface rounded-2xl border border-white/[0.06] p-6 space-y-4">
           <h2 className="text-white font-medium">Import Complete</h2>
-          <div className="flex gap-4">
+          <div className="flex gap-4 flex-wrap">
             <div className="flex items-center gap-2 bg-[#3DDC97]/10 border border-[#3DDC97]/20 rounded-xl px-4 py-3">
               <CheckCircle2 className="w-4 h-4 text-[#3DDC97]" />
               <span className="text-[#3DDC97] font-medium">{results.created} created</span>
             </div>
-            <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-3">
-              <span className="text-[#A1A1B5] font-medium">{results.skipped} skipped (duplicates)</span>
-            </div>
+            {results.updated > 0 && (
+              <div className="flex items-center gap-2 bg-[#7F5BFF]/10 border border-[#7F5BFF]/20 rounded-xl px-4 py-3">
+                <CheckCircle2 className="w-4 h-4 text-[#7F5BFF]" />
+                <span className="text-[#7F5BFF] font-medium">{results.updated} updated</span>
+              </div>
+            )}
+            {results.skipped > 0 && (
+              <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-3">
+                <span className="text-[#A1A1B5] font-medium">{results.skipped} skipped</span>
+              </div>
+            )}
           </div>
           {results.errors.length > 0 && (
-            <div className="space-y-1">
-              <p className="text-[#FF5C7A] text-xs font-medium flex items-center gap-1"><AlertCircle className="w-3 h-3" /> Errors</p>
-              {results.errors.map((e, i) => <p key={i} className="text-[#6C6C80] text-xs ml-4">{e}</p>)}
+            <div className="space-y-1 bg-[#FF5C7A]/5 border border-[#FF5C7A]/20 rounded-xl p-4">
+              <p className="text-[#FF5C7A] text-xs font-medium flex items-center gap-1 mb-2"><AlertCircle className="w-3 h-3" /> Warnings / Errors</p>
+              {results.errors.map((e, i) => <p key={i} className="text-[#6C6C80] text-xs">{e}</p>)}
             </div>
           )}
           <div className="flex gap-2 pt-2">

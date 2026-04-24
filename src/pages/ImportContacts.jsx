@@ -38,6 +38,7 @@ const FIELD_MAP = {
   "Name": "name",
   "Job Title": "role",
   "Role for Client": "client_role",
+  "Role for this client": "client_role",
   "Company Name": "company_name",
   "Email": "email",
   "Phone": "phone",
@@ -82,10 +83,10 @@ export default function ImportContacts() {
   const handleImport = async () => {
     if (!preview) return;
     setImporting(true);
-    const results = { created: 0, skipped: 0, errors: [] };
+    const results = { created: 0, skipped: 0, updated: 0, unlinked: 0, errors: [] };
 
     const accountMap = {};
-    tradeAccounts.forEach(a => { accountMap[a.name?.toLowerCase()] = a.id; });
+    tradeAccounts.forEach(a => { if (a.name) accountMap[a.name.trim().toLowerCase()] = a.id; });
 
     const toCreate = [];
 
@@ -101,6 +102,7 @@ export default function ImportContacts() {
 
       if (!mapped.name?.trim()) {
         results.errors.push(`Row skipped: missing Name`);
+        results.skipped++;
         continue;
       }
 
@@ -109,7 +111,8 @@ export default function ImportContacts() {
       if (companyName) {
         company_id = accountMap[companyName.toLowerCase()] ?? "";
         if (!company_id) {
-          results.errors.push(`Contact "${mapped.name}" — Company "${companyName}" not found, saved without company link`);
+          results.unlinked++;
+          results.errors.push(`Contact "${mapped.name}" — Company "${companyName}" not found in Trade Accounts`);
         }
       }
 
@@ -135,7 +138,7 @@ export default function ImportContacts() {
         notes: mapped.notes ?? "",
         company_id,
         company_name: companyName ?? "",
-        company_type: company_id ? "TradeAccount" : "",
+        company_type: "TradeAccount", // always set; company_id may be empty if not matched
       });
     }
 
@@ -266,6 +269,12 @@ export default function ImportContacts() {
             {results.skipped > 0 && (
               <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.06] rounded-xl px-4 py-3">
                 <span className="text-[#A1A1B5] font-medium">{results.skipped} skipped</span>
+              </div>
+            )}
+            {results.unlinked > 0 && (
+              <div className="flex items-center gap-2 bg-[#FFB547]/10 border border-[#FFB547]/20 rounded-xl px-4 py-3">
+                <AlertCircle className="w-4 h-4 text-[#FFB547]" />
+                <span className="text-[#FFB547] font-medium">{results.unlinked} missing company link</span>
               </div>
             )}
           </div>
