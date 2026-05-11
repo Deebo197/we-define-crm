@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Megaphone, Search, Calendar, Trash2 } from "lucide-react";
+import CampaignDetail from "@/components/campaigns/CampaignDetail";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
@@ -14,6 +15,7 @@ export default function Campaigns() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [search, setSearch] = useState("");
+  const [viewing, setViewing] = useState(null);
   const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
@@ -75,6 +77,16 @@ export default function Campaigns() {
     c.type?.toLowerCase().includes(search.toLowerCase())
   );
 
+  if (viewing && !showForm) {
+    return (
+      <CampaignDetail
+        campaign={viewing}
+        onBack={() => setViewing(null)}
+        onEdit={() => { setEditing(viewing); setShowForm(true); setViewing(null); }}
+      />
+    );
+  }
+
   return (
     <div>
       <PageHeader title="Campaigns" subtitle="Marketing activity and campaigns" action={() => { setEditing(null); setShowForm(true); }} actionLabel="New Campaign" />
@@ -108,7 +120,7 @@ export default function Campaigns() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {filtered.map((campaign, i) => (
-            <div key={campaign.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => { setEditing(campaign); setShowForm(true); }}>
+            <div key={campaign.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => setViewing(campaign)}>
               <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDelete(campaign); }} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>

@@ -8,7 +8,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import ClientForm from "@/components/clients/ClientForm";
 import { Input } from "@/components/ui/input";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 function ClientCard({ client, contacts, onClick }) {
   const clientContacts = contacts.filter(c => c.linked_clients?.includes(client.id));
@@ -83,6 +83,7 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const { data: clients = [], isLoading } = useQuery({
@@ -176,7 +177,7 @@ export default function Clients() {
               <ClientCard
                 client={client}
                 contacts={contacts}
-                onClick={() => { setEditingClient(client); setShowForm(true); }}
+                onClick={() => navigate(`/clients/${client.id}`)}
               />
             </div>
           ))}

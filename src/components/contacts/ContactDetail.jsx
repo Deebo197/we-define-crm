@@ -2,7 +2,9 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2, Calendar, Users } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2, Calendar, Users, MessageSquare, Clock, CheckSquare } from "lucide-react";
+import { format, isPast } from "date-fns";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ContactForm from "@/components/contacts/ContactForm";
 
@@ -44,6 +46,27 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
     contact.company_id &&
     c.company_id === contact.company_id
   );
+
+  const { data: allInteractions = [] } = useQuery({
+    queryKey: ["interactions"],
+    queryFn: () => base44.entities.Interaction.list("-date", 200),
+  });
+
+  const { data: allActions = [] } = useQuery({
+    queryKey: ["actions"],
+    queryFn: () => base44.entities.Action.list("-created_date", 200),
+  });
+
+  // Last interaction for this contact
+  const contactInteractions = allInteractions
+    .filter(i => i.contact_ids?.includes(contact.id))
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  const lastInteraction = contactInteractions[0];
+
+  // Next open action for this contact
+  const nextAction = allActions
+    .filter(a => a.linked_contact_id === contact.id && a.status !== "Completed" && a.status !== "Cancelled")
+    .sort((a, b) => new Date(a.due_date || "9999") - new Date(b.due_date || "9999"))[0];
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Contact.update(id, data),
@@ -217,6 +240,42 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
               </div>
             )}
           </div>
+
+          {/* Last Interaction + Next Action */}
+          {(lastInteraction || nextAction) && (
+            <div className="mt-5 grid sm:grid-cols-2 gap-4">
+              {lastInteraction && (
+                <Link to={`/interactions/${lastInteraction.id}`} className="bg-surface rounded-2xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all group block">
+                  <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <MessageSquare className="w-3.5 h-3.5" /> Last Interaction
+                  </h2>
+                  <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{lastInteraction.title}</p>
+                  <p className="text-[#6C6C80] text-xs mt-1">{lastInteraction.type}</p>
+                  {lastInteraction.date && (
+                    <p className="text-[#6C6C80] text-xs mt-1 flex items-center gap-1">
+                      <Calendar className="w-3 h-3" />
+                      {format(new Date(lastInteraction.date), "MMM d, yyyy")}
+                    </p>
+                  )}
+                </Link>
+              )}
+              {nextAction && (
+                <Link to="/actions" className="bg-surface rounded-2xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all group block">
+                  <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <CheckSquare className="w-3.5 h-3.5" /> Next Action
+                  </h2>
+                  <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors">{nextAction.description}</p>
+                  {nextAction.due_date && (
+                    <p className={`text-xs mt-1 flex items-center gap-1 ${isPast(new Date(nextAction.due_date)) ? "text-[#FF5C7A]" : "text-[#6C6C80]"}`}>
+                      <Clock className="w-3 h-3" />
+                      Due {format(new Date(nextAction.due_date), "MMM d, yyyy")}
+                    </p>
+                  )}
+                  {nextAction.owner && <p className="text-[#6C6C80] text-xs mt-1">Owner: {nextAction.owner}</p>}
+                </Link>
+              )}
+            </div>
+          )}
 
           {/* Colleagues at same company */}
           {colleagues.length > 0 && (

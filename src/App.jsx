@@ -10,6 +10,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import AppLayout from '@/components/layout/AppLayout';
 import Dashboard from '@/pages/Dashboard';
 import Clients from '@/pages/Clients';
+import ClientDetail from '@/pages/ClientDetail';
 import TradeAccounts from '@/pages/TradeAccounts';
 import OtherPartners from '@/pages/OtherPartners';
 import Contacts from '@/pages/Contacts';
@@ -52,11 +53,13 @@ const AuthenticatedApp = () => {
       <Route element={<AppLayout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/clients" element={<Clients />} />
+        <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/trade-accounts" element={<TradeAccounts />} />
         <Route path="/other-partners" element={<OtherPartners />} />
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/interactions" element={<Interactions />} />
         <Route path="/interactions/:id" element={<InteractionDetail />} />
+        <Route path="/interactions/:id/:mode" element={<InteractionDetail />} />
         <Route path="/actions" element={<Actions />} />
         <Route path="/campaigns" element={<Campaigns />} />
         <Route path="/reports" element={<Reports />} />

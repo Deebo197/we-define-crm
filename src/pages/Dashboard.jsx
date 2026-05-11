@@ -117,6 +117,9 @@ export default function Dashboard() {
                         {action.linked_client_name && (
                           <span className="text-[#6C6C80] text-xs">· {action.linked_client_name}</span>
                         )}
+                        {action.linked_interaction_title && (
+                          <span className="text-[#6C6C80] text-xs truncate">· {action.linked_interaction_title}</span>
+                        )}
                       </div>
                     </div>
                     <StatusBadge status={action.status} />

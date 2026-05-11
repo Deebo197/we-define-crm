@@ -19,6 +19,7 @@ export default function Contacts() {
   const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
   const [view, setView] = useState("grid"); // "grid" | "list"
+  const [destFilter, setDestFilter] = useState(""); // "", "maldives", "mauritius", "uae", "far_east"
   const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
@@ -55,11 +56,21 @@ export default function Contacts() {
     setConfirmDelete(contact);
   };
 
-  const filtered = contacts.filter(c =>
-    c.name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.company_name?.toLowerCase().includes(search.toLowerCase()) ||
-    c.role?.toLowerCase().includes(search.toLowerCase())
-  );
+  const DEST_FLAGS = {
+    maldives:  "dest_maldives",
+    mauritius: "dest_mauritius",
+    uae:       "dest_uae",
+    far_east:  "dest_far_east",
+  };
+
+  const filtered = contacts.filter(c => {
+    const matchesSearch =
+      c.name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.company_name?.toLowerCase().includes(search.toLowerCase()) ||
+      c.role?.toLowerCase().includes(search.toLowerCase());
+    const matchesDest = !destFilter || c[DEST_FLAGS[destFilter]];
+    return matchesSearch && matchesDest;
+  });
 
   const scrollToTop = () => {
     window.scrollTo(0, 0);
@@ -131,6 +142,30 @@ export default function Contacts() {
             <List className="w-4 h-4" />
           </button>
         </div>
+      </div>
+
+      {/* Destination filter chips */}
+      <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up" style={{ animationDelay: "0.08s" }}>
+        {[
+          { key: "", label: "All" },
+          { key: "maldives",  label: "🏝 Maldives" },
+          { key: "mauritius", label: "🌴 Mauritius" },
+          { key: "uae",       label: "🏙 UAE" },
+          { key: "far_east",  label: "🗺 Far East" },
+        ].map(f => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setDestFilter(f.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+              destFilter === f.key
+                ? "bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white border-transparent shadow-lg shadow-[#7F5BFF]/20"
+                : "bg-white/[0.03] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.16] hover:text-white"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
       </div>
 
       {isLoading ? <ShimmerCard count={4} /> : filtered.length === 0 ? (
