@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { X } from "lucide-react";
+import { X, MapPin, Loader2 } from "lucide-react";
+import { geocodeAddress } from "@/lib/geocoding";
 
 const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
 const NONE = "__none__";
@@ -16,6 +17,11 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
     queryKey: ["trade-accounts"],
     queryFn: () => base44.entities.TradeAccount.list(),
   });
+
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeStatus, setGeocodeStatus] = useState(
+    account?.lat ? "✓ Location mapped" : ""
+  );
 
   const [form, setForm] = useState({
     name: account?.name ?? "",
@@ -29,6 +35,9 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
     county: account?.county ?? "",
     address_postcode: account?.address_postcode ?? "",
     address_country: account?.address_country ?? "",
+    lat: account?.lat ?? null,
+    lng: account?.lng ?? null,
+    geocoded_at: account?.geocoded_at ?? "",
     key_destinations: account?.key_destinations ?? [],
     notes: account?.notes ?? "",
     relationship_strength: account?.relationship_strength ?? "New",
@@ -37,7 +46,6 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
   });
 
   const [destInput, setDestInput] = useState("");
-
   const parentOptions = allAccounts.filter(a => a.id !== account?.id);
 
   const handleParentChange = (v) => {
@@ -59,9 +67,36 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
 
   const removeDest = (d) => setForm(f => ({ ...f, key_destinations: f.key_destinations.filter(x => x !== d) }));
 
-  const handleSubmit = (e) => {
+  const handleGeocode = async () => {
+    setGeocoding(true);
+    setGeocodeStatus("Locating...");
+    const result = await geocodeAddress(form);
+    if (result) {
+      setForm(f => ({ ...f, lat: result.lat, lng: result.lng, geocoded_at: new Date().toISOString() }));
+      setGeocodeStatus("✓ Location mapped");
+    } else {
+      setGeocodeStatus("⚠ Could not locate — check address");
+    }
+    setGeocoding(false);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(form);
+    // Auto-geocode if address has changed or no coords yet
+    let finalForm = { ...form };
+    const hasAddress = form.city || form.address_postcode;
+    const needsGeocode = hasAddress && !form.lat;
+    if (needsGeocode) {
+      setGeocoding(true);
+      setGeocodeStatus("Mapping location...");
+      const result = await geocodeAddress(form);
+      if (result) {
+        finalForm = { ...finalForm, lat: result.lat, lng: result.lng, geocoded_at: new Date().toISOString() };
+        setGeocodeStatus("✓ Location mapped");
+      }
+      setGeocoding(false);
+    }
+    onSubmit(finalForm);
   };
 
   return (
@@ -107,29 +142,90 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
 
         {/* Address */}
         <div className="border-t border-white/[0.06] pt-4 space-y-3">
-          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Address</p>
+          <div className="flex items-center justify-between">
+            <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">Address</p>
+            <div className="flex items-center gap-2">
+              {geocodeStatus && (
+                <span className={`text-[10px] ${geocodeStatus.startsWith("✓") ? "text-[#3DDC97]" : geocodeStatus.startsWith("⚠") ? "text-[#FFB547]" : "text-[#6C6C80]"}`}>
+                  {geocodeStatus}
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={handleGeocode}
+                disabled={geocoding}
+                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] text-[#7F5BFF] border border-[#7F5BFF]/20 bg-[#7F5BFF]/5 hover:bg-[#7F5BFF]/10 transition-all disabled:opacity-50"
+              >
+                {geocoding ? <Loader2 className="w-3 h-3 animate-spin" /> : <MapPin className="w-3 h-3" />}
+                {geocoding ? "Mapping..." : "Map location"}
+              </button>
+            </div>
+          </div>
           <div className="grid sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">
               <Label className="text-[#A1A1B5] text-xs mb-1.5">Address Line 1</Label>
-              <Input value={form.address_line1} onChange={e => setForm(f => ({ ...f, address_line1: e.target.value }))} className={inputClass} />
+              <Input
+                value={form.address_line1}
+                onChange={e => { setForm(f => ({ ...f, address_line1: e.target.value, lat: null, lng: null })); setGeocodeStatus(""); }}
+                className={inputClass}
+              />
             </div>
             <div>
               <Label className="text-[#A1A1B5] text-xs mb-1.5">City</Label>
-              <Input value={form.city} onChange={e => setForm(f => ({ ...f, city: e.target.value }))} className={inputClass} />
+              <Input
+                value={form.city}
+                onChange={e => { setForm(f => ({ ...f, city: e.target.value, lat: null, lng: null })); setGeocodeStatus(""); }}
+                className={inputClass}
+              />
             </div>
             <div>
               <Label className="text-[#A1A1B5] text-xs mb-1.5">County</Label>
-              <Input value={form.county} onChange={e => setForm(f => ({ ...f, county: e.target.value }))} className={inputClass} />
+              <Input
+                value={form.county}
+                onChange={e => { setForm(f => ({ ...f, county: e.target.value, lat: null, lng: null })); setGeocodeStatus(""); }}
+                className={inputClass}
+              />
             </div>
             <div>
               <Label className="text-[#A1A1B5] text-xs mb-1.5">Postcode</Label>
-              <Input value={form.address_postcode} onChange={e => setForm(f => ({ ...f, address_postcode: e.target.value }))} className={inputClass} />
+              <Input
+                value={form.address_postcode}
+                onChange={e => { setForm(f => ({ ...f, address_postcode: e.target.value, lat: null, lng: null })); setGeocodeStatus(""); }}
+                className={inputClass}
+              />
             </div>
             <div>
               <Label className="text-[#A1A1B5] text-xs mb-1.5">Country</Label>
-              <Input value={form.address_country} onChange={e => setForm(f => ({ ...f, address_country: e.target.value }))} className={inputClass} />
+              <Input
+                value={form.address_country}
+                onChange={e => setForm(f => ({ ...f, address_country: e.target.value }))}
+                className={inputClass}
+                placeholder="UK"
+              />
             </div>
           </div>
+          {form.lat && (
+            <p className="text-[#3DDC97] text-[10px] flex items-center gap-1">
+              <MapPin className="w-3 h-3" /> Mapped: {form.lat.toFixed(4)}, {form.lng.toFixed(4)}
+            </p>
+          )}
+        </div>
+
+        {/* Region */}
+        <div>
+          <Label className="text-[#A1A1B5] text-xs mb-1.5">Region</Label>
+          <Input value={form.region} onChange={e => setForm(f => ({ ...f, region: e.target.value }))} className={inputClass} placeholder="e.g. North West, London, Yorkshire" />
+        </div>
+
+        {/* Relationship Strength */}
+        <div>
+          <Label className="text-[#A1A1B5] text-xs mb-1.5">Relationship Strength</Label>
+          <Select value={form.relationship_strength} onValueChange={v => setForm(f => ({ ...f, relationship_strength: v }))}>
+            <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-surface-elevated border-white/[0.06]">
+              {["Strong", "Growing", "New", "At Risk", "Dormant"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Key Destinations */}
@@ -156,8 +252,8 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
 
         <div className="flex justify-end gap-3 pt-2">
           <Button type="button" variant="ghost" onClick={onCancel} className="text-[#A1A1B5] hover:text-white">Cancel</Button>
-          <Button type="submit" disabled={isLoading} className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-6">
-            {isLoading ? "Saving..." : account ? "Update" : "Create"}
+          <Button type="submit" disabled={isLoading || geocoding} className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-6">
+            {isLoading || geocoding ? "Saving..." : account ? "Update" : "Create"}
           </Button>
         </div>
       </form>

@@ -51,6 +51,18 @@
       "type": "string",
       "description": "Country"
     },
+    "lat": {
+      "type": "number",
+      "description": "Latitude (auto-geocoded from address)"
+    },
+    "lng": {
+      "type": "number",
+      "description": "Longitude (auto-geocoded from address)"
+    },
+    "geocoded_at": {
+      "type": "string",
+      "description": "ISO timestamp of last geocode"
+    },
     "key_destinations": {
       "type": "array",
       "items": {
