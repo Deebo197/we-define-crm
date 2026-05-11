@@ -480,14 +480,12 @@ export default function TradeAccounts() {
       a.lat ?? "",
       a.lng ?? "",
       (a.key_destinations ?? []).join("; "),
-      (a.notes ?? "").replace(/
-/g, " "),
+      (a.notes ?? "").replace(/\n/g, " "),
       a.last_interaction_date ?? "",
-    ]);
-    const csv = [headers, ...rows]
+      ]);
+      const csv = [headers, ...rows]
       .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
-      .join("
-");
+      .join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -105,13 +105,11 @@ export default function Contacts() {
       c.home_country ?? "",
       (c.tags ?? []).join("; "),
       c.birthday ?? "",
-      (c.notes ?? "").replace(/
-/g, " "),
+      (c.notes ?? "").replace(/\n/g, " "),
     ]);
     const csv = [headers, ...rows]
       .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
-      .join("
-");
+      .join("\n");
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
