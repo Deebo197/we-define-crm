@@ -166,20 +166,35 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
           </div>
         </div>
 
-        {/* Linked Clients */}
-        {clients.length > 0 && (
-          <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1 block">Linked WDT Clients</Label>
+
+
+        {/* Client Responsibilities — imperative field */}
+        <div className="border-t border-white/[0.06] pt-4">
+          <div className="flex items-center gap-2 mb-3">
+            <p className="text-[#A1A1B5] text-xs font-bold uppercase tracking-wider">Client Responsibilities</p>
+            <span className="text-[10px] text-[#6C6C80] italic">Which of your clients does this person work with?</span>
+          </div>
+          {clients.length === 0 ? (
+            <p className="text-[#6C6C80] text-xs">No clients found in system.</p>
+          ) : (
             <div className="flex flex-wrap gap-2">
               {clients.map(client => (
                 <button key={client.id} type="button" onClick={() => toggleClient(client)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.linked_clients.includes(client.id) ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border flex items-center gap-1.5 ${
+                    form.linked_clients.includes(client.id)
+                      ? "bg-[#7F5BFF] text-white border-[#7F5BFF] shadow-lg shadow-[#7F5BFF]/20"
+                      : "bg-white/[0.02] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.18] hover:text-white"
+                  }`}>
+                  {form.linked_clients.includes(client.id) && <span className="text-white/80">✓</span>}
                   {client.name}
                 </button>
               ))}
             </div>
-          </div>
-        )}
+          )}
+          {form.linked_clients.length === 0 && (
+            <p className="text-amber-400/70 text-[11px] mt-2 flex items-center gap-1">⚠ No client responsibilities assigned — add at least one if this contact is relevant to your business</p>
+          )}
+        </div>
 
         {/* Destinations */}
         <div className="border-t border-white/[0.06] pt-4">

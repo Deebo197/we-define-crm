@@ -110,13 +110,21 @@ export default function TradeAccountDetail({ account, onBack, onEdit, onViewCont
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate group-hover:text-[#7F5BFF] transition-colors">{contact.name}</p>
                     <p className="text-[#6C6C80] text-xs truncate">{contact.role || contact.client_role || "—"}</p>
+                    {/* Client responsibilities */}
+                    {contact.linked_client_names?.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {contact.linked_client_names.map(name => (
+                          <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 shrink-0">
                     {contact.email && (
                       <a
                         href={`mailto:${contact.email}`}
                         onClick={e => e.stopPropagation()}
-                        className="text-[#6C6C80] text-xs hover:text-[#7F5BFF] transition-colors truncate max-w-[140px]"
+                        className="text-[#6C6C80] text-xs hover:text-[#7F5BFF] transition-colors truncate max-w-[120px]"
                       >
                         {contact.email}
                       </a>

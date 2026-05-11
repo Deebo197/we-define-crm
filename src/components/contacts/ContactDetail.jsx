@@ -167,6 +167,26 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
             </div>
           </div>
 
+          {/* Client Responsibilities — shown prominently */}
+          <div className="bg-surface rounded-2xl border border-[#7F5BFF]/20 p-5 mb-5">
+            <h2 className="text-[#7F5BFF] text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+              <Building2 className="w-3.5 h-3.5" /> Client Responsibilities
+            </h2>
+            {contact.linked_client_names?.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {contact.linked_client_names.map(name => (
+                  <span key={name} className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#7F5BFF] text-white shadow-lg shadow-[#7F5BFF]/20">
+                    {name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <p className="text-amber-400/70 text-sm flex items-center gap-2">
+                ⚠ No client responsibilities assigned to this contact
+              </p>
+            )}
+          </div>
+
           <div className="grid sm:grid-cols-2 gap-5">
             {/* Contact Info */}
             <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
@@ -238,19 +258,7 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
               </div>
             )}
 
-            {/* Linked Clients */}
-            {contact.linked_client_names?.length > 0 && (
-              <div className="bg-surface rounded-2xl border border-white/[0.06] p-5">
-                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3">Linked WDT Clients</h2>
-                <div className="flex flex-wrap gap-2">
-                  {contact.linked_client_names.map(name => (
-                    <span key={name} className="px-3 py-1.5 rounded-xl text-xs font-medium bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">
-                      {name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
+
 
             {/* Tags */}
             {contact.tags?.length > 0 && (

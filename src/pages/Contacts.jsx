@@ -67,7 +67,8 @@ export default function Contacts() {
     const matchesSearch =
       c.name?.toLowerCase().includes(search.toLowerCase()) ||
       c.company_name?.toLowerCase().includes(search.toLowerCase()) ||
-      c.role?.toLowerCase().includes(search.toLowerCase());
+      c.role?.toLowerCase().includes(search.toLowerCase()) ||
+      c.linked_client_names?.some(n => n.toLowerCase().includes(search.toLowerCase()));
     const matchesDest = !destFilter || c[DEST_FLAGS[destFilter]];
     return matchesSearch && matchesDest;
   });
@@ -132,7 +133,7 @@ export default function Contacts() {
       <div className="flex gap-3 mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
-          <Input placeholder="Search contacts..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
+          <Input placeholder="Search by name, company, role, or client..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
         </div>
         <div className="flex gap-1 bg-surface border border-white/[0.06] rounded-xl p-1">
           <button type="button" onClick={() => setView("grid")} className={`p-2 rounded-lg transition-all ${view === "grid" ? "bg-white/[0.08] text-white" : "text-[#6C6C80] hover:text-white"}`}>
@@ -190,8 +191,16 @@ export default function Contacts() {
                 {contact.email && <span className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{contact.email}</span></span>}
                 {contact.phone && <span className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{contact.phone}</span>}
               </div>
-              {contact.tags?.length > 0 && (
+              {/* Client responsibilities badges */}
+              {contact.linked_client_names?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
+                  {contact.linked_client_names.map(name => (
+                    <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
+                  ))}
+                </div>
+              )}
+              {contact.tags?.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
                   {contact.tags.map(tag => (
                     <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">{tag}</span>
                   ))}
@@ -212,7 +221,14 @@ export default function Contacts() {
                 <span className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{contact.name}</span>
                 <span className="text-[#6C6C80] text-xs truncate">{contact.role || "—"}</span>
                 <span className="text-[#6C6C80] text-xs truncate hidden sm:block">{contact.company_name || "—"}</span>
-                <span className="text-[#6C6C80] text-xs truncate hidden sm:block">{contact.email || "—"}</span>
+                <div className="hidden sm:flex flex-wrap gap-1">
+                  {contact.linked_client_names?.length > 0
+                    ? contact.linked_client_names.map(name => (
+                        <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
+                      ))
+                    : <span className="text-[#6C6C80] text-xs">{contact.email || "—"}</span>
+                  }
+                </div>
               </div>
               <button type="button" onClick={(e) => handleDelete(e, contact)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all shrink-0">
                 <Trash2 className="w-3.5 h-3.5" />
