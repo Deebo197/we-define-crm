@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSearchParams, Link } from "react-router-dom";
 import { format } from "date-fns";
-import { geocodeLocation, distanceMiles } from "@/lib/geocoding";
+import { geocodeAddress, geocodeLocation, distanceMiles } from "@/lib/geocoding";
 
 const GOOGLE_API_KEY = "AIzaSyAN-qJFLomJZNCpaFjacQk5K2j_wlu8b5U";
 
@@ -382,6 +382,8 @@ export default function TradeAccounts() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [bulkGeocoding, setBulkGeocoding] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, errors: 0 });
   const queryClient = useQueryClient();
 
   const { data: accounts = [], isLoading } = useQuery({
@@ -411,6 +413,29 @@ export default function TradeAccounts() {
 
   const handleSubmit = (data) => {
     editing ? updateMutation.mutate({ id: editing.id, data }) : createMutation.mutate(data);
+  };
+
+  const handleBulkGeocode = async () => {
+    const unmapped = accounts.filter(a => !a.lat && (a.address_line1 || a.city || a.address_postcode));
+    if (unmapped.length === 0) return;
+    setBulkGeocoding(true);
+    setBulkProgress({ done: 0, total: unmapped.length, errors: 0 });
+    let errors = 0;
+    for (let i = 0; i < unmapped.length; i++) {
+      const a = unmapped[i];
+      try {
+        const parts = [a.address_line1, a.city, a.county, a.address_postcode, a.address_country || "UK"].filter(Boolean);
+        const result = await geocodeAddress({ address_line1: a.address_line1, city: a.city, county: a.county, address_postcode: a.address_postcode, address_country: a.address_country });
+        if (result) {
+          await base44.entities.TradeAccount.update(a.id, { lat: result.lat, lng: result.lng, geocoded_at: new Date().toISOString() });
+        } else { errors++; }
+      } catch { errors++; }
+      setBulkProgress({ done: i + 1, total: unmapped.length, errors });
+      // Small delay to avoid hammering the API
+      await new Promise(r => setTimeout(r, 200));
+    }
+    queryClient.invalidateQueries({ queryKey: ["trade-accounts"] });
+    setBulkGeocoding(false);
   };
 
   // Extended search: name, type, region, city, county, postcode
@@ -541,6 +566,22 @@ export default function TradeAccounts() {
                 </button>
               ))}
             </div>
+            {/* Bulk geocode */}
+            {accounts.filter(a => !a.lat && (a.address_line1 || a.city)).length > 0 && !bulkGeocoding && (
+              <button
+                onClick={handleBulkGeocode}
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-medium border border-white/[0.08] bg-white/[0.03] text-[#A1A1B5] hover:text-white hover:border-white/[0.16] transition-all whitespace-nowrap"
+              >
+                <MapPin className="w-3 h-3" />
+                Geocode All ({accounts.filter(a => !a.lat && (a.address_line1 || a.city)).length} unmapped)
+              </button>
+            )}
+            {bulkGeocoding && (
+              <div className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs border border-[#7F5BFF]/30 bg-[#7F5BFF]/10 text-[#7F5BFF] whitespace-nowrap">
+                <Loader2 className="w-3 h-3 animate-spin" />
+                Geocoding {bulkProgress.done}/{bulkProgress.total}…
+              </div>
+            )}
           </div>
 
           {search && (
