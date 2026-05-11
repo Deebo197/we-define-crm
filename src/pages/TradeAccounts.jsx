@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Handshake, Search, Upload, Trash2, MapPin, Navigation, Map, List, SlidersHorizontal, X, Loader2, Building2 } from "lucide-react";
+import { Handshake, Search, Upload, Download, Trash2, MapPin, Navigation, Map, List, SlidersHorizontal, X, Loader2, Building2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
@@ -457,6 +457,46 @@ export default function TradeAccounts() {
 
   const geocodedCount = accounts.filter(a => a.lat && a.lng).length;
 
+  const exportToCSV = () => {
+    const headers = [
+      "Name", "Type", "Parent Company", "Region", "City", "County", "Postcode", "Country",
+      "Address Line 1", "Phone", "Website", "Relationship Strength",
+      "Geocoded", "Latitude", "Longitude", "Key Destinations", "Notes", "Last Interaction Date"
+    ];
+    const rows = accounts.map(a => [
+      a.name ?? "",
+      a.type ?? "",
+      a.parent_company_name ?? "",
+      a.region ?? "",
+      a.city ?? "",
+      a.county ?? "",
+      a.address_postcode ?? "",
+      a.address_country ?? "",
+      a.address_line1 ?? "",
+      a.phone ?? "",
+      a.website ?? "",
+      a.relationship_strength ?? "",
+      a.lat && a.lng ? "Yes" : "No",
+      a.lat ?? "",
+      a.lng ?? "",
+      (a.key_destinations ?? []).join("; "),
+      (a.notes ?? "").replace(/
+/g, " "),
+      a.last_interaction_date ?? "",
+    ]);
+    const csv = [headers, ...rows]
+      .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("
+");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `trade-accounts-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (viewingContact) {
     return (
       <ContactDetail
@@ -504,8 +544,11 @@ export default function TradeAccounts() {
         </div>
       )}
 
-      {/* Import link */}
-      <div className="flex justify-end mb-2 -mt-4">
+      {/* Import / Export */}
+      <div className="flex justify-end gap-2 mb-2 -mt-4">
+        <Button type="button" variant="ghost" onClick={exportToCSV} className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
+          <Download className="w-3.5 h-3.5" /> Export CSV
+        </Button>
         <Link to="/import-trade-accounts">
           <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
             <Upload className="w-3.5 h-3.5" /> Import CSV

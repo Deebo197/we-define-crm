@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Users, Search, Mail, Upload, LayoutGrid, List, Trash2, Phone } from "lucide-react";
+import { Users, Search, Mail, Upload, Download, LayoutGrid, List, Trash2, Phone } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
@@ -73,6 +73,54 @@ export default function Contacts() {
     return matchesSearch && matchesDest;
   });
 
+  const exportToCSV = () => {
+    const headers = [
+      "Full Name", "First Name", "Last Name", "Job Title", "Company", "Company Type",
+      "Email", "Phone", "Mobile", "LinkedIn",
+      "Client Responsibilities",
+      "Maldives", "Mauritius", "UAE", "Far East",
+      "Home Address Line 1", "Home City", "Home County", "Home Postcode", "Home Country",
+      "Tags", "Birthday", "Notes"
+    ];
+    const rows = contacts.map(c => [
+      c.name ?? "",
+      c.first_name ?? "",
+      c.last_name ?? "",
+      c.role ?? "",
+      c.company_name ?? "",
+      c.company_type ?? "",
+      c.email ?? "",
+      c.phone ?? "",
+      c.mobile ?? "",
+      c.linkedin ?? "",
+      (c.linked_client_names ?? []).join("; "),
+      c.dest_maldives ? "Yes" : "No",
+      c.dest_mauritius ? "Yes" : "No",
+      c.dest_uae ? "Yes" : "No",
+      c.dest_far_east ? "Yes" : "No",
+      c.home_address_line1 ?? "",
+      c.home_city ?? "",
+      c.home_county ?? "",
+      c.home_postcode ?? "",
+      c.home_country ?? "",
+      (c.tags ?? []).join("; "),
+      c.birthday ?? "",
+      (c.notes ?? "").replace(/
+/g, " "),
+    ]);
+    const csv = [headers, ...rows]
+      .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(","))
+      .join("
+");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `contacts-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const scrollToTop = () => {
     window.scrollTo(0, 0);
     document.documentElement.scrollTop = 0;
@@ -101,7 +149,10 @@ export default function Contacts() {
   return (
     <div>
       <PageHeader title="Contacts" subtitle="People across your network" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Contact" />
-      <div className="flex justify-end mb-2 -mt-4">
+      <div className="flex justify-end gap-2 mb-2 -mt-4">
+        <Button type="button" variant="ghost" onClick={exportToCSV} className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
+          <Download className="w-3.5 h-3.5" /> Export CSV
+        </Button>
         <Link to="/import-contacts">
           <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
             <Upload className="w-3.5 h-3.5" /> Import CSV
