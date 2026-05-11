@@ -8,6 +8,7 @@ import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import TradeAccountForm from "@/components/trade/TradeAccountForm";
 import TradeAccountDetail from "@/components/trade/TradeAccountDetail";
+import ContactDetail from "@/components/contacts/ContactDetail";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -379,6 +380,7 @@ export default function TradeAccounts() {
   const [showForm, setShowForm] = useState(searchParams.get("new") === "true");
   const [editing, setEditing] = useState(null);
   const [viewing, setViewing] = useState(null);
+  const [viewingContact, setViewingContact] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -455,12 +457,24 @@ export default function TradeAccounts() {
 
   const geocodedCount = accounts.filter(a => a.lat && a.lng).length;
 
+  if (viewingContact) {
+    return (
+      <ContactDetail
+        contact={viewingContact}
+        onBack={() => setViewingContact(null)}
+        onDeleted={() => setViewingContact(null)}
+        onViewContact={(c) => setViewingContact(c)}
+      />
+    );
+  }
+
   if (viewing && !showForm) {
     return (
       <TradeAccountDetail
         account={viewing}
         onBack={() => setViewing(null)}
         onEdit={() => { setEditing(viewing); setShowForm(true); }}
+        onViewContact={(contact) => setViewingContact(contact)}
       />
     );
   }

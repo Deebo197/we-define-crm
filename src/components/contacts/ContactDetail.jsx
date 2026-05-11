@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2, Calendar, Users, MessageSquare, Clock, CheckSquare } from "lucide-react";
+import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2, Calendar, Users, MessageSquare, Clock, CheckSquare, Building2, Globe, ExternalLink } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -57,11 +57,19 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
     queryFn: () => base44.entities.Action.list("-created_date", 200),
   });
 
-  // Last interaction for this contact
+  // All interactions for this contact, newest first
   const contactInteractions = allInteractions
     .filter(i => i.contact_ids?.includes(contact.id))
     .sort((a, b) => new Date(b.date) - new Date(a.date));
   const lastInteraction = contactInteractions[0];
+
+  // Fetch the linked Trade Account for work address
+  const { data: tradeAccounts = [] } = useQuery({
+    queryKey: ["trade-accounts"],
+    queryFn: () => base44.entities.TradeAccount.list(),
+    enabled: !!contact.company_id,
+  });
+  const tradeAccount = tradeAccounts.find(a => a.id === contact.company_id) || null;
 
   // Next open action for this contact
   const nextAction = allActions
@@ -180,13 +188,39 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
               {contact.birthday && <InfoRow icon={Calendar} label="Birthday" value={contact.birthday} />}
             </div>
 
-            {/* Address */}
+            {/* Work Address (from Trade Account) */}
+            {tradeAccount && (
+              <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
+                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-[#7F5BFF]" /> Work — {tradeAccount.name}
+                </h2>
+                {(tradeAccount.address_line1 || tradeAccount.city) ? (
+                  <InfoRow icon={MapPin} label="Office Address" value={[tradeAccount.address_line1, tradeAccount.city, tradeAccount.county, tradeAccount.address_postcode, tradeAccount.address_country].filter(Boolean).join(", ")} />
+                ) : null}
+                {tradeAccount.phone && <InfoRow icon={Phone} label="Office Phone" value={tradeAccount.phone} />}
+                {tradeAccount.website && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
+                      <Globe className="w-3.5 h-3.5 text-[#6C6C80]" />
+                    </div>
+                    <div>
+                      <p className="text-[#6C6C80] text-[10px] uppercase tracking-wider font-medium">Website</p>
+                      <a href={tradeAccount.website} target="_blank" rel="noopener noreferrer" className="text-[#7F5BFF] text-sm hover:underline mt-0.5 flex items-center gap-1">
+                        Visit site <ExternalLink className="w-3 h-3" />
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Home Address */}
             <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
               <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider">Home Address</h2>
               {address ? (
                 <InfoRow icon={MapPin} label="Address" value={address} />
               ) : (
-                <p className="text-[#6C6C80] text-sm">No address on record</p>
+                <p className="text-[#6C6C80] text-sm">No home address on record</p>
               )}
             </div>
 
@@ -241,41 +275,66 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
             )}
           </div>
 
-          {/* Last Interaction + Next Action */}
-          {(lastInteraction || nextAction) && (
-            <div className="mt-5 grid sm:grid-cols-2 gap-4">
-              {lastInteraction && (
-                <Link to={`/interactions/${lastInteraction.id}`} className="bg-surface rounded-2xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all group block">
-                  <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <MessageSquare className="w-3.5 h-3.5" /> Last Interaction
-                  </h2>
-                  <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{lastInteraction.title}</p>
-                  <p className="text-[#6C6C80] text-xs mt-1">{lastInteraction.type}</p>
-                  {lastInteraction.date && (
-                    <p className="text-[#6C6C80] text-xs mt-1 flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {format(new Date(lastInteraction.date), "MMM d, yyyy")}
-                    </p>
-                  )}
-                </Link>
-              )}
-              {nextAction && (
-                <Link to="/actions" className="bg-surface rounded-2xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all group block">
-                  <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
-                    <CheckSquare className="w-3.5 h-3.5" /> Next Action
-                  </h2>
-                  <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors">{nextAction.description}</p>
-                  {nextAction.due_date && (
-                    <p className={`text-xs mt-1 flex items-center gap-1 ${isPast(new Date(nextAction.due_date)) ? "text-[#FF5C7A]" : "text-[#6C6C80]"}`}>
-                      <Clock className="w-3 h-3" />
-                      Due {format(new Date(nextAction.due_date), "MMM d, yyyy")}
-                    </p>
-                  )}
-                  {nextAction.owner && <p className="text-[#6C6C80] text-xs mt-1">Owner: {nextAction.owner}</p>}
-                </Link>
-              )}
+          {/* Next Action */}
+          {nextAction && (
+            <div className="mt-5">
+              <Link to="/actions" className="bg-surface rounded-2xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all group block">
+                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                  <CheckSquare className="w-3.5 h-3.5" /> Next Action
+                </h2>
+                <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors">{nextAction.description}</p>
+                {nextAction.due_date && (
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${isPast(new Date(nextAction.due_date)) ? "text-[#FF5C7A]" : "text-[#6C6C80]"}`}>
+                    <Clock className="w-3 h-3" />
+                    Due {format(new Date(nextAction.due_date), "MMM d, yyyy")}
+                  </p>
+                )}
+                {nextAction.owner && <p className="text-[#6C6C80] text-xs mt-1">Owner: {nextAction.owner}</p>}
+              </Link>
             </div>
           )}
+
+          {/* Full Interaction History */}
+          <div className="mt-5 bg-surface rounded-2xl border border-white/[0.06] p-5">
+            <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+              <MessageSquare className="w-3.5 h-3.5" /> Interaction History
+              {contactInteractions.length > 0 && (
+                <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-white/[0.06] text-[#A1A1B5]">{contactInteractions.length}</span>
+              )}
+            </h2>
+            {contactInteractions.length === 0 ? (
+              <p className="text-[#6C6C80] text-sm">No interactions recorded with this contact yet.</p>
+            ) : (
+              <div className="space-y-2">
+                {contactInteractions.map(interaction => (
+                  <Link
+                    key={interaction.id}
+                    to={`/interactions/${interaction.id}`}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-[#7F5BFF]/30 hover:bg-[#7F5BFF]/5 transition-all group block"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0 text-sm">
+                      {{"Meeting (In-Person)":"🤝","Meeting (Virtual)":"💻","Call":"📞","Email":"✉️","Event":"🎪","FAM Feedback":"📋","Marketing Discussion":"📣"}[interaction.type] || "💬"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{interaction.title}</p>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-[#6C6C80] text-xs">{interaction.type}</span>
+                        {interaction.linked_client_names?.length > 0 && (
+                          <span className="text-[#6C6C80] text-xs">· {interaction.linked_client_names.join(", ")}</span>
+                        )}
+                      </div>
+                    </div>
+                    {interaction.date && (
+                      <span className="text-[#6C6C80] text-xs shrink-0 flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {format(new Date(interaction.date), "d MMM yyyy")}
+                      </span>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Colleagues at same company */}
           {colleagues.length > 0 && (

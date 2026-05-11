@@ -26,7 +26,7 @@ function SectionHeader({ icon: Icon, label }) {
   );
 }
 
-export default function TradeAccountDetail({ account, onBack, onEdit }) {
+export default function TradeAccountDetail({ account, onBack, onEdit, onViewContact }) {
   const navigate = useNavigate();
 
   const { data: contacts = [] } = useQuery({
@@ -99,17 +99,39 @@ export default function TradeAccountDetail({ account, onBack, onEdit }) {
           ) : (
             <div className="space-y-2">
               {accountContacts.map(contact => (
-                <div key={contact.id} className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-white/[0.10] transition-all">
+                <div
+                  key={contact.id}
+                  onClick={() => onViewContact && onViewContact(contact)}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-[#7F5BFF]/30 hover:bg-[#7F5BFF]/5 transition-all cursor-pointer group"
+                >
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7F5BFF]/20 to-[#3A1DFF]/10 flex items-center justify-center shrink-0">
                     <span className="text-[#7F5BFF] text-xs font-bold">{contact.name?.charAt(0)}</span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white text-sm font-medium truncate">{contact.name}</p>
+                    <p className="text-white text-sm font-medium truncate group-hover:text-[#7F5BFF] transition-colors">{contact.name}</p>
                     <p className="text-[#6C6C80] text-xs truncate">{contact.role || contact.client_role || "—"}</p>
                   </div>
-                  {contact.email && (
-                    <a href={`mailto:${contact.email}`} className="text-[#6C6C80] text-xs hover:text-[#7F5BFF] transition-colors truncate max-w-[140px]">{contact.email}</a>
-                  )}
+                  <div className="flex items-center gap-3">
+                    {contact.email && (
+                      <a
+                        href={`mailto:${contact.email}`}
+                        onClick={e => e.stopPropagation()}
+                        className="text-[#6C6C80] text-xs hover:text-[#7F5BFF] transition-colors truncate max-w-[140px]"
+                      >
+                        {contact.email}
+                      </a>
+                    )}
+                    {contact.phone && (
+                      <a
+                        href={`tel:${contact.phone}`}
+                        onClick={e => e.stopPropagation()}
+                        className="text-[#6C6C80] text-xs hover:text-[#3DDC97] transition-colors"
+                      >
+                        {contact.phone}
+                      </a>
+                    )}
+                    <span className="text-[#6C6C80] text-xs opacity-0 group-hover:opacity-100 transition-opacity">View →</span>
+                  </div>
                 </div>
               ))}
             </div>
