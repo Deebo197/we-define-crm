@@ -18,6 +18,8 @@ import Interactions from '@/pages/Interactions';
 import InteractionDetail from '@/pages/InteractionDetail';
 import Actions from '@/pages/Actions';
 import Campaigns from '@/pages/Campaigns';
+import Events from '@/pages/Events';
+import EventEditor from '@/pages/EventEditor';
 import Reports from '@/pages/Reports';
 import TeamMembers from '@/pages/TeamMembers';
 import ImportTradeAccounts from '@/pages/ImportTradeAccounts';
@@ -86,6 +88,8 @@ const AuthenticatedApp = () => {
         <Route path="/interactions/:id/:mode" element={<InteractionDetail />} />
         <Route path="/actions" element={<Actions />} />
         <Route path="/campaigns" element={<Campaigns />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/events/:id" element={<EventEditor />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/team" element={<TeamMembers />} />
         <Route path="/todos" element={<Todos />} />
