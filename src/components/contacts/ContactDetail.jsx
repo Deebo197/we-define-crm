@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2, Calendar, Users, MessageSquare, Clock, CheckSquare, Building2, Globe, ExternalLink } from "lucide-react";
 import { format, isPast } from "date-fns";
 import { Link } from "react-router-dom";
@@ -66,7 +67,7 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
   // Fetch the linked Trade Account for work address
   const { data: tradeAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+    queryFn: () => listActiveTradeAccounts(),
     enabled: !!contact.company_id,
   });
   const tradeAccount = tradeAccounts.find(a => a.id === contact.company_id) || null;

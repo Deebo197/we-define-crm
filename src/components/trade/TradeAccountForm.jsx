@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,7 +16,7 @@ const NONE = "__none__";
 export default function TradeAccountForm({ account, onSubmit, onCancel, isLoading }) {
   const { data: allAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+    queryFn: () => listActiveTradeAccounts(),
   });
 
   const [geocoding, setGeocoding] = useState(false);

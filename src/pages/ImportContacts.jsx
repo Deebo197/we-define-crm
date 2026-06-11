@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Button } from "@/components/ui/button";
 import { Upload, CheckCircle2, AlertCircle, ArrowLeft, FileText, Download } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -65,7 +66,7 @@ export default function ImportContacts() {
 
   const { data: tradeAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+    queryFn: () => listActiveTradeAccounts(),
   });
 
   const handleFile = (e) => {

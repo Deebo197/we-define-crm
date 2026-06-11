@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +22,7 @@ const DEST_FIELDS = [
 export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) {
   const { data: tradeAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+    queryFn: () => listActiveTradeAccounts(),
   });
   const { data: clients = [] } = useQuery({
     queryKey: ["clients"],

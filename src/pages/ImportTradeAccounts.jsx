@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Button } from "@/components/ui/button";
 import { Upload, CheckCircle2, AlertCircle, ArrowLeft, FileText, Download } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -53,7 +54,7 @@ export default function ImportTradeAccounts() {
 
   const { data: existingAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+    queryFn: () => listActiveTradeAccounts(),
   });
 
   const handleFile = (e) => {
@@ -132,7 +133,7 @@ export default function ImportTradeAccounts() {
     results.updated = toUpdate.length;
 
     // Second pass: link parent companies
-    const refreshed = await base44.entities.TradeAccount.list();
+    const refreshed = await listActiveTradeAccounts();
     const nameToId = {};
     refreshed.forEach(a => { nameToId[a.name?.trim().toLowerCase()] = a.id; });
 

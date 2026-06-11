@@ -1,6 +1,7 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Link } from "react-router-dom";
 import {
   Building2, Handshake, MessageSquare, CheckSquare, Megaphone,
@@ -60,7 +61,7 @@ export default function Dashboard() {
 
   const { data: tradeAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
-    queryFn: () => base44.entities.TradeAccount.list(),
+    queryFn: () => listActiveTradeAccounts(),
   });
 
   const openActions = actions.filter(a => a.status !== "Completed" && a.status !== "Cancelled");

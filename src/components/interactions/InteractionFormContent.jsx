@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -120,7 +121,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   const { data: contacts = [] } = useQuery({ queryKey: ["contacts"], queryFn: () => base44.entities.Contact.list() });
   const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });
   const { data: teamMembers = [] } = useQuery({ queryKey: ["team-members"], queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }) });
-  const { data: tradeAccounts = [] } = useQuery({ queryKey: ["trade-accounts"], queryFn: () => base44.entities.TradeAccount.list() });
+  const { data: tradeAccounts = [] } = useQuery({ queryKey: ["trade-accounts"], queryFn: () => listActiveTradeAccounts() });
   const { data: otherPartners = [] } = useQuery({ queryKey: ["otherpartners"], queryFn: () => base44.entities.OtherPartner.list() });
 
   const [companyOpen, setCompanyOpen] = useState(false);
