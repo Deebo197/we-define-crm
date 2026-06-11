@@ -143,10 +143,6 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     raw_transcript: interaction?.raw_transcript || "",
     // notes: array of { id, type, text, assigned_clients: [], crossroads_tag }
     notes: interaction?.notes || [],
-    // legacy support
-    general_notes: interaction?.general_notes || "",
-    general_notes_assigned_clients: interaction?.general_notes_assigned_clients || [],
-    client_specific_notes: interaction?.client_specific_notes || [],
   });
 
   const companySuggestions = (() => {
@@ -219,7 +215,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   };
 
   const handleAiRewrite = async () => {
-    const source = form.raw_transcript || form.general_notes;
+    const source = form.raw_transcript;
     if (!source) return;
     setAiLoading(true);
     try {

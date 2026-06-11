@@ -207,31 +207,6 @@ export default function InteractionDetail() {
           </div>
         )}
 
-        {/* Legacy: general notes */}
-        {interaction.general_notes && !interaction.notes?.length && (
-          <div className="bg-surface rounded-2xl border border-white/[0.06] p-5">
-            <h3 className="text-white font-medium text-sm mb-3">Notes</h3>
-            <p className="text-[#A1A1B5] text-sm leading-relaxed whitespace-pre-wrap">{interaction.general_notes}</p>
-          </div>
-        )}
-
-        {/* Legacy: client-specific notes */}
-        {interaction.client_specific_notes?.length > 0 && (
-          <div className="space-y-3">
-            {interaction.client_specific_notes.map((csn, idx) => (
-              <div key={idx} className="bg-surface rounded-2xl border border-white/[0.06] p-5">
-                <div className="flex items-center gap-2 mb-3">
-                  <Building2 className="w-4 h-4 text-[#7F5BFF]" />
-                  <h3 className="text-white font-medium text-sm">{csn.client_name}</h3>
-                  {csn.tags?.map(tag => (
-                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] bg-[#7F5BFF]/10 text-[#7F5BFF]">{tag}</span>
-                  ))}
-                </div>
-                <p className="text-[#A1A1B5] text-sm leading-relaxed whitespace-pre-wrap">{csn.notes}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </div>
     </div>
   );

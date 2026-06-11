@@ -38,14 +38,6 @@ function extractClientNotes(interaction, clientId) {
       }
     });
   }
-  // Legacy fields
-  if (interaction.general_notes && interaction.general_notes_assigned_clients?.includes(clientId)) {
-    out.general.push(interaction.general_notes);
-  }
-  if (interaction.client_specific_notes?.length) {
-    const csn = interaction.client_specific_notes.find(n => n.client_id === clientId);
-    if (csn?.notes) out.client.push(csn.notes);
-  }
   return out;
 }
 
@@ -109,7 +101,6 @@ export default function ReportForm({ report, onSubmit, onCancel, isLoading }) {
       const relevantInteractions = interactions.filter(i =>
         reportClientIds.some(cid =>
           i.linked_clients?.includes(cid) ||
-          i.general_notes_assigned_clients?.includes(cid) ||
           i.notes?.some(n => !n.assigned_clients?.length || n.assigned_clients.includes(cid))
         )
       );
