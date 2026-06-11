@@ -1,20 +1,19 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { FileText, Search, Sparkles, Loader2, Download, Trash2 } from "lucide-react";
+import { FileText, Search, Trash2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import ReportForm from "@/components/reports/ReportForm";
-import ReportView from "@/components/reports/ReportView";
+import ReportEditor from "@/components/reports/ReportEditor";
 import { Input } from "@/components/ui/input";
 import { useSearchParams } from "react-router-dom";
 
 export default function Reports() {
   const [searchParams] = useSearchParams();
   const [showForm, setShowForm] = useState(searchParams.get("new") === "true");
-  const [editing, setEditing] = useState(null);
   const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -26,23 +25,34 @@ export default function Reports() {
   });
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Report.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["reports"] }); setShowForm(false); },
-  });
-
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Report.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["reports"] }); setEditing(null); setShowForm(false); setViewing(null); },
+    mutationFn: async (data) => {
+      const report = await base44.entities.Report.create(data);
+      // Each report carries an Internal and a Client version
+      await Promise.all(["Internal", "Client"].map(version =>
+        base44.entities.ReportVersion.create({
+          report_id: report.id,
+          report_title: report.title,
+          version,
+          status: "Draft",
+        })
+      ));
+      return report;
+    },
+    onSuccess: (report) => {
+      queryClient.invalidateQueries({ queryKey: ["reports"] });
+      setShowForm(false);
+      setViewing(report);
+    },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Report.delete(id),
+    mutationFn: async (id) => {
+      const versions = await base44.entities.ReportVersion.filter({ report_id: id });
+      await Promise.all(versions.map(v => base44.entities.ReportVersion.delete(v.id)));
+      await base44.entities.Report.delete(id);
+    },
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["reports"] }); setConfirmDelete(null); },
   });
-
-  const handleSubmit = (data) => {
-    editing ? updateMutation.mutate({ id: editing.id, data }) : createMutation.mutate(data);
-  };
 
   const filtered = reports.filter(r =>
     r.title?.toLowerCase().includes(search.toLowerCase()) ||
@@ -50,29 +60,22 @@ export default function Reports() {
   );
 
   if (viewing) {
-    return (
-      <ReportView
-        report={viewing}
-        onBack={() => setViewing(null)}
-        onEdit={() => { setEditing(viewing); setShowForm(true); setViewing(null); }}
-        onUpdate={(data) => updateMutation.mutate({ id: viewing.id, data })}
-      />
-    );
+    return <ReportEditor report={viewing} onBack={() => setViewing(null)} />;
   }
 
   return (
     <div>
-      <PageHeader title="Reports" subtitle="Monthly client reports" action={() => { setEditing(null); setShowForm(true); }} actionLabel="New Report" actionIcon={FileText} />
+      <PageHeader title="Reports" subtitle="Monthly client reports" action={() => setShowForm(true)} actionLabel="New Report" actionIcon={FileText} />
 
       {showForm && (
-        <ReportForm report={editing} onSubmit={handleSubmit} onCancel={() => { setShowForm(false); setEditing(null); }} isLoading={createMutation.isPending || updateMutation.isPending} />
+        <ReportForm onSubmit={(data) => createMutation.mutate(data)} onCancel={() => setShowForm(false)} isLoading={createMutation.isPending} />
       )}
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-surface rounded-2xl border border-white/[0.08] p-6 max-w-sm w-full mx-4 shadow-2xl">
             <h3 className="text-white font-medium mb-2">Delete Report</h3>
-            <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete <span className="text-white font-medium">{confirmDelete.title}</span>? This cannot be undone.</p>
+            <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete <span className="text-white font-medium">{confirmDelete.title}</span> and both its versions? This cannot be undone.</p>
             <div className="flex gap-3 justify-end">
               <button type="button" onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-[#6C6C80] hover:text-white transition-colors">Cancel</button>
               <button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="px-5 py-2 text-sm bg-[#FF5C7A] hover:bg-[#FF5C7A]/80 text-white rounded-xl">
@@ -104,8 +107,12 @@ export default function Reports() {
                 </div>
                 <StatusBadge status={report.status} />
               </div>
-              {report.activity_summary && (
-                <p className="text-[#6C6C80] text-xs mt-2 line-clamp-2">{report.activity_summary}</p>
+              {report.metrics ? (
+                <p className="text-[#6C6C80] text-xs mt-2">
+                  {report.metrics.interaction_count ?? 0} interactions · {report.metrics.actions_raised ?? 0} actions · {report.metrics.coverage_entries ?? 0} coverage
+                </p>
+              ) : (
+                <p className="text-[#6C6C80] text-xs mt-2 italic">No metrics yet — open to auto-draft</p>
               )}
             </div>
           ))}
