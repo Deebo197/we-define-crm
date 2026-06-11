@@ -131,14 +131,31 @@ Deno.serve(async (req) => {
     base44 = createClientFromRequest(req);
     const payload = await req.json();
 
-    const isAutomation = !!payload.event;
-    const entityName = isAutomation ? payload.event?.entity_name : (payload.entity_type || 'Expense');
-    entityId = isAutomation ? payload.event?.entity_id : payload.entity_id;
-    const data = isAutomation ? payload.data : payload;
-    // Normalise: accept "Expense", "expense", "MileageJourney", "mileage"
-    entityType = (entityName === 'Expense' || entityName === 'expense') ? 'expense' : 'mileage';
+    // Accept every payload shape Base44 automations or direct invocations produce:
+    // { event: {entity_name, entity_id}, data }, { event: {..., data } }, { record },
+    // or the record fields at the top level.
+    const event = payload.event || {};
+    const entityName =
+      event.entity_name || event.entityName || payload.entity_type || payload.entity_name ||
+      (payload.vehicle_type || payload.record?.vehicle_type ? 'MileageJourney' : 'Expense');
+    entityId =
+      event.entity_id || event.entityId || event.record_id || payload.entity_id ||
+      payload.record?.id || payload.data?.id || payload.id;
+    let data = payload.data || event.data || payload.record || (payload.event ? null : payload);
+    entityType = /mileage/i.test(String(entityName)) ? 'mileage' : 'expense';
 
-    if (!data) return Response.json({ error: 'No data' }, { status: 400 });
+    // Automation payloads sometimes omit the record — fetch it by id instead of giving up.
+    if ((!data || (!data.receipt_code && !data.receipt_file && !data.receipt_files)) && entityId) {
+      const matches = entityType === 'expense'
+        ? await base44.asServiceRole.entities.Expense.filter({ id: entityId })
+        : await base44.asServiceRole.entities.MileageJourney.filter({ id: entityId });
+      if (matches.length > 0) data = matches[0];
+    }
+
+    if (!data) {
+      await flagSyncFailed(base44, entityType, entityId);
+      return Response.json({ error: 'No data and record not found', entityId }, { status: 400 });
+    }
 
     const receiptCode = data.receipt_code;
     const paidBy = data.paid_by;
