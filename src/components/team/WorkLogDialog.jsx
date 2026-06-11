@@ -62,7 +62,7 @@ export default function WorkLogDialog({ open, onClose, log, date, member }) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-sm bg-surface border-line">
+      <DialogContent className="max-w-sm bg-surface border-line max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-ink">
             {log ? "Edit hours" : "Log hours"} — {member.full_name?.split(" ")[0]}, {format(parseISO(date), "EEE d MMM")}

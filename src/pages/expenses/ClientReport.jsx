@@ -280,7 +280,7 @@ export default function ClientReport() {
       {/* Preview */}
       {showPreview && (
         <>
-          <div className="flex justify-end gap-3 mb-4">
+          <div className="flex justify-end gap-3 mb-4 flex-wrap">
             {clientCode === "SO" && (
               <Button
                 variant="outline"
@@ -298,7 +298,8 @@ export default function ClientReport() {
             </Button>
           </div>
 
-          <div ref={reportRef} className="bg-white text-black p-8 max-w-4xl mx-auto" style={{ fontFamily: "Inter, sans-serif" }}>
+          <div className="overflow-x-auto">
+          <div ref={reportRef} className="bg-white text-black p-8 max-w-4xl min-w-[640px] mx-auto" style={{ fontFamily: "Inter, sans-serif" }}>
             {/* Header */}
             <div className="flex justify-between items-start mb-6">
               <div>
@@ -413,6 +414,7 @@ export default function ClientReport() {
             <div className="mt-6 pt-3 border-t border-gray-200 text-xs text-gray-400 text-center">
               {COMPANY_INFO.name} | Registered in England & Wales No. {COMPANY_INFO.regNumber} | VAT No. {COMPANY_INFO.vatNumber}
             </div>
+          </div>
           </div>
         </>
       )}

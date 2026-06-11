@@ -103,7 +103,7 @@ export default function PriceEntryGrid({
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 min-w-[720px]">
       {/* Header */}
       <div className="grid grid-cols-12 gap-2 px-3 text-[10px] font-medium uppercase tracking-wider text-faint">
         <div className="col-span-3">Hotel</div>

@@ -560,7 +560,7 @@ export default function TradeAccounts() {
       )}
 
       {/* Mode tabs */}
-      <div className="flex gap-2 mb-5 animate-fade-in-up">
+      <div className="flex gap-2 flex-wrap mb-5 animate-fade-in-up">
         {[
           { key: "browse", label: "Browse", icon: List },
           { key: "visit",  label: "Plan a Visit", icon: Navigation },

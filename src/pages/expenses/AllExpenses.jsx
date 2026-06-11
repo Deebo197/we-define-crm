@@ -124,9 +124,9 @@ export default function AllExpenses() {
   return (
     <AnimatedPage>
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-ink tracking-tight">All Expenses</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
         {selectedIds.length > 0 && (
           <>
             {selectedIds.length === 1 && (
@@ -195,7 +195,7 @@ export default function AllExpenses() {
 
       {/* Table */}
       <div className="bg-card rounded-xl border border-border overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[1000px] text-sm">
           <thead>
             <tr className="bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
             <th className="p-3 w-10 text-center align-bottom pb-2">
@@ -310,7 +310,7 @@ export default function AllExpenses() {
 
       {/* Detail dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Expense Detail</DialogTitle>
           </DialogHeader>

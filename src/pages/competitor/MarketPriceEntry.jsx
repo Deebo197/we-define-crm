@@ -206,7 +206,7 @@ export default function MarketPriceEntry() {
 
       {/* Operator Tabs */}
       <Tabs value={selectedOperatorId} onValueChange={setSelectedOperatorId}>
-        <TabsList className="bg-surface border border-line">
+        <TabsList className="bg-surface border border-line h-auto flex-wrap">
           {scenarioOperators.map(op => (
             <TabsTrigger key={op.id} value={op.id} className="text-xs">{op.name}</TabsTrigger>
           ))}

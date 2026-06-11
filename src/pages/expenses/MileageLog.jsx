@@ -262,9 +262,9 @@ export default function MileageLog() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
         <h1 className="text-2xl font-semibold text-ink tracking-tight">Mileage Log</h1>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
           {selectedIds.length === 1 && (
             <Button size="sm" variant="outline" onClick={() => openEdit(filtered.find(j => j.id === selectedIds[0]))}>
               <Pencil className="h-4 w-4 mr-1" /> Edit
@@ -304,7 +304,7 @@ export default function MileageLog() {
 
       {/* Journey list */}
       <div className="bg-card rounded-xl border border-border overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[860px] text-sm">
           <thead>
             <tr className="bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               <th className="p-3 w-10">

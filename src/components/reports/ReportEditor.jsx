@@ -380,10 +380,10 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 bg-surface rounded-xl border border-line w-fit">
+      <div className="flex gap-1 mb-6 p-1 bg-surface rounded-xl border border-line w-fit max-w-full overflow-x-auto">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? "bg-primary/15 text-primary" : "text-faint hover:text-ink"}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all ${tab === t.id ? "bg-primary/15 text-primary" : "text-faint hover:text-ink"}`}>
             {t.label}
           </button>
         ))}

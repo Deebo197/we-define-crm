@@ -22,6 +22,11 @@ import Reports from '@/pages/Reports';
 import TeamMembers from '@/pages/TeamMembers';
 import ImportTradeAccounts from '@/pages/ImportTradeAccounts';
 import ImportContacts from '@/pages/ImportContacts';
+import Todos from '@/pages/Todos';
+
+// Document library
+import Documents from '@/pages/Documents';
+import ClientDocuments from '@/pages/ClientDocuments';
 
 // Expenses module
 import AdminRoute from '@/components/expenses/AdminRoute';
@@ -83,6 +88,9 @@ const AuthenticatedApp = () => {
         <Route path="/campaigns" element={<Campaigns />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/team" element={<TeamMembers />} />
+        <Route path="/todos" element={<Todos />} />
+        <Route path="/documents" element={<Documents />} />
+        <Route path="/documents/:clientId" element={<ClientDocuments />} />
         <Route path="/import-trade-accounts" element={<ImportTradeAccounts />} />
         <Route path="/import-contacts" element={<ImportContacts />} />
         {/* Expenses module */}

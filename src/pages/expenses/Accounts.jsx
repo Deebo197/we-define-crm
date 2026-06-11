@@ -353,7 +353,7 @@ ${csvText}`,
 
         <TabsContent value={tab} className="mt-4">
           <div className="bg-card rounded-xl border border-border overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full min-w-[880px] text-xs">
               <thead>
                 <tr className="bg-muted/50 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                    <th className="px-2 py-2 text-left whitespace-nowrap">Date</th>
@@ -529,7 +529,7 @@ ${csvText}`,
       {/* Client split dialog */}
       {splitDialogTxn && (
         <Dialog open={!!splitDialogTxn} onOpenChange={() => setSplitDialogTxn(null)}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Split Client Allocation</DialogTitle>
             </DialogHeader>
@@ -598,7 +598,7 @@ ${csvText}`,
 
       {/* Reorganise confirmation dialog */}
       <Dialog open={reorgConfirmOpen} onOpenChange={setReorgConfirmOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Reorganise Drive receipts?</DialogTitle>
           </DialogHeader>

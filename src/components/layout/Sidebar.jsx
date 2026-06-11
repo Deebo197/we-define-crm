@@ -1,87 +1,10 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  LayoutDashboard,
-  Building2,
-  Handshake,
-  Globe,
-  Users,
-  Users2,
-  MessageSquare,
-  CheckSquare,
-  Megaphone,
-  FileText,
-  Gauge,
-  Receipt,
-  FolderOpen,
-  ChevronLeft,
-  ChevronRight,
-  LogOut,
-  PlusCircle,
-  Inbox,
-  MapPin,
-  CreditCard,
-  List,
-  Landmark,
-  PieChart,
-  HelpCircle,
-  BarChart3,
-  PoundSterling,
-  Settings
-} from "lucide-react";
+import { ChevronLeft, ChevronRight, ChevronDown, LogOut } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import ProfileCodePicker from "@/components/expenses/ProfileCodePicker";
-
-const navGroups = [
-  {
-    label: "CRM",
-    items: [
-      { label: "Dashboard", icon: LayoutDashboard, path: "/" },
-      { label: "Clients", icon: Building2, path: "/clients" },
-      { label: "Trade Accounts", icon: Handshake, path: "/trade-accounts" },
-      { label: "Other Partners", icon: Globe, path: "/other-partners" },
-      { label: "Contacts", icon: Users, path: "/contacts" },
-      { label: "Interactions", icon: MessageSquare, path: "/interactions" },
-      { label: "Actions", icon: CheckSquare, path: "/actions" },
-      { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
-      { label: "Team", icon: Users2, path: "/team" },
-    ],
-  },
-  {
-    label: "Reporting",
-    items: [{ label: "Reports", icon: FileText, path: "/reports" }],
-  },
-  {
-    label: "Competitor Analysis",
-    items: [
-      { label: "Overview", icon: Gauge, path: "/competitor-analysis" },
-      { label: "New Scenario", icon: PlusCircle, path: "/competitor-analysis/new-scenario" },
-      { label: "Price Entry", icon: PoundSterling, path: "/competitor-analysis/price-entry" },
-      { label: "Analysis", icon: BarChart3, path: "/competitor-analysis/analysis" },
-      { label: "Admin", icon: Settings, path: "/competitor-analysis/admin", adminOnly: true },
-    ],
-  },
-  {
-    label: "Expenses",
-    items: [
-      { label: "Overview", icon: PieChart, path: "/expenses" },
-      { label: "Submit Expense", icon: PlusCircle, path: "/expenses/submit" },
-      { label: "My Expenses", icon: Receipt, path: "/expenses/mine" },
-      { label: "Receipt Inbox", icon: Inbox, path: "/expenses/inbox" },
-      { label: "Mileage", icon: MapPin, path: "/expenses/mileage" },
-      { label: "Reimbursements", icon: CreditCard, path: "/expenses/reimbursements" },
-      { label: "All Expenses", icon: List, path: "/expenses/all", adminOnly: true },
-      { label: "Accounts", icon: Landmark, path: "/expenses/accounts", adminOnly: true },
-      { label: "Client Report", icon: FileText, path: "/expenses/client-report", adminOnly: true },
-      { label: "Help & Guide", icon: HelpCircle, path: "/expenses/help" },
-    ],
-  },
-  {
-    label: "Documents",
-    items: [{ label: "Document Library", icon: FolderOpen, soon: true }],
-  },
-];
+import { navGroups, isItemActive, useCollapsedGroups } from "./navGroups";
 
 function SoonPill() {
   return (
@@ -96,6 +19,7 @@ export default function Sidebar() {
   const location = useLocation();
   const { user, isLoadingAuth } = useAuth();
   const isAdmin = user?.role === "admin";
+  const { collapsedGroups, toggleGroup } = useCollapsedGroups(location.pathname);
 
   return (
     <aside
@@ -114,59 +38,79 @@ export default function Sidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 py-4 px-3 overflow-y-auto">
-        {navGroups.map((group) => (
-          <div key={group.label} className="mb-4">
-            {!collapsed && (
-              <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-faint">
-                {group.label}
-              </p>
-            )}
-            <div className="space-y-0.5">
-              {group.items
-                .filter((item) => !item.adminOnly || isAdmin || isLoadingAuth)
-                .map((item) => {
-                if (item.soon) {
-                  return (
-                    <div
-                      key={item.label}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-faint cursor-default select-none"
-                      title={`${item.label} — coming soon`}
-                    >
-                      <item.icon className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
-                      {!collapsed && (
-                        <>
-                          <span>{item.label}</span>
-                          <SoonPill />
-                        </>
-                      )}
-                    </div>
-                  );
-                }
-                const isActive =
-                  location.pathname === item.path ||
-                  (item.path !== "/" && item.path !== "/expenses" && item.path !== "/competitor-analysis" && location.pathname.startsWith(item.path));
-                return (
-                  <Link
-                    key={item.path}
-                    to={item.path}
-                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                      isActive
-                        ? "bg-primary-soft text-primary"
-                        : "text-muted hover:text-ink hover:bg-black/[0.03]"
+        {navGroups.map((group) => {
+          // In icon-only mode group toggling is hidden and items always show.
+          const isGroupCollapsed = !collapsed && !!collapsedGroups[group.label];
+          return (
+            <div key={group.label} className="mb-4">
+              {!collapsed && (
+                <button
+                  type="button"
+                  onClick={() => toggleGroup(group.label)}
+                  aria-expanded={!isGroupCollapsed}
+                  className="w-full flex items-center justify-between px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-faint hover:text-muted transition-colors duration-200"
+                >
+                  <span>{group.label}</span>
+                  <ChevronDown
+                    className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-300 ${
+                      isGroupCollapsed ? "-rotate-90" : ""
                     }`}
-                  >
-                    <item.icon
-                      className={`w-[18px] h-[18px] flex-shrink-0 ${
-                        isActive ? "text-primary" : "text-faint group-hover:text-muted"
-                      }`}
-                    />
-                    {!collapsed && <span>{item.label}</span>}
-                  </Link>
-                );
-              })}
+                  />
+                </button>
+              )}
+              <div
+                className={`grid transition-[grid-template-rows] duration-300 ${
+                  isGroupCollapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
+                }`}
+              >
+                <div className="overflow-hidden">
+                  <div className="space-y-0.5">
+                    {group.items
+                      .filter((item) => !item.adminOnly || isAdmin || isLoadingAuth)
+                      .map((item) => {
+                        if (item.soon) {
+                          return (
+                            <div
+                              key={item.label}
+                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-faint cursor-default select-none"
+                              title={`${item.label} — coming soon`}
+                            >
+                              <item.icon className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
+                              {!collapsed && (
+                                <>
+                                  <span>{item.label}</span>
+                                  <SoonPill />
+                                </>
+                              )}
+                            </div>
+                          );
+                        }
+                        const isActive = isItemActive(item, location.pathname);
+                        return (
+                          <Link
+                            key={item.path}
+                            to={item.path}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                              isActive
+                                ? "bg-primary-soft text-primary"
+                                : "text-muted hover:text-ink hover:bg-black/[0.03]"
+                            }`}
+                          >
+                            <item.icon
+                              className={`w-[18px] h-[18px] flex-shrink-0 ${
+                                isActive ? "text-primary" : "text-faint group-hover:text-muted"
+                              }`}
+                            />
+                            {!collapsed && <span>{item.label}</span>}
+                          </Link>
+                        );
+                      })}
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </nav>
 
       {/* Footer */}

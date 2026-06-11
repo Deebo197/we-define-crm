@@ -572,7 +572,7 @@ export default function MyExpenses() {
 
       {/* Detail dialog */}
       <Dialog open={!!selected} onOpenChange={() => setSelected(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Expense Detail</DialogTitle>
           </DialogHeader>

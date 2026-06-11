@@ -76,7 +76,7 @@ export default function LeaveEntryDialog({ open, onClose, entry, defaultDate, me
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
-      <DialogContent className="max-w-md bg-surface border-line">
+      <DialogContent className="max-w-md bg-surface border-line max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-ink">
             {!entry ? "Add leave" : canEdit ? "Edit leave" : "Leave details"}
