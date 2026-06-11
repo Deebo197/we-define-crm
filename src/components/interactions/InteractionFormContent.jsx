@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { listActiveTradeAccounts } from "@/api/tradeAccounts";
@@ -6,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap } from "lucide-react";
+import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap, Search, Plus, User } from "lucide-react";
+import { toast } from "sonner";
 
 const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 const types = ["Meeting (In-Person)", "Meeting (Virtual)", "Call", "Email", "Event", "FAM Feedback", "Marketing Discussion"];
@@ -23,7 +23,7 @@ function isCrossroads(name) {
 function CrossroadsTag({ value, onChange }) {
   const tags = ["Hard Rock", "SAii", "Both (CROSSROADS)"];
   return (
-    <div className="flex gap-1.5 mt-2">
+    <div className="flex flex-wrap gap-1.5 mt-2">
       {tags.map(t => (
         <button key={t} type="button" onClick={() => onChange(value === t ? "" : t)}
           className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold tracking-wide border transition-all ${
@@ -50,6 +50,138 @@ function ClientChip({ client, selected, onToggle }) {
       }`}>
       {client.name}
     </button>
+  );
+}
+
+// Section card with a small uppercase heading
+function Section({ title, action, children }) {
+  return (
+    <section className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-3">
+      <div className="flex items-center justify-between gap-2">
+        <h2 className="text-[11px] font-semibold uppercase tracking-wider text-faint">{title}</h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+// Contact picker: never lists all 2,000+ contacts.
+// Shows the selected company's contacts as quick-select chips, plus a
+// type-ahead search (2+ chars, max 8 results) over the cached list.
+function ContactPicker({ contacts, companyName, companyId, contactIds, contactNames, onAdd, onRemove }) {
+  const [query, setQuery] = useState("");
+  const [open, setOpen] = useState(false);
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Contacts at the selected company: prefer company_id, fall back to name match
+  const companyContacts = useMemo(() => {
+    if (companyId) {
+      const byId = contacts.filter(c => c.company_id === companyId);
+      if (byId.length > 0) return byId;
+    }
+    const cn = (companyName || "").trim().toLowerCase();
+    if (!cn) return [];
+    return contacts.filter(c => (c.company_name || "").trim().toLowerCase() === cn);
+  }, [contacts, companyId, companyName]);
+
+  const quickPicks = companyContacts.filter(c => !contactIds.includes(c.id)).slice(0, 20);
+
+  const q = query.trim().toLowerCase();
+  const searchMatches = q.length >= 2
+    ? contacts
+        .filter(c => !contactIds.includes(c.id))
+        .filter(c => c.name?.toLowerCase().includes(q))
+        .slice(0, 8)
+    : [];
+
+  // Selected pills — name from cache when available, fall back to stored names
+  const selected = contactIds.map((id, i) => {
+    const c = contacts.find(x => x.id === id);
+    return { id, name: c?.name || contactNames[i] || "Unknown contact", company: c?.company_name || "" };
+  });
+
+  const cn = (companyName || "").trim().toLowerCase();
+
+  return (
+    <div className="space-y-3">
+      {/* Selected contacts */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {selected.map(p => (
+            <span key={p.id} className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-xl text-xs font-medium bg-success/15 text-success border border-success/30 max-w-full">
+              <span className="truncate">{p.name}</span>
+              {p.company && p.company.trim().toLowerCase() !== cn && (
+                <span className="text-success/70 text-[10px] truncate">· {p.company}</span>
+              )}
+              <button type="button" onClick={() => onRemove(p.id)} aria-label={`Remove ${p.name}`}
+                className="rounded-full p-0.5 hover:bg-success/20 transition-colors shrink-0">
+                <X className="w-3 h-3" />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Quick picks from the selected company */}
+      {quickPicks.length > 0 && (
+        <div>
+          <p className="text-faint text-[11px] mb-1.5">Contacts at {companyName}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {quickPicks.map(c => (
+              <button key={c.id} type="button" onClick={() => onAdd(c)}
+                className="px-2.5 py-1 rounded-xl text-xs font-medium border bg-canvas text-muted border-line hover:border-success/40 hover:text-success transition-all">
+                + {c.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Type-ahead search over all contacts */}
+      <div ref={searchRef} className="relative">
+        <Search className="w-3.5 h-3.5 text-faint absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+        <Input
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Search all contacts…"
+          autoComplete="off"
+          className={`${inputClass} pl-8 h-9 text-sm`}
+        />
+        {open && q.length >= 2 && (
+          <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-surface border border-line rounded-xl shadow-xl overflow-hidden">
+            {searchMatches.length === 0 ? (
+              <p className="px-3 py-2.5 text-xs text-faint">No contacts match “{query}”</p>
+            ) : (
+              searchMatches.map(c => (
+                <button key={c.id} type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { onAdd(c); setQuery(""); setOpen(false); }}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-black/[0.03] transition-colors group">
+                  <User className="w-3.5 h-3.5 text-faint shrink-0" />
+                  <span className="text-ink text-sm group-hover:text-primary transition-colors truncate">{c.name}</span>
+                  {c.company_name && (
+                    <span className="text-faint text-[10px] bg-canvas px-2 py-0.5 rounded-full ml-auto shrink-0 max-w-[140px] truncate">{c.company_name}</span>
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+      {q.length > 0 && q.length < 2 && (
+        <p className="text-faint text-[11px]">Type 2+ letters to search contacts</p>
+      )}
+    </div>
   );
 }
 
@@ -116,9 +248,16 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   const queryClient = useQueryClient();
   const [aiLoading, setAiLoading] = useState(false);
   const [showTranscript, setShowTranscript] = useState(!interaction);
+  const [showCampaigns, setShowCampaigns] = useState((interaction?.linked_campaigns?.length || 0) > 0);
 
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
-  const { data: contacts = [] } = useQuery({ queryKey: ["contacts"], queryFn: () => base44.entities.Contact.list() });
+  // Shared contacts cache (same key + queryFn as Todos / Contacts) — 2,000+
+  // records fetched once and searched client-side; never rendered in full.
+  const { data: contacts = [] } = useQuery({
+    queryKey: ["contacts"],
+    queryFn: () => base44.entities.Contact.list("-created_date"),
+    staleTime: 10 * 60 * 1000,
+  });
   const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });
   const { data: teamMembers = [] } = useQuery({ queryKey: ["team-members"], queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }) });
   const { data: tradeAccounts = [] } = useQuery({ queryKey: ["trade-accounts"], queryFn: () => listActiveTradeAccounts() });
@@ -132,6 +271,8 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     date: interaction?.date || new Date().toISOString().split("T")[0],
     type: interaction?.type || "Meeting (Virtual)",
     company_name: interaction?.company_name || "",
+    company_id: interaction?.company_id || "",
+    company_type: interaction?.company_type || "",
     contact_ids: interaction?.contact_ids || [],
     contact_names: interaction?.contact_names || [],
     internal_team: interaction?.internal_team || [],
@@ -171,7 +312,11 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
       : base44.entities.Interaction.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["interactions"] });
+      toast.success(interaction ? "Interaction updated" : "Interaction logged");
       onSuccess?.();
+    },
+    onError: () => {
+      toast.error("Couldn’t save the interaction — please try again");
     },
   });
 
@@ -196,13 +341,27 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     }
   };
 
-  const toggleContact = (contact) => {
-    const isLinked = form.contact_ids.includes(contact.id);
-    setForm(prev => ({
-      ...prev,
-      contact_ids: isLinked ? prev.contact_ids.filter(id => id !== contact.id) : [...prev.contact_ids, contact.id],
-      contact_names: isLinked ? prev.contact_names.filter(n => n !== contact.name) : [...prev.contact_names, contact.name],
-    }));
+  const addContact = (contact) => {
+    setForm(prev => {
+      if (prev.contact_ids.includes(contact.id)) return prev;
+      return {
+        ...prev,
+        contact_ids: [...prev.contact_ids, contact.id],
+        contact_names: [...prev.contact_names, contact.name],
+      };
+    });
+  };
+
+  const removeContact = (contactId) => {
+    setForm(prev => {
+      const idx = prev.contact_ids.indexOf(contactId);
+      if (idx === -1) return prev;
+      return {
+        ...prev,
+        contact_ids: prev.contact_ids.filter(id => id !== contactId),
+        contact_names: prev.contact_names.filter((_, i) => i !== idx),
+      };
+    });
   };
 
   const toggleCampaign = (campaign) => {
@@ -312,116 +471,121 @@ Return a JSON array of note objects. Each object must have:
     createMutation.mutate(form);
   };
 
-  const linkedClients = clients.filter(c => form.linked_clients.includes(c.id));
-
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up">
+    <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up pb-2">
 
-      {/* ── Meta ── */}
-      <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-4">
+      {/* ① Basics */}
+      <Section title="Basics">
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="sm:col-span-2">
-            <Label className="text-muted text-xs mb-1.5">Title *</Label>
-            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} required placeholder="e.g. Call with Kuoni re: Maldives Summer" />
-          </div>
           <div>
             <Label className="text-muted text-xs mb-1.5">Date</Label>
             <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
           </div>
           <div>
-            <Label className="text-muted text-xs mb-1.5">Type</Label>
-            <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
-              <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-surface-elevated border-line">
-                {types.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div ref={companyRef} className="relative">
-            <Label className="text-muted text-xs mb-1.5">Company / Organisation</Label>
-            <Input
-              value={form.company_name}
-              onChange={(e) => { setForm({ ...form, company_name: e.target.value }); setCompanyOpen(true); }}
-              onFocus={() => setCompanyOpen(true)}
-              className={inputClass}
-              placeholder="e.g. Kuoni, Audley Travel…"
-              autoComplete="off"
-            />
-            {companyOpen && companySuggestions.length > 0 && (
-              <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-surface border border-line rounded-xl shadow-xl overflow-hidden">
-                {companySuggestions.map(s => (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onMouseDown={(e) => e.preventDefault()}
-                    onClick={() => { setForm(prev => ({ ...prev, company_name: s.name, company_id: s.id, company_type: s.source === "trade" ? "TradeAccount" : "OtherPartner" })); setCompanyOpen(false); }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-black/[0.03] transition-colors group"
-                  >
-                    <span className="text-ink text-sm group-hover:text-primary transition-colors">{s.name}</span>
-                    <span className="text-faint text-[10px] bg-canvas px-2 py-0.5 rounded-full">{s.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          <div>
             <Label className="text-muted text-xs mb-1.5">Next Action Date</Label>
             <Input type="date" value={form.next_action_date} onChange={(e) => setForm({ ...form, next_action_date: e.target.value })} className={inputClass} />
           </div>
-        </div>
-
-        {/* Clients */}
-        <div>
-          <Label className="text-muted text-xs mb-2 block">Clients in this meeting</Label>
-          <div className="flex flex-wrap gap-2">
-            {clients.map(c => <ClientChip key={c.id} client={c} selected={form.linked_clients.includes(c.id)} onToggle={toggleClient} />)}
-          </div>
-        </div>
-
-        {/* Contacts */}
-        {contacts.length > 0 && (
-          <div>
-            <Label className="text-muted text-xs mb-2 block">Contacts present</Label>
-            <div className="flex flex-wrap gap-2">
-              {contacts.map(c => (
-                <button key={c.id} type="button" onClick={() => toggleContact(c)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.contact_ids.includes(c.id) ? "bg-success/20 text-success border-success/30" : "bg-canvas text-faint border-line hover:border-line-strong"}`}>
-                  {c.name}
+          <div className="sm:col-span-2">
+            <Label className="text-muted text-xs mb-1.5 block">Type</Label>
+            <div className="flex flex-wrap gap-1.5">
+              {types.map(t => (
+                <button key={t} type="button" onClick={() => setForm({ ...form, type: t })}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+                    form.type === t
+                      ? "bg-primary/20 text-primary border-primary/30"
+                      : "bg-canvas text-faint border-line hover:border-line-strong"
+                  }`}>
+                  {t}
                 </button>
               ))}
             </div>
           </div>
-        )}
-
-        {/* Internal Team */}
-        <div>
-          <Label className="text-muted text-xs mb-1.5">WDT Team</Label>
-          <div className="flex flex-wrap gap-2">
-            {teamMembers.map(m => (
-              <button key={m.id} type="button" onClick={() => {
-                const isIn = form.internal_team.includes(m.full_name);
-                setForm(prev => ({
-                  ...prev,
-                  internal_team: isIn
-                    ? prev.internal_team.filter(n => n !== m.full_name)
-                    : [...prev.internal_team, m.full_name],
-                }));
-              }}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
-                  form.internal_team.includes(m.full_name)
-                    ? "bg-primary/20 text-primary border-primary/30"
-                    : "bg-canvas text-faint border-line hover:border-line-strong"
-                }`}>
-                {m.full_name}
-              </button>
-            ))}
+          <div className="sm:col-span-2">
+            <Label className="text-muted text-xs mb-1.5">Title *</Label>
+            <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} required placeholder="e.g. Kuoni product meeting" />
           </div>
         </div>
+      </Section>
 
-        {/* Campaigns */}
-        {campaigns.length > 0 && (
-          <div>
-            <Label className="text-muted text-xs mb-2 block">Linked Campaigns</Label>
+      {/* ② Company & contacts */}
+      <Section title="Company & Contacts">
+        <div ref={companyRef} className="relative">
+          <Label className="text-muted text-xs mb-1.5">Company / Organisation</Label>
+          <Input
+            value={form.company_name}
+            onChange={(e) => { setForm({ ...form, company_name: e.target.value, company_id: "", company_type: "" }); setCompanyOpen(true); }}
+            onFocus={() => setCompanyOpen(true)}
+            className={inputClass}
+            placeholder="e.g. Kuoni, Audley Travel…"
+            autoComplete="off"
+          />
+          {companyOpen && companySuggestions.length > 0 && (
+            <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-surface border border-line rounded-xl shadow-xl overflow-hidden">
+              {companySuggestions.map(s => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={() => { setForm(prev => ({ ...prev, company_name: s.name, company_id: s.id, company_type: s.source === "trade" ? "TradeAccount" : "OtherPartner" })); setCompanyOpen(false); }}
+                  className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-black/[0.03] transition-colors group"
+                >
+                  <span className="text-ink text-sm group-hover:text-primary transition-colors">{s.name}</span>
+                  <span className="text-faint text-[10px] bg-canvas px-2 py-0.5 rounded-full">{s.label}</span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          <Label className="text-muted text-xs mb-1.5 block">Contacts present</Label>
+          <ContactPicker
+            contacts={contacts}
+            companyName={form.company_name}
+            companyId={form.company_id}
+            contactIds={form.contact_ids}
+            contactNames={form.contact_names}
+            onAdd={addContact}
+            onRemove={removeContact}
+          />
+        </div>
+      </Section>
+
+      {/* ③ WDT clients */}
+      <Section title="WDT Clients">
+        <div className="flex flex-wrap gap-2">
+          {clients.map(c => <ClientChip key={c.id} client={c} selected={form.linked_clients.includes(c.id)} onToggle={toggleClient} />)}
+        </div>
+      </Section>
+
+      {/* ④ Internal team */}
+      <Section title="WDT Team">
+        <div className="flex flex-wrap gap-2">
+          {teamMembers.map(m => (
+            <button key={m.id} type="button" onClick={() => {
+              const isIn = form.internal_team.includes(m.full_name);
+              setForm(prev => ({
+                ...prev,
+                internal_team: isIn
+                  ? prev.internal_team.filter(n => n !== m.full_name)
+                  : [...prev.internal_team, m.full_name],
+              }));
+            }}
+              className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+                form.internal_team.includes(m.full_name)
+                  ? "bg-primary/20 text-primary border-primary/30"
+                  : "bg-canvas text-faint border-line hover:border-line-strong"
+              }`}>
+              {m.full_name}
+            </button>
+          ))}
+        </div>
+      </Section>
+
+      {/* ⑤ Campaigns — collapsed behind a subtle affordance when none linked */}
+      {campaigns.length > 0 && (
+        showCampaigns || form.linked_campaigns.length > 0 ? (
+          <Section title="Campaigns">
             <div className="flex flex-wrap gap-2">
               {campaigns.map(c => (
                 <button key={c.id} type="button" onClick={() => toggleCampaign(c)}
@@ -430,24 +594,31 @@ Return a JSON array of note objects. Each object must have:
                 </button>
               ))}
             </div>
-          </div>
-        )}
-      </div>
-
-      {/* ── Transcript + AI ── */}
-      <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <button type="button" onClick={() => setShowTranscript(v => !v)} className="flex items-center gap-2 text-ink font-medium text-sm">
-            {showTranscript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            Paste Notes / Transcript
+          </Section>
+        ) : (
+          <button type="button" onClick={() => setShowCampaigns(true)}
+            className="flex items-center gap-1.5 px-1 text-xs text-faint hover:text-primary transition-colors">
+            <Plus className="w-3.5 h-3.5" /> Link campaign
           </button>
+        )
+      )}
+
+      {/* ⑥ Notes — transcript + AI */}
+      <Section
+        title="Notes"
+        action={
           <Button type="button" onClick={handleAiRewrite}
             disabled={aiLoading || (!form.raw_transcript)}
             className="bg-primary hover:bg-primary-hover text-white rounded-xl px-4 h-8 text-xs gap-1">
             {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
             {aiLoading ? "Processing…" : "AI Parse & Rewrite"}
           </Button>
-        </div>
+        }
+      >
+        <button type="button" onClick={() => setShowTranscript(v => !v)} className="flex items-center gap-2 text-ink font-medium text-sm">
+          {showTranscript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+          Paste Notes / Transcript
+        </button>
         {showTranscript && (
           <Textarea
             value={form.raw_transcript}
@@ -459,12 +630,9 @@ Return a JSON array of note objects. Each object must have:
         {form.raw_transcript && !showTranscript && (
           <p className="text-faint text-xs">Transcript saved · <button type="button" className="text-primary hover:underline" onClick={() => setShowTranscript(true)}>show</button></p>
         )}
-      </div>
 
-      {/* ── Notes ── */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-ink font-medium text-sm">Notes <span className="text-faint font-normal">({form.notes.length})</span></h3>
+        <div className="flex items-center justify-between pt-1">
+          <h3 className="text-ink font-medium text-sm">Note blocks <span className="text-faint font-normal">({form.notes.length})</span></h3>
           <div className="flex gap-1.5">
             {[
               { type: "general", label: "+ General", color: "text-muted" },
@@ -498,12 +666,15 @@ Return a JSON array of note objects. Each object must have:
             onRemove={() => removeNote(idx)}
           />
         ))}
-      </div>
+      </Section>
 
-      <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" disabled={createMutation.isPending} className="bg-primary hover:bg-primary-hover text-white rounded-xl px-8 h-11">
-          {createMutation.isPending ? "Saving…" : interaction ? "Update Interaction" : "Save Interaction"}
-        </Button>
+      {/* Sticky submit bar */}
+      <div className="sticky bottom-0 z-20 -mx-1 px-1">
+        <div className="bg-surface border-t border-line rounded-t-2xl shadow-card px-5 py-3 flex justify-end">
+          <Button type="submit" disabled={createMutation.isPending} className="bg-primary hover:bg-primary-hover text-white rounded-xl px-8 h-11">
+            {createMutation.isPending ? "Saving…" : interaction ? "Save Changes" : "Log Interaction"}
+          </Button>
+        </div>
       </div>
     </form>
   );
