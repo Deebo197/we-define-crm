@@ -1,52 +1,103 @@
-import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Users2, Search, Mail, Phone } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 import PageHeader from "@/components/ui/PageHeader";
-import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
-import StatusBadge from "@/components/ui/StatusBadge";
 import TeamMemberForm from "@/components/team/TeamMemberForm";
-import { Input } from "@/components/ui/input";
+import WhosAwayStrip from "@/components/team/WhosAwayStrip";
+import LeaveSummaryCards from "@/components/team/LeaveSummaryCards";
+import LeaveCalendar from "@/components/team/LeaveCalendar";
+import LeaveEntryDialog from "@/components/team/LeaveEntryDialog";
+import WorkingHoursWeek from "@/components/team/WorkingHoursWeek";
+import MemberCards from "@/components/team/MemberCards";
+import { DEFAULT_COLOURS, dayKey, emailsMatch, useBankHolidays } from "@/components/team/teamUtils";
+import { toast } from "sonner";
 
+// Team page: who's away, leave summary, calendar, working hours, member cards.
 export default function TeamMembers() {
+  const { user } = useAuth();
+  const isAdmin = user?.role === "admin";
+  const queryClient = useQueryClient();
+
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
-  const [search, setSearch] = useState("");
-  const queryClient = useQueryClient();
+  const [leaveDialog, setLeaveDialog] = useState(null); // { entry } | { date }
 
   const { data: members = [], isLoading } = useQuery({
     queryKey: ["team-members"],
-    queryFn: () => base44.entities.TeamMember.list("-created_date"),
+    queryFn: () => base44.entities.TeamMember.list("created_date"),
   });
+
+  const { data: leaveEntries = [] } = useQuery({
+    queryKey: ["leave-entries"],
+    queryFn: () => base44.entities.LeaveEntry.list("-start_date", 1000),
+  });
+
+  const { data: bankHolidays = [] } = useBankHolidays();
+  const holidaySet = useMemo(() => new Set(bankHolidays.map((h) => h.date)), [bankHolidays]);
+
+  // Assign default calendar colours on first load (written back to Base44).
+  const assignedColours = useRef(false);
+  useEffect(() => {
+    if (assignedColours.current || members.length === 0) return;
+    const missing = members.filter((m) => m.status !== "Inactive" && !m.calendar_colour);
+    if (missing.length === 0) return;
+    assignedColours.current = true;
+    const used = new Set(members.map((m) => m.calendar_colour).filter(Boolean));
+    const palette = DEFAULT_COLOURS.filter((c) => !used.has(c));
+    Promise.all(
+      missing.map((m, i) =>
+        base44.entities.TeamMember.update(m.id, { calendar_colour: palette[i % palette.length] || DEFAULT_COLOURS[i % DEFAULT_COLOURS.length] })
+      )
+    )
+      .then(() => queryClient.invalidateQueries({ queryKey: ["team-members"] }))
+      .catch(() => { /* colours fall back to defaults in the UI */ });
+  }, [members, queryClient]);
+
+  // Stable colour lookup (uses the stored colour, falls back to palette order).
+  const colourOf = useMemo(() => {
+    const fallback = new Map();
+    members.forEach((m, i) => fallback.set(m.id, DEFAULT_COLOURS[i % DEFAULT_COLOURS.length]));
+    return (member) => member?.calendar_colour || fallback.get(member?.id) || "#C4C7D4";
+  }, [members]);
+
+  const currentMember = useMemo(
+    () => members.find((m) => emailsMatch(m.email, user?.email)) || null,
+    [members, user?.email]
+  );
 
   const createMutation = useMutation({
     mutationFn: (data) => base44.entities.TeamMember.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["team-members"] }); setShowForm(false); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
+      toast.success("Team member added");
+      setShowForm(false);
+    },
+    onError: (err) => toast.error(err.message || "Failed to add member"),
   });
 
   const updateMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.TeamMember.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["team-members"] }); setEditing(null); setShowForm(false); },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team-members"] });
+      toast.success("Team member updated");
+      setEditing(null);
+      setShowForm(false);
+    },
+    onError: (err) => toast.error(err.message || "Failed to update member"),
   });
 
   const handleSubmit = (data) => {
-    editing ? updateMutation.mutate({ id: editing.id, data }) : createMutation.mutate(data);
+    if (editing) updateMutation.mutate({ id: editing.id, data });
+    else createMutation.mutate(data);
   };
-
-  const filtered = members.filter(m =>
-    m.full_name?.toLowerCase().includes(search.toLowerCase()) ||
-    m.job_title?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const active = filtered.filter(m => m.status !== "Inactive");
-  const inactive = filtered.filter(m => m.status === "Inactive");
 
   return (
     <div>
       <PageHeader
-        title="Team Members"
-        subtitle="Internal WDT staff"
+        title="Team"
+        subtitle="Who's away, leave, working hours & profiles"
         action={() => { setEditing(null); setShowForm(true); }}
         actionLabel="Add Member"
       />
@@ -60,66 +111,47 @@ export default function TeamMembers() {
         />
       )}
 
-      <div className="relative mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-faint" />
-        <Input placeholder="Search team…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-line text-ink placeholder:text-faint rounded-xl h-10" />
-      </div>
-
-      {isLoading ? <ShimmerCard count={3} /> : filtered.length === 0 ? (
-        <EmptyState icon={Users2} title="No team members" description="Add your WDT team" action={() => setShowForm(true)} actionLabel="Add Member" />
+      {isLoading ? (
+        <ShimmerCard count={3} />
       ) : (
-        <div className="space-y-6">
-          {active.length > 0 && (
-            <div>
-              <p className="text-faint text-xs font-medium uppercase tracking-wider mb-3">Active</p>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {active.map((member, i) => (
-                  <MemberCard key={member.id} member={member} delay={i * 0.03} onClick={() => { setEditing(member); setShowForm(true); }} />
-                ))}
-              </div>
-            </div>
-          )}
-          {inactive.length > 0 && (
-            <div>
-              <p className="text-faint text-xs font-medium uppercase tracking-wider mb-3">Inactive</p>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {inactive.map((member, i) => (
-                  <MemberCard key={member.id} member={member} delay={i * 0.03} onClick={() => { setEditing(member); setShowForm(true); }} />
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
+        <>
+          <WhosAwayStrip members={members} entries={leaveEntries} colourOf={colourOf} />
 
-function MemberCard({ member, delay, onClick }) {
-  return (
-    <div
-      onClick={onClick}
-      className="bg-surface rounded-2xl shadow-card border border-line p-5 hover:border-line-strong hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group"
-      style={{ animationDelay: `${delay}s` }}
-    >
-      <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center flex-shrink-0">
-          <span className="text-primary font-semibold text-sm">{member.full_name?.charAt(0)?.toUpperCase()}</span>
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-ink font-medium text-sm group-hover:text-primary transition-colors truncate">{member.full_name}</h3>
-          {member.job_title && <p className="text-faint text-xs truncate">{member.job_title}</p>}
-        </div>
-        <StatusBadge status={member.status} />
-      </div>
-      <div className="space-y-1">
-        {member.email && (
-          <p className="text-faint text-xs flex items-center gap-1.5"><Mail className="w-3 h-3" />{member.email}</p>
-        )}
-        {member.phone && (
-          <p className="text-faint text-xs flex items-center gap-1.5"><Phone className="w-3 h-3" />{member.phone}</p>
-        )}
-      </div>
+          <LeaveSummaryCards members={members} entries={leaveEntries} holidaySet={holidaySet} colourOf={colourOf} />
+
+          <LeaveCalendar
+            members={members}
+            entries={leaveEntries}
+            holidays={bankHolidays}
+            colourOf={colourOf}
+            onAddEntry={(date) => setLeaveDialog({ entry: null, date })}
+            onSelectEntry={(entry) => setLeaveDialog({ entry, date: null })}
+          />
+
+          <WorkingHoursWeek members={members} colourOf={colourOf} isAdmin={isAdmin} user={user} />
+
+          <MemberCards
+            members={members}
+            colourOf={colourOf}
+            isAdmin={isAdmin}
+            onEdit={(member) => { setEditing(member); setShowForm(true); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+          />
+        </>
+      )}
+
+      {leaveDialog && (
+        <LeaveEntryDialog
+          key={leaveDialog.entry?.id || leaveDialog.date || "new"}
+          open
+          onClose={() => setLeaveDialog(null)}
+          entry={leaveDialog.entry}
+          defaultDate={leaveDialog.date || dayKey(new Date())}
+          members={members}
+          currentMember={currentMember}
+          isAdmin={isAdmin}
+          user={user}
+        />
+      )}
     </div>
   );
 }

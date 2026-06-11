@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
+import { DEFAULT_COLOURS } from "@/components/team/teamUtils";
 
 const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 
@@ -15,12 +16,23 @@ export default function TeamMemberForm({ member, onSubmit, onCancel, isLoading }
     email: member?.email || "",
     phone: member?.phone || "",
     status: member?.status || "Active",
+    birthday: member?.birthday || "",
+    start_date: member?.start_date || "",
+    annual_leave_allowance: member?.annual_leave_allowance ?? "",
+    contracted_hours_per_week: member?.contracted_hours_per_week ?? "",
+    calendar_colour: member?.calendar_colour || "",
     notes: member?.notes || "",
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(form);
+    onSubmit({
+      ...form,
+      birthday: form.birthday || null,
+      start_date: form.start_date || null,
+      annual_leave_allowance: form.annual_leave_allowance === "" ? null : Number(form.annual_leave_allowance),
+      contracted_hours_per_week: form.contracted_hours_per_week === "" ? null : Number(form.contracted_hours_per_week),
+    });
   };
 
   return (
@@ -56,6 +68,44 @@ export default function TeamMemberForm({ member, onSubmit, onCancel, isLoading }
                 <SelectItem value="Inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
+          </div>
+          <div>
+            <Label className="text-muted text-xs mb-1.5">Birthday</Label>
+            <Input type="date" value={form.birthday} onChange={(e) => setForm({ ...form, birthday: e.target.value })} className={inputClass} />
+          </div>
+          <div>
+            <Label className="text-muted text-xs mb-1.5">Start Date</Label>
+            <Input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} className={inputClass} />
+          </div>
+          <div>
+            <Label className="text-muted text-xs mb-1.5">Annual Leave Allowance (days)</Label>
+            <Input type="number" min="0" step="0.5" value={form.annual_leave_allowance} onChange={(e) => setForm({ ...form, annual_leave_allowance: e.target.value })} className={inputClass} placeholder="e.g. 25" />
+          </div>
+          <div>
+            <Label className="text-muted text-xs mb-1.5">Contracted Hours / Week</Label>
+            <Input type="number" min="0" step="0.5" value={form.contracted_hours_per_week} onChange={(e) => setForm({ ...form, contracted_hours_per_week: e.target.value })} className={inputClass} placeholder="e.g. 37.5" />
+          </div>
+        </div>
+        <div>
+          <Label className="text-muted text-xs mb-1.5">Calendar Colour</Label>
+          <div className="flex items-center gap-2">
+            {DEFAULT_COLOURS.map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => setForm({ ...form, calendar_colour: c })}
+                className={`w-7 h-7 rounded-full transition-transform ${form.calendar_colour === c ? "ring-2 ring-offset-2 ring-primary scale-110" : "hover:scale-110"}`}
+                style={{ background: c }}
+                aria-label={`Colour ${c}`}
+              />
+            ))}
+            <input
+              type="color"
+              value={form.calendar_colour || "#5A3DE6"}
+              onChange={(e) => setForm({ ...form, calendar_colour: e.target.value })}
+              className="w-7 h-7 rounded-full border border-line cursor-pointer bg-transparent"
+              title="Custom colour"
+            />
           </div>
         </div>
         <div>

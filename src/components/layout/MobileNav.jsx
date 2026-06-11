@@ -20,7 +20,7 @@ const navGroups = [
       { label: "Interactions", icon: MessageSquare, path: "/interactions" },
       { label: "Actions", icon: CheckSquare, path: "/actions" },
       { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
-      { label: "Team Members", icon: Users2, path: "/team" },
+      { label: "Team", icon: Users2, path: "/team" },
     ],
   },
   {
