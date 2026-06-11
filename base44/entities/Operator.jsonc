@@ -1,0 +1,26 @@
+{
+  "name": "Operator",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Tour operator name"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this operator is active"
+    },
+    "trade_account_id": {
+      "type": "string",
+      "description": "Optional link to the full CRM TradeAccount"
+    },
+    "trade_account_name": {
+      "type": "string",
+      "description": "Denormalized TradeAccount name"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

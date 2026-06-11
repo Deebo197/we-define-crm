@@ -1,0 +1,29 @@
+{
+  "name": "RoomMapping",
+  "type": "object",
+  "properties": {
+    "hotel_id": {
+      "type": "string",
+      "description": "Reference to the hotel"
+    },
+    "default_room": {
+      "type": "string",
+      "description": "Default room type for this hotel"
+    },
+    "alternative_rooms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of alternative room types"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about room mapping"
+    }
+  },
+  "required": [
+    "hotel_id",
+    "default_room"
+  ]
+}

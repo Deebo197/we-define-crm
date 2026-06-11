@@ -1,0 +1,73 @@
+{
+  "name": "Scenario",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Scenario name"
+    },
+    "destination": {
+      "type": "string",
+      "enum": [
+        "Maldives",
+        "Mauritius"
+      ],
+      "description": "Destination"
+    },
+    "analysis_scope": {
+      "type": "string",
+      "enum": [
+        "single",
+        "multi"
+      ],
+      "description": "Single or multi-client analysis"
+    },
+    "client_hotel_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Selected client hotel IDs"
+    },
+    "travel_dates": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Selected travel dates"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Duration in nights"
+    },
+    "board_basis": {
+      "type": "string",
+      "description": "Board basis type"
+    },
+    "operator_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Selected operator IDs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "in_progress",
+        "complete"
+      ],
+      "default": "draft",
+      "description": "Scenario status"
+    },
+    "analysis_month": {
+      "type": "string",
+      "description": "The month being analysed"
+    }
+  },
+  "required": [
+    "name",
+    "destination"
+  ]
+}

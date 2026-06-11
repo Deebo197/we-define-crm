@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
@@ -34,6 +35,14 @@ import Reimbursements from '@/pages/expenses/Reimbursements';
 import Accounts from '@/pages/expenses/Accounts';
 import ClientReport from '@/pages/expenses/ClientReport';
 import ExpensesHelp from '@/pages/expenses/Help';
+
+// Competitor Analysis module (MarketGauge)
+import CompetitorAdminRoute from '@/components/competitor/AdminRoute';
+import CompetitorOverview from '@/pages/competitor/CompetitorOverview';
+import CreateScenario from '@/pages/competitor/CreateScenario';
+import MarketPriceEntry from '@/pages/competitor/MarketPriceEntry';
+import CompetitorAnalysis from '@/pages/competitor/Analysis';
+import CompetitorAdmin from '@/pages/competitor/Admin';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
@@ -87,6 +96,12 @@ const AuthenticatedApp = () => {
         <Route path="/expenses/accounts" element={<AdminRoute><Accounts /></AdminRoute>} />
         <Route path="/expenses/client-report" element={<AdminRoute><ClientReport /></AdminRoute>} />
         <Route path="/expenses/help" element={<ExpensesHelp />} />
+        {/* Competitor Analysis module */}
+        <Route path="/competitor-analysis" element={<CompetitorOverview />} />
+        <Route path="/competitor-analysis/new-scenario" element={<CreateScenario />} />
+        <Route path="/competitor-analysis/price-entry" element={<MarketPriceEntry />} />
+        <Route path="/competitor-analysis/analysis" element={<CompetitorAnalysis />} />
+        <Route path="/competitor-analysis/admin" element={<CompetitorAdminRoute><CompetitorAdmin /></CompetitorAdminRoute>} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>
@@ -101,6 +116,7 @@ function App() {
           <AuthenticatedApp />
         </Router>
         <Toaster />
+        <SonnerToaster theme="light" />
       </QueryClientProvider>
     </AuthProvider>
   )

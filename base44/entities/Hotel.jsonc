@@ -1,0 +1,53 @@
+{
+  "name": "Hotel",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Hotel name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "client",
+        "competitor"
+      ],
+      "description": "Whether this is a client hotel or competitor"
+    },
+    "destination": {
+      "type": "string",
+      "enum": [
+        "Maldives",
+        "Mauritius"
+      ],
+      "description": "Destination region"
+    },
+    "star_rating": {
+      "type": "number",
+      "enum": [
+        3,
+        4,
+        5
+      ],
+      "description": "Hotel star rating"
+    },
+    "active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this hotel is active"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "CRM Client this hotel resolves to (client-type hotels only)"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized CRM Client name"
+    }
+  },
+  "required": [
+    "name",
+    "type",
+    "destination"
+  ]
+}

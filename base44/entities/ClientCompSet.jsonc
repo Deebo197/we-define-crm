@@ -1,0 +1,18 @@
+{
+  "name": "ClientCompSet",
+  "type": "object",
+  "properties": {
+    "client_hotel_id": {
+      "type": "string",
+      "description": "Reference to the client hotel"
+    },
+    "competitor_hotel_id": {
+      "type": "string",
+      "description": "Reference to the competitor hotel"
+    }
+  },
+  "required": [
+    "client_hotel_id",
+    "competitor_hotel_id"
+  ]
+}

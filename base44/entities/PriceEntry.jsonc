@@ -1,0 +1,54 @@
+{
+  "name": "PriceEntry",
+  "type": "object",
+  "properties": {
+    "scenario_id": {
+      "type": "string",
+      "description": "Reference to the scenario"
+    },
+    "operator_id": {
+      "type": "string",
+      "description": "Reference to the operator"
+    },
+    "hotel_id": {
+      "type": "string",
+      "description": "Reference to the hotel"
+    },
+    "travel_date": {
+      "type": "string",
+      "description": "Travel date for this price"
+    },
+    "default_room": {
+      "type": "string",
+      "description": "Default room type"
+    },
+    "actual_room": {
+      "type": "string",
+      "description": "Actual room used (may differ from default)"
+    },
+    "price": {
+      "type": "number",
+      "description": "Package price in GBP"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this price entry"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "entered",
+        "verified"
+      ],
+      "default": "pending",
+      "description": "Entry status"
+    }
+  },
+  "required": [
+    "scenario_id",
+    "operator_id",
+    "hotel_id",
+    "travel_date"
+  ]
+}

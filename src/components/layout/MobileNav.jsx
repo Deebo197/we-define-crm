@@ -4,7 +4,7 @@ import {
   LayoutDashboard, Building2, Handshake, Globe, Users, Users2,
   MessageSquare, CheckSquare, Megaphone, FileText, Gauge, Receipt,
   FolderOpen, Menu, X, PieChart, PlusCircle, Inbox, MapPin,
-  CreditCard, List, Landmark, HelpCircle
+  CreditCard, List, Landmark, HelpCircle, BarChart3, PoundSterling, Settings
 } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -29,7 +29,13 @@ const navGroups = [
   },
   {
     label: "Competitor Analysis",
-    items: [{ label: "MarketGauge", icon: Gauge, soon: true }],
+    items: [
+      { label: "Overview", icon: Gauge, path: "/competitor-analysis" },
+      { label: "New Scenario", icon: PlusCircle, path: "/competitor-analysis/new-scenario" },
+      { label: "Price Entry", icon: PoundSterling, path: "/competitor-analysis/price-entry" },
+      { label: "Analysis", icon: BarChart3, path: "/competitor-analysis/analysis" },
+      { label: "Admin", icon: Settings, path: "/competitor-analysis/admin", adminOnly: true },
+    ],
   },
   {
     label: "Expenses",

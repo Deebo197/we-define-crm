@@ -24,7 +24,10 @@ import {
   List,
   Landmark,
   PieChart,
-  HelpCircle
+  HelpCircle,
+  BarChart3,
+  PoundSterling,
+  Settings
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
@@ -51,7 +54,13 @@ const navGroups = [
   },
   {
     label: "Competitor Analysis",
-    items: [{ label: "MarketGauge", icon: Gauge, soon: true }],
+    items: [
+      { label: "Overview", icon: Gauge, path: "/competitor-analysis" },
+      { label: "New Scenario", icon: PlusCircle, path: "/competitor-analysis/new-scenario" },
+      { label: "Price Entry", icon: PoundSterling, path: "/competitor-analysis/price-entry" },
+      { label: "Analysis", icon: BarChart3, path: "/competitor-analysis/analysis" },
+      { label: "Admin", icon: Settings, path: "/competitor-analysis/admin", adminOnly: true },
+    ],
   },
   {
     label: "Expenses",
@@ -135,7 +144,7 @@ export default function Sidebar() {
                 }
                 const isActive =
                   location.pathname === item.path ||
-                  (item.path !== "/" && item.path !== "/expenses" && location.pathname.startsWith(item.path));
+                  (item.path !== "/" && item.path !== "/expenses" && item.path !== "/competitor-analysis" && location.pathname.startsWith(item.path));
                 return (
                   <Link
                     key={item.path}
