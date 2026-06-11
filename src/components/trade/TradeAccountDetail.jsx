@@ -1,7 +1,8 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Pencil, Users, Building2, MessageSquare, CheckSquare, MapPin, Calendar, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Pencil, Users, Building2, MessageSquare, CheckSquare, MapPin, Calendar, AlertTriangle, Globe } from "lucide-react";
+import { externalHref, displayUrl } from "@/lib/externalUrl";
 import { Button } from "@/components/ui/button";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { format, isPast, parseISO } from "date-fns";
@@ -75,6 +76,12 @@ export default function TradeAccountDetail({ account, onBack, onEdit, onViewCont
           <p className="text-faint text-sm">
             {account.type}{account.region ? ` · ${account.region}` : ""}
           </p>
+          {account.website && (
+            <a href={externalHref(account.website)} target="_blank" rel="noopener noreferrer"
+              className="text-primary text-sm hover:underline inline-flex items-center gap-1 mt-0.5 break-all">
+              <Globe className="w-3.5 h-3.5 shrink-0" /> {displayUrl(account.website)}
+            </a>
+          )}
         </div>
         <StatusBadge status={account.relationship_strength} />
         <Button variant="ghost" size="sm" onClick={onEdit} className="text-muted hover:text-ink">

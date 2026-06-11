@@ -8,6 +8,7 @@ import { format, isPast } from "date-fns";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ContactForm from "@/components/contacts/ContactForm";
+import { externalHref, displayUrl } from "@/lib/externalUrl";
 
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
@@ -219,7 +220,7 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                   </div>
                   <div>
                     <p className="text-faint text-[10px] uppercase tracking-wider font-medium">LinkedIn</p>
-                    <a href={contact.linkedin} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline mt-0.5 block truncate max-w-[200px]">View Profile</a>
+                    <a href={externalHref(contact.linkedin)} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline mt-0.5 block truncate max-w-[220px]">{displayUrl(contact.linkedin)}</a>
                   </div>
                 </div>
               )}
@@ -243,8 +244,8 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                     </div>
                     <div>
                       <p className="text-faint text-[10px] uppercase tracking-wider font-medium">Website</p>
-                      <a href={tradeAccount.website} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline mt-0.5 flex items-center gap-1">
-                        Visit site <ExternalLink className="w-3 h-3" />
+                      <a href={externalHref(tradeAccount.website)} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline mt-0.5 flex items-center gap-1 break-all">
+                        {displayUrl(tradeAccount.website)} <ExternalLink className="w-3 h-3 shrink-0" />
                       </a>
                     </div>
                   </div>

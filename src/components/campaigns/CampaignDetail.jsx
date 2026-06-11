@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { externalHref } from "@/lib/externalUrl";
 import {
   ArrowLeft, Pencil, Megaphone, Calendar, Users, Link2,
   TrendingUp, DollarSign, Trash2, Plus, ExternalLink
@@ -160,7 +161,7 @@ export default function CampaignDetail({ campaign, onBack, onEdit }) {
                     <div className="flex items-center gap-2">
                       <p className="text-ink text-sm font-medium">{entry.platform_partner}</p>
                       {entry.url && (
-                        <a href={entry.url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:text-primary transition-colors">
+                        <a href={externalHref(entry.url)} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:text-primary transition-colors">
                           <ExternalLink className="w-3.5 h-3.5" />
                         </a>
                       )}
