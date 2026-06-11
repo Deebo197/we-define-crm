@@ -109,13 +109,16 @@ export default function TradeAccountDetail({ account, onBack, onEdit, onViewCont
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white text-sm font-medium truncate group-hover:text-[#7F5BFF] transition-colors">{contact.name}</p>
-                    <p className="text-[#6C6C80] text-xs truncate">{contact.role || contact.client_role || "—"}</p>
-                    {/* Client responsibilities */}
-                    {contact.linked_client_names?.length > 0 && (
+                    <p className="text-[#6C6C80] text-xs truncate">{contact.role || "—"}</p>
+                    {/* Coverage clients */}
+                    {contact.coverage?.length > 0 && (
                       <div className="flex flex-wrap gap-1 mt-1.5">
-                        {contact.linked_client_names.map(name => (
-                          <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
-                        ))}
+                        {[...new Set(contact.coverage.flatMap(cv => cv.clients ?? []))]
+                          .map(cid => clients.find(cl => cl.id === cid)?.name)
+                          .filter(Boolean)
+                          .map(name => (
+                            <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
+                          ))}
                       </div>
                     )}
                   </div>

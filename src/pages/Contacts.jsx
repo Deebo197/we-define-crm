@@ -19,7 +19,8 @@ export default function Contacts() {
   const [viewing, setViewing] = useState(null);
   const [search, setSearch] = useState("");
   const [view, setView] = useState("grid"); // "grid" | "list"
-  const [destFilter, setDestFilter] = useState(""); // "", "maldives", "mauritius", "uae", "far_east"
+  const [destFilter, setDestFilter] = useState(""); // "", "Maldives", "Mauritius", "UAE", "Far East"
+  const [functionFilter, setFunctionFilter] = useState(""); // "", "Commercial", "Product", "Marketing", "Press", "Admin"
   const [confirmDelete, setConfirmDelete] = useState(null);
   const queryClient = useQueryClient();
 
@@ -56,28 +57,21 @@ export default function Contacts() {
     setConfirmDelete(contact);
   };
 
-  const DEST_FLAGS = {
-    maldives:  "dest_maldives",
-    mauritius: "dest_mauritius",
-    uae:       "dest_uae",
-    far_east:  "dest_far_east",
-  };
-
   const filtered = contacts.filter(c => {
     const matchesSearch =
       c.name?.toLowerCase().includes(search.toLowerCase()) ||
       c.company_name?.toLowerCase().includes(search.toLowerCase()) ||
-      c.role?.toLowerCase().includes(search.toLowerCase()) ||
-      c.linked_client_names?.some(n => n.toLowerCase().includes(search.toLowerCase()));
-    const matchesDest = !destFilter || c[DEST_FLAGS[destFilter]];
-    return matchesSearch && matchesDest;
+      c.role?.toLowerCase().includes(search.toLowerCase());
+    const matchesDest = !destFilter || c.coverage?.some(cv => cv.destination === destFilter);
+    const matchesFunction = !functionFilter || c.function === functionFilter;
+    return matchesSearch && matchesDest && matchesFunction;
   });
 
   const exportToCSV = () => {
     const headers = [
       "Full Name", "First Name", "Last Name", "Job Title", "Company", "Company Type",
       "Email", "Phone", "Mobile", "LinkedIn",
-      "Client Responsibilities",
+      "Function", "Seniority",
       "Maldives", "Mauritius", "UAE", "Far East",
       "Home Address Line 1", "Home City", "Home County", "Home Postcode", "Home Country",
       "Tags", "Birthday", "Notes"
@@ -93,11 +87,12 @@ export default function Contacts() {
       c.phone ?? "",
       c.mobile ?? "",
       c.linkedin ?? "",
-      (c.linked_client_names ?? []).join("; "),
-      c.dest_maldives ? "Yes" : "No",
-      c.dest_mauritius ? "Yes" : "No",
-      c.dest_uae ? "Yes" : "No",
-      c.dest_far_east ? "Yes" : "No",
+      c.function ?? "",
+      c.seniority ?? "",
+      c.coverage?.some(cv => cv.destination === "Maldives") ? "Yes" : "No",
+      c.coverage?.some(cv => cv.destination === "Mauritius") ? "Yes" : "No",
+      c.coverage?.some(cv => cv.destination === "UAE") ? "Yes" : "No",
+      c.coverage?.some(cv => cv.destination === "Far East") ? "Yes" : "No",
       c.home_address_line1 ?? "",
       c.home_city ?? "",
       c.home_county ?? "",
@@ -182,7 +177,7 @@ export default function Contacts() {
       <div className="flex gap-3 mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
-          <Input placeholder="Search by name, company, role, or client..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
+          <Input placeholder="Search by name, company, or role..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
         </div>
         <div className="flex gap-1 bg-surface border border-white/[0.06] rounded-xl p-1">
           <button type="button" onClick={() => setView("grid")} className={`p-2 rounded-lg transition-all ${view === "grid" ? "bg-white/[0.08] text-white" : "text-[#6C6C80] hover:text-white"}`}>
@@ -198,10 +193,10 @@ export default function Contacts() {
       <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up" style={{ animationDelay: "0.08s" }}>
         {[
           { key: "", label: "All" },
-          { key: "maldives",  label: "🏝 Maldives" },
-          { key: "mauritius", label: "🌴 Mauritius" },
-          { key: "uae",       label: "🏙 UAE" },
-          { key: "far_east",  label: "🗺 Far East" },
+          { key: "Maldives",  label: "🏝 Maldives" },
+          { key: "Mauritius", label: "🌴 Mauritius" },
+          { key: "UAE",       label: "🏙 UAE" },
+          { key: "Far East",  label: "🗺 Far East" },
         ].map(f => (
           <button
             key={f.key}
@@ -209,6 +204,31 @@ export default function Contacts() {
             onClick={() => setDestFilter(f.key)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
               destFilter === f.key
+                ? "bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white border-transparent shadow-lg shadow-[#7F5BFF]/20"
+                : "bg-white/[0.03] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.16] hover:text-white"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Function filter chips */}
+      <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
+        {[
+          { key: "", label: "All Functions" },
+          { key: "Commercial", label: "Commercial" },
+          { key: "Product",    label: "Product" },
+          { key: "Marketing",  label: "Marketing" },
+          { key: "Press",      label: "Press" },
+          { key: "Admin",      label: "Admin" },
+        ].map(f => (
+          <button
+            key={f.key}
+            type="button"
+            onClick={() => setFunctionFilter(f.key)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
+              functionFilter === f.key
                 ? "bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white border-transparent shadow-lg shadow-[#7F5BFF]/20"
                 : "bg-white/[0.03] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.16] hover:text-white"
             }`}
@@ -240,11 +260,11 @@ export default function Contacts() {
                 {contact.email && <span className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{contact.email}</span></span>}
                 {contact.phone && <span className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{contact.phone}</span>}
               </div>
-              {/* Client responsibilities badges */}
-              {contact.linked_client_names?.length > 0 && (
+              {/* Coverage badges */}
+              {contact.coverage?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
-                  {contact.linked_client_names.map(name => (
-                    <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
+                  {contact.coverage.map(cv => (
+                    <span key={cv.destination} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{cv.destination}</span>
                   ))}
                 </div>
               )}
@@ -271,9 +291,9 @@ export default function Contacts() {
                 <span className="text-[#6C6C80] text-xs truncate">{contact.role || "—"}</span>
                 <span className="text-[#6C6C80] text-xs truncate hidden sm:block">{contact.company_name || "—"}</span>
                 <div className="hidden sm:flex flex-wrap gap-1">
-                  {contact.linked_client_names?.length > 0
-                    ? contact.linked_client_names.map(name => (
-                        <span key={name} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{name}</span>
+                  {contact.coverage?.length > 0
+                    ? contact.coverage.map(cv => (
+                        <span key={cv.destination} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{cv.destination}</span>
                       ))
                     : <span className="text-[#6C6C80] text-xs">{contact.email || "—"}</span>
                   }

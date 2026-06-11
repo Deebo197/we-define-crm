@@ -94,7 +94,7 @@ export default function ClientDetail() {
   if (!client) return <div className="text-[#6C6C80] py-12 text-center">Client not found</div>;
 
   // Filter related data
-  const contacts = allContacts.filter(c => c.linked_clients?.includes(id));
+  const contacts = allContacts.filter(c => c.coverage?.some(cv => cv.clients?.includes(id)));
   const interactions = allInteractions.filter(i => i.linked_clients?.includes(id)).slice(0, 8);
   const openActions = allActions.filter(a => a.linked_client === id && a.status !== "Completed" && a.status !== "Cancelled");
   const campaigns = allCampaigns.filter(c => c.linked_clients?.includes(id));
@@ -268,7 +268,7 @@ export default function ClientDetail() {
                     </div>
                     <div className="min-w-0">
                       <p className="text-white text-xs font-medium truncate">{c.name}</p>
-                      {c.client_role && <p className="text-[#6C6C80] text-[10px]">{c.client_role}</p>}
+                      {c.role && <p className="text-[#6C6C80] text-[10px]">{c.role}</p>}
                     </div>
                   </div>
                 ))}

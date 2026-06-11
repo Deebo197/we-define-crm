@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { useSearchParams, useNavigate } from "react-router-dom";
 
 function ClientCard({ client, contacts, onClick }) {
-  const clientContacts = contacts.filter(c => c.linked_clients?.includes(client.id));
+  const clientContacts = contacts.filter(c => c.coverage?.some(cv => cv.clients?.includes(client.id)));
 
   return (
     <div
@@ -62,8 +62,8 @@ function ClientCard({ client, contacts, onClick }) {
                   </div>
                   <span className="text-[#C8C8D8] text-xs">{contact.name}</span>
                 </div>
-                {contact.client_role && (
-                  <span className="text-[#6C6C80] text-[10px]">{contact.client_role}</span>
+                {contact.role && (
+                  <span className="text-[#6C6C80] text-[10px]">{contact.role}</span>
                 )}
               </div>
             ))}

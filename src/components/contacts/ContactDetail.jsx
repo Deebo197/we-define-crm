@@ -9,13 +9,6 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import ContactForm from "@/components/contacts/ContactForm";
 
-const DEST_LABELS = [
-  { key: "dest_maldives", label: "Maldives" },
-  { key: "dest_mauritius", label: "Mauritius" },
-  { key: "dest_uae", label: "UAE" },
-  { key: "dest_far_east", label: "Far East" },
-];
-
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
@@ -39,6 +32,11 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
   const { data: allContacts = [] } = useQuery({
     queryKey: ["contacts"],
     queryFn: () => base44.entities.Contact.list(),
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients"],
+    queryFn: () => base44.entities.Client.list(),
   });
 
   // Colleagues: same company_id (if set), excluding self
@@ -92,8 +90,6 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
       onDeleted();
     },
   });
-
-  const activeDestinations = DEST_LABELS.filter(d => contact[d.key]);
 
   const address = [contact.home_address_line1, contact.home_address_line2, contact.home_city, contact.home_county, contact.home_postcode, contact.home_country].filter(Boolean).join(", ");
 
@@ -159,32 +155,53 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                 {contact.company_name && (
                   <p className="text-[#6C6C80] text-sm">{contact.company_name}</p>
                 )}
-                {contact.client_role && (
-                  <span className="inline-block mt-2 px-2.5 py-1 rounded-full text-xs bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">
-                    {contact.client_role}
-                  </span>
+                {(contact.function || contact.seniority) && (
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {contact.function && (
+                      <span className="px-2.5 py-1 rounded-full text-xs bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">
+                        {contact.function}
+                      </span>
+                    )}
+                    {contact.seniority && (
+                      <span className="px-2.5 py-1 rounded-full text-xs bg-white/[0.06] text-[#A1A1B5] border border-white/[0.08]">
+                        {contact.seniority}
+                      </span>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
           </div>
 
-          {/* Client Responsibilities — shown prominently */}
+          {/* Coverage — shown prominently */}
           <div className="bg-surface rounded-2xl border border-[#7F5BFF]/20 p-5 mb-5">
             <h2 className="text-[#7F5BFF] text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
-              <Building2 className="w-3.5 h-3.5" /> Client Responsibilities
+              <Building2 className="w-3.5 h-3.5" /> Coverage
             </h2>
-            {contact.linked_client_names?.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {contact.linked_client_names.map(name => (
-                  <span key={name} className="px-4 py-2 rounded-xl text-sm font-semibold bg-[#7F5BFF] text-white shadow-lg shadow-[#7F5BFF]/20">
-                    {name}
-                  </span>
-                ))}
+            {contact.coverage?.length > 0 ? (
+              <div className="space-y-3">
+                {contact.coverage.map(entry => {
+                  const names = (entry.clients ?? [])
+                    .map(cid => clients.find(c => c.id === cid)?.name)
+                    .filter(Boolean);
+                  return (
+                    <div key={entry.destination} className="flex flex-wrap items-center gap-2">
+                      <span className="px-3 py-1.5 rounded-xl text-xs font-medium bg-[#3DDC97]/10 text-[#3DDC97] border border-[#3DDC97]/20">
+                        {entry.destination}
+                      </span>
+                      {names.length > 0 ? names.map(name => (
+                        <span key={name} className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#7F5BFF] text-white shadow-lg shadow-[#7F5BFF]/20">
+                          {name}
+                        </span>
+                      )) : (
+                        <span className="text-[#6C6C80] text-xs">No clients assigned</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             ) : (
-              <p className="text-amber-400/70 text-sm flex items-center gap-2">
-                ⚠ No client responsibilities assigned to this contact
-              </p>
+              <p className="text-[#6C6C80] text-sm">No coverage recorded for this contact</p>
             )}
           </div>
 
@@ -244,22 +261,6 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                 <p className="text-[#6C6C80] text-sm">No home address on record</p>
               )}
             </div>
-
-            {/* Destinations */}
-            {activeDestinations.length > 0 && (
-              <div className="bg-surface rounded-2xl border border-white/[0.06] p-5">
-                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3">Destination Interest</h2>
-                <div className="flex flex-wrap gap-2">
-                  {activeDestinations.map(d => (
-                    <span key={d.key} className="px-3 py-1.5 rounded-xl text-xs font-medium bg-[#3DDC97]/10 text-[#3DDC97] border border-[#3DDC97]/20">
-                      {d.label}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-
-
 
             {/* Tags */}
             {contact.tags?.length > 0 && (
@@ -364,7 +365,7 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                     </div>
                     <div className="min-w-0">
                       <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{c.name}</p>
-                      <p className="text-[#6C6C80] text-xs truncate">{c.role || c.client_role || "—"}</p>
+                      <p className="text-[#6C6C80] text-xs truncate">{c.role || "—"}</p>
                     </div>
                   </button>
                 ))}

@@ -38,8 +38,8 @@ const FIELD_MAP = {
   "Full Name": "name",
   "Name": "name",
   "Job Title": "role",
-  "Role for Client": "client_role",
-  "Role for this client": "client_role",
+  "Function": "function",
+  "Seniority": "seniority",
   "Company Name": "company_name",
   "Email": "email",
   "Phone": "phone",
@@ -50,12 +50,26 @@ const FIELD_MAP = {
   "County": "home_county",
   "Postcode": "home_postcode",
   "Country": "home_country",
-  "Maldives": "dest_maldives",
-  "Mauritius": "dest_mauritius",
-  "UAE": "dest_uae",
-  "Far East": "dest_far_east",
+  "Maldives": "cov_maldives",
+  "Mauritius": "cov_mauritius",
+  "UAE": "cov_uae",
+  "Far East": "cov_far_east",
   "Notes": "notes",
 };
+
+const COVERAGE_COLUMNS = [
+  { field: "cov_maldives", destination: "Maldives" },
+  { field: "cov_mauritius", destination: "Mauritius" },
+  { field: "cov_uae", destination: "UAE" },
+  { field: "cov_far_east", destination: "Far East" },
+];
+
+const FUNCTIONS = ["Commercial", "Product", "Marketing", "Press", "Admin"];
+const SENIORITIES = ["Head/Director", "Manager", "Executive", "Other"];
+
+function matchEnum(options, val) {
+  return options.find(o => o.toLowerCase() === (val ?? "").trim().toLowerCase()) ?? "";
+}
 
 export default function ImportContacts() {
   const fileRef = useRef(null);
@@ -117,12 +131,19 @@ export default function ImportContacts() {
         }
       }
 
+      const coverage = COVERAGE_COLUMNS
+        .filter(({ field }) => parseBool(mapped[field]))
+        .map(({ destination }) => ({ destination, clients: [] }));
+      const fn = matchEnum(FUNCTIONS, mapped.function);
+      const seniority = matchEnum(SENIORITIES, mapped.seniority);
+
       toCreate.push({
         name: mapped.name.trim(),
         first_name: mapped.first_name ?? "",
         last_name: mapped.last_name ?? "",
         role: mapped.role ?? "",
-        client_role: mapped.client_role ?? "",
+        ...(fn ? { function: fn } : {}),
+        ...(seniority ? { seniority } : {}),
         email: mapped.email ?? "",
         phone: mapped.phone ?? "",
         mobile: mapped.mobile ?? "",
@@ -132,10 +153,7 @@ export default function ImportContacts() {
         home_county: mapped.home_county ?? "",
         home_postcode: mapped.home_postcode ?? "",
         home_country: mapped.home_country ?? "",
-        dest_maldives: parseBool(mapped.dest_maldives),
-        dest_mauritius: parseBool(mapped.dest_mauritius),
-        dest_uae: parseBool(mapped.dest_uae),
-        dest_far_east: parseBool(mapped.dest_far_east),
+        coverage,
         notes: mapped.notes ?? "",
         company_id,
         company_name: companyName ?? "",
@@ -155,7 +173,7 @@ export default function ImportContacts() {
   };
 
   const downloadTemplate = () => {
-    const csv = "First Name,Last Name,Full Name,Job Title,Role for Client,Company Name,Email,Phone,Mobile,Home Address Line 1,Home Address Line 2,City,County,Postcode,Country,Maldives,Mauritius,UAE,Far East,Notes\nJane,Smith,Jane Smith,Sales Manager,DOSM,Kuoni UK,jane@kuoni.co.uk,020 7751 7711,07700 900123,12 High Street,,London,Surrey,SW1A 1AA,United Kingdom,Yes,Yes,No,No,Key contact";
+    const csv = "First Name,Last Name,Full Name,Job Title,Function,Seniority,Company Name,Email,Phone,Mobile,Home Address Line 1,Home Address Line 2,City,County,Postcode,Country,Maldives,Mauritius,UAE,Far East,Notes\nJane,Smith,Jane Smith,Sales Manager,Commercial,Manager,Kuoni UK,jane@kuoni.co.uk,020 7751 7711,07700 900123,12 High Street,,London,Surrey,SW1A 1AA,United Kingdom,Yes,Yes,No,No,Key contact";
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a"); a.href = url; a.download = "contacts_template.csv"; a.click();
@@ -181,11 +199,11 @@ export default function ImportContacts() {
             <h2 className="text-white font-medium mb-2">CSV Format</h2>
             <p className="text-[#A1A1B5] text-sm mb-3">Contacts are linked to Trade Accounts via <span className="text-white font-medium">Company Name</span> (must match exactly). Supported columns:</p>
             <div className="flex flex-wrap gap-2">
-              {["First Name", "Last Name", "Full Name", "Job Title", "Role for Client", "Company Name", "Email", "Phone", "Mobile", "Home Address Line 1", "Home Address Line 2", "City", "County", "Postcode", "Country", "Maldives", "Mauritius", "UAE", "Far East", "Notes"].map(f => (
+              {["First Name", "Last Name", "Full Name", "Job Title", "Function", "Seniority", "Company Name", "Email", "Phone", "Mobile", "Home Address Line 1", "Home Address Line 2", "City", "County", "Postcode", "Country", "Maldives", "Mauritius", "UAE", "Far East", "Notes"].map(f => (
                 <span key={f} className="px-2.5 py-1 rounded-lg text-xs bg-white/[0.04] text-[#A1A1B5] border border-white/[0.06] font-mono">{f}</span>
               ))}
             </div>
-            <p className="text-[#6C6C80] text-xs mt-3">Destination columns accept: <span className="text-white">Yes / No / True / False / 1 / 0</span>. Import Trade Accounts first to enable company linking.</p>
+            <p className="text-[#6C6C80] text-xs mt-3">Destination columns accept: <span className="text-white">Yes / No / True / False / 1 / 0</span> and set the contact's coverage. Function accepts: <span className="text-white">Commercial / Product / Marketing / Press / Admin</span>. Seniority accepts: <span className="text-white">Head/Director / Manager / Executive / Other</span>. Import Trade Accounts first to enable company linking.</p>
           </div>
           <Button type="button" onClick={downloadTemplate} variant="outline" className="shrink-0 text-[#A1A1B5] border-white/[0.10] hover:text-white text-xs gap-2">
             <Download className="w-4 h-4" /> Template

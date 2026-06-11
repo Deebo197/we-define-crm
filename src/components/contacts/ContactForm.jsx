@@ -12,12 +12,9 @@ import { X } from "lucide-react";
 const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
 const NONE = "__none__";
 
-const DEST_FIELDS = [
-  { key: "dest_maldives", label: "Maldives" },
-  { key: "dest_mauritius", label: "Mauritius" },
-  { key: "dest_uae", label: "UAE" },
-  { key: "dest_far_east", label: "Far East" },
-];
+const DESTINATIONS = ["Maldives", "Mauritius", "UAE", "Far East"];
+const FUNCTIONS = ["Commercial", "Product", "Marketing", "Press", "Admin"];
+const SENIORITIES = ["Head/Director", "Manager", "Executive", "Other"];
 
 export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) {
   const { data: tradeAccounts = [] } = useQuery({
@@ -34,7 +31,8 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     last_name: contact?.last_name ?? "",
     name: contact?.name ?? "",
     role: contact?.role ?? "",
-    client_role: contact?.client_role ?? "",
+    function: contact?.function ?? "",
+    seniority: contact?.seniority ?? "",
     company_id: contact?.company_id ?? "",
     company_name: contact?.company_name ?? "",
     company_type: contact?.company_type ?? "TradeAccount",
@@ -47,17 +45,12 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     home_county: contact?.home_county ?? "",
     home_postcode: contact?.home_postcode ?? "",
     home_country: contact?.home_country ?? "",
-    dest_maldives: contact?.dest_maldives ?? false,
-    dest_mauritius: contact?.dest_mauritius ?? false,
-    dest_uae: contact?.dest_uae ?? false,
-    dest_far_east: contact?.dest_far_east ?? false,
+    coverage: contact?.coverage ?? [],
     notes: contact?.notes ?? "",
     linkedin: contact?.linkedin ?? "",
     birthday: contact?.birthday ?? "",
     relationship_notes: contact?.relationship_notes ?? "",
     tags: contact?.tags ?? [],
-    linked_clients: contact?.linked_clients ?? [],
-    linked_client_names: contact?.linked_client_names ?? [],
     working_pattern: contact?.working_pattern ?? {},
   });
 
@@ -80,12 +73,24 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     setForm(f => ({ ...f, ...updates }));
   };
 
-  const toggleClient = (client) => {
-    const isLinked = form.linked_clients.includes(client.id);
+  const toggleDestination = (destination) => {
     setForm(f => ({
       ...f,
-      linked_clients: isLinked ? f.linked_clients.filter(id => id !== client.id) : [...f.linked_clients, client.id],
-      linked_client_names: isLinked ? f.linked_client_names.filter(n => n !== client.name) : [...f.linked_client_names, client.name],
+      coverage: f.coverage.some(c => c.destination === destination)
+        ? f.coverage.filter(c => c.destination !== destination)
+        : [...f.coverage, { destination, clients: [] }],
+    }));
+  };
+
+  const toggleCoverageClient = (destination, clientId) => {
+    setForm(f => ({
+      ...f,
+      coverage: f.coverage.map(c => c.destination !== destination ? c : {
+        ...c,
+        clients: (c.clients ?? []).includes(clientId)
+          ? (c.clients ?? []).filter(id => id !== clientId)
+          : [...(c.clients ?? []), clientId],
+      }),
     }));
   };
 
@@ -127,8 +132,24 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
             <Input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={inputClass} />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Role for Client</Label>
-            <Input value={form.client_role} onChange={e => setForm(f => ({ ...f, client_role: e.target.value }))} className={inputClass} placeholder="e.g. GM, DOSM" />
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Function</Label>
+            <Select value={form.function || NONE} onValueChange={v => setForm(f => ({ ...f, function: v === NONE ? "" : v }))}>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Select function..." /></SelectTrigger>
+              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                <SelectItem value={NONE}>None</SelectItem>
+                {FUNCTIONS.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-[#A1A1B5] text-xs mb-1.5">Seniority</Label>
+            <Select value={form.seniority || NONE} onValueChange={v => setForm(f => ({ ...f, seniority: v === NONE ? "" : v }))}>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Select seniority..." /></SelectTrigger>
+              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                <SelectItem value={NONE}>None</SelectItem>
+                {SENIORITIES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
           </div>
           <div>
             <Label className="text-[#A1A1B5] text-xs mb-1.5">Email</Label>
@@ -169,44 +190,43 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
 
 
 
-        {/* Client Responsibilities — imperative field */}
+        {/* Coverage */}
         <div className="border-t border-white/[0.06] pt-4">
           <div className="flex items-center gap-2 mb-3">
-            <p className="text-[#A1A1B5] text-xs font-bold uppercase tracking-wider">Client Responsibilities</p>
-            <span className="text-[10px] text-[#6C6C80] italic">Which of your clients does this person work with?</span>
+            <p className="text-[#A1A1B5] text-xs font-bold uppercase tracking-wider">Coverage</p>
+            <span className="text-[10px] text-[#6C6C80] italic">Which destinations does this person sell or manage, and for which of your clients?</span>
           </div>
-          {clients.length === 0 ? (
-            <p className="text-[#6C6C80] text-xs">No clients found in system.</p>
-          ) : (
-            <div className="flex flex-wrap gap-2">
-              {clients.map(client => (
-                <button key={client.id} type="button" onClick={() => toggleClient(client)}
-                  className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border flex items-center gap-1.5 ${
-                    form.linked_clients.includes(client.id)
-                      ? "bg-[#7F5BFF] text-white border-[#7F5BFF] shadow-lg shadow-[#7F5BFF]/20"
-                      : "bg-white/[0.02] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.18] hover:text-white"
-                  }`}>
-                  {form.linked_clients.includes(client.id) && <span className="text-white/80">✓</span>}
-                  {client.name}
-                </button>
-              ))}
-            </div>
-          )}
-          {form.linked_clients.length === 0 && (
-            <p className="text-amber-400/70 text-[11px] mt-2 flex items-center gap-1">⚠ No client responsibilities assigned — add at least one if this contact is relevant to your business</p>
-          )}
-        </div>
-
-        {/* Destinations */}
-        <div className="border-t border-white/[0.06] pt-4">
-          <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider mb-3">Destination Interest</p>
-          <div className="flex flex-wrap gap-2">
-            {DEST_FIELDS.map(({ key, label }) => (
-              <button key={key} type="button" onClick={() => setForm(f => ({ ...f, [key]: !f[key] }))}
-                className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form[key] ? "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
-                {label}
-              </button>
-            ))}
+          <div className="space-y-3">
+            {DESTINATIONS.map(destination => {
+              const entry = form.coverage.find(c => c.destination === destination);
+              return (
+                <div key={destination}>
+                  <button type="button" onClick={() => toggleDestination(destination)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${entry ? "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                    {destination}
+                  </button>
+                  {entry && (
+                    clients.length === 0 ? (
+                      <p className="text-[#6C6C80] text-xs mt-2">No clients found in system.</p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {clients.map(client => (
+                          <button key={client.id} type="button" onClick={() => toggleCoverageClient(destination, client.id)}
+                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border flex items-center gap-1.5 ${
+                              (entry.clients ?? []).includes(client.id)
+                                ? "bg-[#7F5BFF] text-white border-[#7F5BFF] shadow-lg shadow-[#7F5BFF]/20"
+                                : "bg-white/[0.02] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.18] hover:text-white"
+                            }`}>
+                            {(entry.clients ?? []).includes(client.id) && <span className="text-white/80">✓</span>}
+                            {client.name}
+                          </button>
+                        ))}
+                      </div>
+                    )
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
 
