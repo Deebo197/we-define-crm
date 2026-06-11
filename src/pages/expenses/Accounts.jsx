@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Paperclip, SplitSquareHorizontal } from "lucide-react";
+import { Paperclip, SplitSquareHorizontal, FolderSync } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import ClientSplitInput from "@/components/expenses/ClientSplitInput";
 import CategorySelectItem from "@/components/expenses/CategorySelectItem";
@@ -31,7 +31,25 @@ export default function Accounts() {
   const [rowReceipts, setRowReceipts] = useState({}); // { [txnId]: { url, name } }
   const [rowAllocations, setRowAllocations] = useState({}); // { [txnId]: [...allocations] }
   const [splitDialogTxn, setSplitDialogTxn] = useState(null);
+  const [reorgConfirmOpen, setReorgConfirmOpen] = useState(false);
+  const [reorgResult, setReorgResult] = useState(null);
   const receiptInputRefs = useRef({});
+
+  const reorganiseDrive = useMutation({
+    mutationFn: async () => {
+      const res = await base44.functions.invoke("reorganiseDriveReceipts", {});
+      return res.data;
+    },
+    onSuccess: (data) => {
+      setReorgResult(data);
+      setReorgConfirmOpen(false);
+      toast.success(`Drive reorganise complete — ${data?.moved ?? 0} moved, ${data?.skipped ?? 0} skipped, ${data?.failed?.length ?? 0} failed.`);
+    },
+    onError: (err) => {
+      setReorgConfirmOpen(false);
+      toast.error(err.message || "Drive reorganise failed");
+    },
+  });
 
   // Description aliases: original -> custom, persisted in localStorage
   const [descAliases, setDescAliases] = useState(() => {
@@ -542,6 +560,64 @@ ${csvText}`,
           </DialogContent>
         </Dialog>
       )}
+
+      {/* Drive receipt reorganisation (admin) */}
+      <div className="bg-card rounded-xl border border-border p-5">
+        <h3 className="font-semibold mb-1">Reorganise Drive Receipts</h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          Moves every receipt file in Google Drive into &ldquo;We Define Travel Expenses / Year / Month&rdquo; based on the expense date.
+          Files are moved, not re-uploaded — existing share links stay valid.
+        </p>
+        <Button
+          variant="outline"
+          className="gap-1.5"
+          onClick={() => setReorgConfirmOpen(true)}
+          disabled={reorganiseDrive.isPending}
+        >
+          {reorganiseDrive.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <FolderSync className="h-4 w-4" />}
+          {reorganiseDrive.isPending ? "Reorganising..." : "Reorganise Drive receipts"}
+        </Button>
+        {reorgResult && (
+          <div className={`mt-3 px-4 py-2.5 rounded-lg text-sm border ${
+            reorgResult.failed?.length > 0 ? `${TONES.warning.pill} border-warning/20` : `${TONES.success.pill} border-success/20`
+          }`}>
+            <p className="font-medium">
+              {reorgResult.moved} moved · {reorgResult.skipped} already in place · {reorgResult.failed?.length ?? 0} failed · {reorgResult.total} total
+            </p>
+            {reorgResult.failed?.length > 0 && (
+              <ul className="mt-1.5 space-y-0.5 text-xs">
+                {reorgResult.failed.slice(0, 10).map((f) => (
+                  <li key={f.id} className="font-mono">{f.id}: {f.error}</li>
+                ))}
+                {reorgResult.failed.length > 10 && <li>…and {reorgResult.failed.length - 10} more</li>}
+              </ul>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Reorganise confirmation dialog */}
+      <Dialog open={reorgConfirmOpen} onOpenChange={setReorgConfirmOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Reorganise Drive receipts?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            This will move <strong>all</strong> receipt files in Google Drive into the
+            &ldquo;We Define Travel Expenses / Year / Month&rdquo; structure, based on each expense date.
+            Files keep their ids and share links. This is a one-off migration and may take a minute.
+          </p>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setReorgConfirmOpen(false)} disabled={reorganiseDrive.isPending}>
+              Cancel
+            </Button>
+            <Button onClick={() => reorganiseDrive.mutate()} disabled={reorganiseDrive.isPending} className="gap-1.5">
+              {reorganiseDrive.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {reorganiseDrive.isPending ? "Reorganising..." : "Yes, reorganise"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Accountant Export */}
       <AccountantExport />

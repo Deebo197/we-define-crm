@@ -17,13 +17,93 @@
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
+const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
 
+const MONTH_NAMES_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function getMonthNames() {
   return ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 }
 
+function getMonthFolderName(dateStr) {
+  const d = new Date(dateStr || new Date());
+  const year = d.getFullYear();
+  const month = d.getMonth();
+  const mm = String(month + 1).padStart(2, '0');
+  return { year: String(year), monthFolder: `${mm} - ${MONTH_NAMES_FULL[month]}` };
+}
 
+async function getMyDriveRootId(authHeader) {
+  const res = await fetch('https://www.googleapis.com/drive/v3/files/root?fields=id', {
+    headers: authHeader,
+  });
+  const json = await res.json();
+  return json.id;
+}
+
+async function getOrCreateCachedFolder(base44, authHeader, name, parentFolderId) {
+  let resolvedParent = parentFolderId;
+  if (!resolvedParent) {
+    resolvedParent = await getMyDriveRootId(authHeader);
+  }
+
+  const cacheKey = `${resolvedParent}/${name}`;
+
+  const existing = await base44.asServiceRole.entities.DriveFolder.filter({ name: cacheKey });
+  if (existing.length > 0) return existing[0].folder_id;
+
+  const q = encodeURIComponent(`name='${name}' and '${resolvedParent}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`, { headers: authHeader });
+  const searchJson = await searchRes.json();
+  if (searchJson.files && searchJson.files.length > 0) {
+    const folderId = searchJson.files[0].id;
+    await base44.asServiceRole.entities.DriveFolder.create({ name: cacheKey, folder_id: folderId, parent_folder_id: resolvedParent });
+    return folderId;
+  }
+
+  const meta = {
+    name,
+    mimeType: 'application/vnd.google-apps.folder',
+    parents: [resolvedParent],
+  };
+  const res = await fetch('https://www.googleapis.com/drive/v3/files', {
+    method: 'POST',
+    headers: { ...authHeader, 'Content-Type': 'application/json' },
+    body: JSON.stringify(meta),
+  });
+  const json = await res.json();
+  await base44.asServiceRole.entities.DriveFolder.create({
+    name: cacheKey,
+    folder_id: json.id,
+    parent_folder_id: resolvedParent,
+  });
+  return json.id;
+}
+
+/**
+ * Move a Drive file into the target folder using files.update
+ * addParents/removeParents — this keeps the file id and any public
+ * share links stable (no re-upload).
+ */
+async function moveDriveFile(authHeader, fileId, targetFolderId) {
+  const metaRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?fields=parents`, { headers: authHeader });
+  const meta = await metaRes.json();
+  if (meta.error) throw new Error(meta.error.message || 'Failed to read file parents');
+  const parents = meta.parents || [];
+  if (parents.includes(targetFolderId)) return; // already in the target folder
+
+  const removeParents = parents.join(',');
+  const moveRes = await fetch(
+    `https://www.googleapis.com/drive/v3/files/${fileId}?addParents=${targetFolderId}${removeParents ? `&removeParents=${removeParents}` : ''}&fields=id,parents`,
+    {
+      method: 'PATCH',
+      headers: { ...authHeader, 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    }
+  );
+  const moved = await moveRes.json();
+  if (moved.error) throw new Error(moved.error.message || 'Drive move failed');
+}
 
 Deno.serve(async (req) => {
   const base44 = createClientFromRequest(req);
@@ -188,22 +268,72 @@ Deno.serve(async (req) => {
     const paidBy = paid_by || item.paid_by || 'CB';
     const desc = description || item.extracted_description || item.extracted_supplier || '';
 
-    // --- STEP 5: Create the Expense ---
-    // Use the base44 file URL (not Drive URL) for receipt_file so the
-    // syncReceiptToDrive automation fires and handles Drive upload/move
-    // exactly the same way as a manually submitted expense.
-    const primaryFileUrl = item.primary_receipt_file_url || item.file_url;
+    // --- STEP 5: Move staged Drive files into the final year/month folder ---
+    // processInboxReceipt uploaded the files to the staging folder
+    // "We Define Travel Expenses/Receipt Inbox". On confirmation we MOVE them
+    // (Drive files.update addParents/removeParents) into
+    // "We Define Travel Expenses/<YEAR>/<MM - MonthName>" derived from the
+    // confirmed expense date — the file id and public links stay stable.
+    // Any file without a Drive id (e.g. the staging upload failed) keeps its
+    // base44 URL so the syncReceiptToDrive automation uploads it instead.
+    const confirmedDate = date || item.extracted_date || new Date().toISOString().split('T')[0];
 
-    // Strip drive URLs from receipt_files so syncReceiptToDrive re-uploads them
-    // into the correct group folder (not the Inbox folder).
-    const receiptFilesForExpense = item.receipt_files?.length > 0
-      ? item.receipt_files.map(f => ({
-          ...f,
-          drive_file_id: undefined,
-          public_receipt_url: f.file_url, // point to base44 URL so sync picks it up
-        }))
-      : undefined;
+    let authHeader = null;
+    let monthFolderId = null;
+    try {
+      const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
+      authHeader = { Authorization: `Bearer ${accessToken}` };
+      const { year: folderYear, monthFolder } = getMonthFolderName(confirmedDate);
+      const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
+      const yearId = await getOrCreateCachedFolder(base44, authHeader, folderYear, rootId);
+      monthFolderId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
+    } catch (driveErr) {
+      console.error('Drive folder resolution failed (falling back to re-upload via sync):', driveErr.message);
+      monthFolderId = null;
+    }
 
+    const sourceFileUrl = item.primary_receipt_file_url || item.file_url; // base44 URL
+    let primaryFileUrl = sourceFileUrl;
+    let receiptFilesForExpense;
+
+    if (item.receipt_files?.length > 0) {
+      receiptFilesForExpense = [];
+      for (const f of item.receipt_files) {
+        let movedOk = false;
+        if (monthFolderId && f.drive_file_id) {
+          try {
+            await moveDriveFile(authHeader, f.drive_file_id, monthFolderId);
+            movedOk = true;
+          } catch (moveErr) {
+            console.error(`Drive move failed for file ${f.drive_file_id}:`, moveErr.message);
+          }
+        }
+        if (movedOk) {
+          const fileLink = f.public_receipt_url?.includes('drive.google.com')
+            ? f.public_receipt_url
+            : `https://drive.google.com/file/d/${f.drive_file_id}/view`;
+          receiptFilesForExpense.push({ ...f, public_receipt_url: fileLink });
+          if (f.role === 'primary') primaryFileUrl = fileLink;
+        } else {
+          // No Drive copy — strip Drive fields so syncReceiptToDrive uploads it
+          receiptFilesForExpense.push({ ...f, drive_file_id: undefined, public_receipt_url: f.file_url });
+        }
+      }
+    } else if (monthFolderId && item.drive_file_id) {
+      try {
+        await moveDriveFile(authHeader, item.drive_file_id, monthFolderId);
+        primaryFileUrl = item.public_receipt_url?.includes('drive.google.com')
+          ? item.public_receipt_url
+          : `https://drive.google.com/file/d/${item.drive_file_id}/view`;
+      } catch (moveErr) {
+        console.error(`Drive move failed for file ${item.drive_file_id}:`, moveErr.message);
+      }
+    }
+
+    // --- STEP 5b: Create the Expense ---
+    // If the Drive move succeeded, receipt_url/primary_receipt_file_url hold
+    // Drive links so syncReceiptToDrive skips the record. Otherwise they hold
+    // base44 URLs, which triggers the normal upload path.
     const expense = await base44.asServiceRole.entities.Expense.create({
       date: date || item.extracted_date,
       description: desc,
@@ -213,8 +343,8 @@ Deno.serve(async (req) => {
       paid_by: paidBy,
       category: category || item.category || '',
       client_allocations: client_allocations || item.client_allocations || [],
-      receipt_file: primaryFileUrl,
-      receipt_url: primaryFileUrl,          // base44 URL → triggers syncReceiptToDrive
+      receipt_file: sourceFileUrl,
+      receipt_url: primaryFileUrl,
       primary_receipt_file_url: primaryFileUrl,
       receipt_files: receiptFilesForExpense,
       receipt_code: item.receipt_code,

@@ -11,30 +11,53 @@
  * 1. Auth + ownership check
  * 2. Fetch the ReceiptInboxItem
  * 3. Run OCR/AI extraction
- * 4. Upload to Drive Inbox folder, create public share link
+ * 4. Upload to the Drive staging folder ("We Define Travel Expenses/Receipt Inbox"),
+ *    create public share link. On confirmation, confirmInboxReceipt MOVES the file
+ *    into the final year/month folder (file id and links stay stable).
  * 5. Update item with extracted fields + Drive info
  * 6. Set status to "needs_review" (or "failed" on error)
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-function getMonthFolderName(dateStr) {
-  const d = new Date(dateStr || new Date());
-  const year = d.getFullYear();
-  const month = d.getMonth() + 1;
-  const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const mm = String(month).padStart(2, '0');
-  return { year: String(year), monthFolder: `${year}-${mm} ${monthNames[month - 1]}` };
+const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
+const INBOX_FOLDER = 'Receipt Inbox';
+
+async function getMyDriveRootId(authHeader) {
+  const res = await fetch('https://www.googleapis.com/drive/v3/files/root?fields=id', {
+    headers: authHeader,
+  });
+  const json = await res.json();
+  return json.id;
 }
 
 async function getOrCreateCachedFolder(base44, authHeader, name, parentFolderId) {
-  const cacheKey = parentFolderId ? `${parentFolderId}/${name}` : name;
+  // For the root folder, resolve My Drive root as parent
+  let resolvedParent = parentFolderId;
+  if (!resolvedParent) {
+    resolvedParent = await getMyDriveRootId(authHeader);
+  }
+
+  const cacheKey = `${resolvedParent}/${name}`;
+
+  // Check DB cache first
   const existing = await base44.asServiceRole.entities.DriveFolder.filter({ name: cacheKey });
   if (existing.length > 0) return existing[0].folder_id;
 
+  // Search Drive for an existing folder with this name under this parent
+  const q = encodeURIComponent(`name='${name}' and '${resolvedParent}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`);
+  const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${q}&fields=files(id)&spaces=drive`, { headers: authHeader });
+  const searchJson = await searchRes.json();
+  if (searchJson.files && searchJson.files.length > 0) {
+    const folderId = searchJson.files[0].id;
+    await base44.asServiceRole.entities.DriveFolder.create({ name: cacheKey, folder_id: folderId, parent_folder_id: resolvedParent });
+    return folderId;
+  }
+
+  // Not found — create it
   const meta = {
     name,
     mimeType: 'application/vnd.google-apps.folder',
-    ...(parentFolderId ? { parents: [parentFolderId] } : {}),
+    parents: [resolvedParent],
   };
   const res = await fetch('https://www.googleapis.com/drive/v3/files', {
     method: 'POST',
@@ -42,23 +65,18 @@ async function getOrCreateCachedFolder(base44, authHeader, name, parentFolderId)
     body: JSON.stringify(meta),
   });
   const json = await res.json();
-  const folderId = json.id;
-
   await base44.asServiceRole.entities.DriveFolder.create({
     name: cacheKey,
-    folder_id: folderId,
-    parent_folder_id: parentFolderId || '',
+    folder_id: json.id,
+    parent_folder_id: resolvedParent,
   });
-  return folderId;
+  return json.id;
 }
 
-async function getInboxFolderId(base44, authHeader, dateStr) {
-  const { year, monthFolder } = getMonthFolderName(dateStr);
-  const rootId = await getOrCreateCachedFolder(base44, authHeader, 'WDT Receipts', null);
-  const yearId = await getOrCreateCachedFolder(base44, authHeader, year, rootId);
-  const monthId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
-  const inboxId = await getOrCreateCachedFolder(base44, authHeader, 'Inbox', monthId);
-  const folderPath = `WDT Receipts/${year}/${monthFolder}/Inbox`;
+async function getInboxFolderId(base44, authHeader) {
+  const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
+  const inboxId = await getOrCreateCachedFolder(base44, authHeader, INBOX_FOLDER, rootId);
+  const folderPath = `${RECEIPTS_ROOT_FOLDER}/${INBOX_FOLDER}`;
   return { inboxId, folderPath };
 }
 
@@ -169,12 +187,11 @@ Return only valid JSON with those exact keys.`,
     }
 
     const extractedDate = extracted.date || new Date().toISOString().split('T')[0];
-    const { year, monthFolder } = getMonthFolderName(extractedDate);
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const d = new Date(extractedDate);
     const monthStr = `${monthNames[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
 
-    // --- Drive upload to Inbox folder ---
+    // --- Drive upload to the staging folder (Receipt Inbox) ---
     let driveFileId = null;
     let publicUrl = null;
     let folderPath = null;
@@ -183,7 +200,7 @@ Return only valid JSON with those exact keys.`,
       const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
       const authHeader = { Authorization: `Bearer ${accessToken}` };
 
-      const { inboxId, folderPath: fp } = await getInboxFolderId(base44, authHeader, extractedDate);
+      const { inboxId, folderPath: fp } = await getInboxFolderId(base44, authHeader);
       folderPath = fp;
 
       // For multi-file items: upload each file with Primary/Supporting labels

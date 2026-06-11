@@ -2,8 +2,11 @@
  * bulkResyncReceiptsToDrive — Admin-only function that re-syncs all expense and mileage
  * receipts to Google Drive, clearing old Drive IDs first so everything gets re-uploaded fresh.
  *
- * This is useful when the Google Drive account was changed and the WDT Receipts folder
- * needs to be fully repopulated.
+ * This is useful when the Google Drive account was changed and the
+ * "We Define Travel Expenses" folder needs to be fully repopulated.
+ *
+ * Folder structure (no group subfolders):
+ *   We Define Travel Expenses / YEAR / MM - MonthName
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
@@ -71,20 +74,15 @@ Deno.serve(async (req) => {
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
     const authHeader = { Authorization: `Bearer ${accessToken}` };
 
-    const PAID_BY_GROUP = {
-      WD: 'WD-WD1', WD1: 'WD-WD1',
-      WCA: 'WCA-CB', CB: 'WCA-CB',
-      WSA: 'WSA-ST', ST: 'WSA-ST',
-      WDA: 'WDA-DJ', DJ: 'WDA-DJ',
-    };
-    const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
+    const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
     function getMonthFolderName(dateStr) {
       const d = new Date(dateStr || new Date());
       const year = d.getFullYear();
       const month = d.getMonth();
       const mm = String(month + 1).padStart(2, '0');
-      return { year: String(year), monthFolder: `${year}-${mm} ${MONTH_NAMES[month]}` };
+      return { year: String(year), monthFolder: `${mm} - ${MONTH_NAMES[month]}` };
     }
 
     // Folder cache (in-memory for this run)
@@ -148,7 +146,7 @@ Deno.serve(async (req) => {
 
     const myDriveRootId = await getMyDriveRootId();
     // Pre-create root folder
-    const rootId = await getOrCreateFolder('WDT Receipts', myDriveRootId);
+    const rootId = await getOrCreateFolder(RECEIPTS_ROOT_FOLDER, myDriveRootId);
 
     let synced = 0;
     let failed = 0;
@@ -158,10 +156,8 @@ Deno.serve(async (req) => {
       try {
         const dateStr = e.date || new Date().toISOString().split('T')[0];
         const { year, monthFolder } = getMonthFolderName(dateStr);
-        const group = PAID_BY_GROUP[e.paid_by] || (e.paid_by ? e.paid_by : 'Inbox');
         const yearId = await getOrCreateFolder(year, rootId);
         const monthId = await getOrCreateFolder(monthFolder, yearId);
-        const groupId = await getOrCreateFolder(group, monthId);
 
         const supplierOrDesc = (e.description || '').replace(/[^a-zA-Z0-9 \-]/g, '').trim().slice(0, 40);
         const amt = Number(e.paid_amount || 0).toFixed(2);
@@ -179,7 +175,7 @@ Deno.serve(async (req) => {
             const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(origExt) ? origExt : 'jpg';
             const label = rf.role === 'primary' ? 'Primary' : `Supporting ${++supportingCount}`;
             const fileName = `${basePrefix} - ${label}.${safeExt}`;
-            const uploadData = await uploadFile(rf.file_url, fileName, groupId);
+            const uploadData = await uploadFile(rf.file_url, fileName, monthId);
             if (!uploadData.id) continue;
             await makePublic(uploadData.id);
             const fileLink = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
@@ -195,7 +191,7 @@ Deno.serve(async (req) => {
           const ext = urlPath.split('.').pop().toLowerCase();
           const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
           const fileName = `${basePrefix} - Primary.${safeExt}`;
-          const uploadData = await uploadFile(e.receipt_file, fileName, groupId);
+          const uploadData = await uploadFile(e.receipt_file, fileName, monthId);
           if (!uploadData.id) throw new Error('Upload returned no ID');
           await makePublic(uploadData.id);
           primaryPublicUrl = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
@@ -216,12 +212,11 @@ Deno.serve(async (req) => {
         const { year, monthFolder } = getMonthFolderName(dateStr);
         const yearId = await getOrCreateFolder(year, rootId);
         const monthId = await getOrCreateFolder(monthFolder, yearId);
-        const groupId = await getOrCreateFolder('Mileage', monthId);
         const urlPath = m.receipt_file.split('?')[0];
         const ext = urlPath.split('.').pop().toLowerCase();
         const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
         const fileName = `${m.receipt_code} - Mileage.${safeExt}`;
-        const uploadData = await uploadFile(m.receipt_file, fileName, groupId);
+        const uploadData = await uploadFile(m.receipt_file, fileName, monthId);
         if (!uploadData.id) throw new Error('Upload returned no ID');
         await makePublic(uploadData.id);
         const shareableLink = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;

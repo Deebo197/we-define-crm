@@ -1,14 +1,16 @@
 /**
- * moveDriveFolderToRoot — one-time utility to move the existing WDT Receipts
- * folder into the authenticated user's My Drive root so it appears in the
- * normal folder tree.
+ * moveDriveFolderToRoot — one-time utility to move a Drive folder into the
+ * authenticated user's My Drive root so it appears in the normal folder tree.
  *
- * Call once from Dashboard → Code → Functions → moveDriveFolderToRoot → Test.
+ * POST body: { folder_id: string } — the Drive folder id to move.
+ * (The receipts root "We Define Travel Expenses" is created at the top of
+ * My Drive by the sync functions, so this is only needed for folders that
+ * ended up elsewhere.)
+ *
+ * Call from Dashboard → Code → Functions → moveDriveFolderToRoot → Test.
  * Admin only.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
-
-const WDT_RECEIPTS_FOLDER_ID = '1rK7tPgxKwJ4THP65hMPVzoNR3Qy3A2k4';
 
 Deno.serve(async (req) => {
   try {
@@ -16,6 +18,12 @@ Deno.serve(async (req) => {
     const user = await base44.auth.me();
     if (user?.role !== 'admin') {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    const payload = await req.json().catch(() => ({}));
+    const folderId = payload.folder_id;
+    if (!folderId) {
+      return Response.json({ error: 'folder_id required' }, { status: 400 });
     }
 
     const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
@@ -27,9 +35,9 @@ Deno.serve(async (req) => {
     });
     const { id: rootId } = await rootRes.json();
 
-    // Get current parents of the WDT Receipts folder
+    // Get current parents of the folder
     const fileRes = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${WDT_RECEIPTS_FOLDER_ID}?fields=id,name,parents`,
+      `https://www.googleapis.com/drive/v3/files/${folderId}?fields=id,name,parents`,
       { headers: authHeader }
     );
     const fileData = await fileRes.json();
@@ -37,7 +45,7 @@ Deno.serve(async (req) => {
 
     // Move: add My Drive root as parent, remove existing parents
     const moveRes = await fetch(
-      `https://www.googleapis.com/drive/v3/files/${WDT_RECEIPTS_FOLDER_ID}?addParents=${rootId}&removeParents=${currentParents}&fields=id,name,parents`,
+      `https://www.googleapis.com/drive/v3/files/${folderId}?addParents=${rootId}&removeParents=${currentParents}&fields=id,name,parents`,
       {
         method: 'PATCH',
         headers: { ...authHeader, 'Content-Type': 'application/json' },
@@ -52,7 +60,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
-      message: 'WDT Receipts folder moved to My Drive root',
+      message: `Folder "${moved.name || folderId}" moved to My Drive root`,
       folder: moved,
     });
   } catch (error) {

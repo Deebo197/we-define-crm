@@ -3,33 +3,24 @@
  *
  * Supports both single-file and multi-file (receipt_files[]) expenses.
  *
- * Folder structure:
- *   WDT Receipts / YEAR / YYYY-MM Month / GROUP
+ * Folder structure (expense and mileage receipts alike — no group subfolders):
+ *   We Define Travel Expenses / YEAR / MM - MonthName
+ * e.g. We Define Travel Expenses/2026/06 - June
  *
- * GROUP mapping:
- *   WD, WD1  → WD-WD1
- *   WCA, CB  → WCA-CB
- *   WSA, ST  → WSA-ST
- *   WDA, DJ  → WDA-DJ
- *   Mileage  → Mileage
+ * The month is derived from the expense date (data.date).
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
-const PAID_BY_GROUP = {
-  WD: 'WD-WD1', WD1: 'WD-WD1',
-  WCA: 'WCA-CB', CB: 'WCA-CB',
-  WSA: 'WSA-ST', ST: 'WSA-ST',
-  WDA: 'WDA-DJ', DJ: 'WDA-DJ',
-};
+const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
 
-const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function getMonthFolderName(dateStr) {
   const d = new Date(dateStr || new Date());
   const year = d.getFullYear();
   const month = d.getMonth();
   const mm = String(month + 1).padStart(2, '0');
-  return { year: String(year), monthFolder: `${year}-${mm} ${MONTH_NAMES[month]}` };
+  return { year: String(year), monthFolder: `${mm} - ${MONTH_NAMES[month]}` };
 }
 
 async function flagSyncFailed(base44, entityType, entityId) {
@@ -168,17 +159,16 @@ Deno.serve(async (req) => {
       const dateStr = data.date || new Date().toISOString().split('T')[0];
       const { year, monthFolder } = getMonthFolderName(dateStr);
 
-      const rootId = await getOrCreateCachedFolder(base44, authHeader, 'WDT Receipts', null);
+      const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
       const yearId = await getOrCreateCachedFolder(base44, authHeader, year, rootId);
       const monthId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
-      const groupId = await getOrCreateCachedFolder(base44, authHeader, 'Mileage', monthId);
 
       const urlPath = receiptFile.split('?')[0];
       const ext = urlPath.split('.').pop().toLowerCase();
       const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
       const fileName = `${receiptCode} - Mileage.${safeExt}`;
 
-      const uploadData = await uploadFileToDrive(authHeader, receiptFile, fileName, groupId);
+      const uploadData = await uploadFileToDrive(authHeader, receiptFile, fileName, monthId);
       if (!uploadData.id) {
         await flagSyncFailed(base44, entityType, entityId);
         return Response.json({ error: 'Upload failed', details: uploadData }, { status: 500 });
@@ -215,12 +205,10 @@ Deno.serve(async (req) => {
 
     const dateStr = data.date || new Date().toISOString().split('T')[0];
     const { year, monthFolder } = getMonthFolderName(dateStr);
-    const group = PAID_BY_GROUP[paidBy] || (paidBy ? paidBy : 'Inbox');
 
-    const rootId = await getOrCreateCachedFolder(base44, authHeader, 'WDT Receipts', null);
+    const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
     const yearId = await getOrCreateCachedFolder(base44, authHeader, year, rootId);
     const monthId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
-    const groupId = await getOrCreateCachedFolder(base44, authHeader, group, monthId);
 
     const supplierOrDesc = (data.description || '').replace(/[^a-zA-Z0-9 \-]/g, '').trim().slice(0, 40);
     const amt = Number(data.paid_amount || 0).toFixed(2);
@@ -246,7 +234,7 @@ Deno.serve(async (req) => {
         const label = rf.role === 'primary' ? 'Primary' : `Supporting ${++supportingCount}`;
         const fileName = `${basePrefix} - ${label}.${safeExt}`;
 
-        const uploadData = await uploadFileToDrive(authHeader, rf.file_url, fileName, groupId);
+        const uploadData = await uploadFileToDrive(authHeader, rf.file_url, fileName, monthId);
         if (!uploadData.id) {
           console.error(`Upload failed for receipt_file index ${i}:`, uploadData);
           continue; // best-effort — don't abort the whole sync
@@ -272,7 +260,7 @@ Deno.serve(async (req) => {
       const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
       const fileName = `${basePrefix} - Primary.${safeExt}`;
 
-      const uploadData = await uploadFileToDrive(authHeader, singleReceiptFile, fileName, groupId);
+      const uploadData = await uploadFileToDrive(authHeader, singleReceiptFile, fileName, monthId);
       if (!uploadData.id) {
         await flagSyncFailed(base44, entityType, entityId);
         return Response.json({ error: 'Upload failed', details: uploadData }, { status: 500 });
@@ -289,7 +277,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       drive_link: primaryPublicUrl,
-      folder_path: `WDT Receipts/${year}/${monthFolder}/${group}`,
+      folder_path: `${RECEIPTS_ROOT_FOLDER}/${year}/${monthFolder}`,
     });
 
   } catch (error) {
