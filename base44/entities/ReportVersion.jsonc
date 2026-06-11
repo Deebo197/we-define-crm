@@ -1,0 +1,69 @@
+{
+  "name": "ReportVersion",
+  "type": "object",
+  "properties": {
+    "report_id": {
+      "type": "string",
+      "description": "ID of the parent Report (shared data backbone)"
+    },
+    "report_title": {
+      "type": "string",
+      "description": "Denormalized parent Report title"
+    },
+    "version": {
+      "type": "string",
+      "enum": [
+        "Internal",
+        "Client"
+      ],
+      "description": "Which rendering this is — internal tracking or client-facing"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Draft",
+        "Review",
+        "Final"
+      ],
+      "default": "Draft",
+      "description": "Per-version status — internal can be Final while client is still Draft"
+    },
+    "cover_note": {
+      "type": "string",
+      "description": "Optional short cover note (client version)"
+    },
+    "activity_summary": {
+      "type": "string"
+    },
+    "key_interactions": {
+      "type": "string"
+    },
+    "market_insights": {
+      "type": "string"
+    },
+    "client_updates": {
+      "type": "string"
+    },
+    "marketing_activity": {
+      "type": "string"
+    },
+    "opportunities": {
+      "type": "string"
+    },
+    "challenges": {
+      "type": "string"
+    },
+    "actions_next_steps": {
+      "type": "string"
+    },
+    "issued_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When this version was issued/sent (client version)"
+    }
+  },
+  "required": [
+    "report_id",
+    "version"
+  ]
+}

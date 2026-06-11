@@ -1,0 +1,46 @@
+{
+  "name": "ClientTradeLink",
+  "type": "object",
+  "properties": {
+    "trade_account_id": {
+      "type": "string",
+      "description": "ID of the linked TradeAccount"
+    },
+    "trade_account_name": {
+      "type": "string",
+      "description": "Denormalized TradeAccount name"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "ID of the linked Client"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized Client name"
+    },
+    "tier_for_client": {
+      "type": "string",
+      "enum": [
+        "Key",
+        "Mid",
+        "Long-tail"
+      ],
+      "description": "Priority of this trade account for this specific client"
+    },
+    "preferred_products": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Which of the client's products this operator actually sells (room types / islands / board basis)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Relationship notes specific to this client-account pairing"
+    }
+  },
+  "required": [
+    "trade_account_id",
+    "client_id"
+  ]
+}

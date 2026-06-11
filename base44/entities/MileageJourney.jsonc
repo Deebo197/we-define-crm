@@ -1,0 +1,154 @@
+{
+  "name": "MileageJourney",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+    },
+    "staff_member": {
+      "type": "string",
+      "title": "Staff Member Email"
+    },
+    "staff_member_name": {
+      "type": "string",
+      "title": "Staff Member Name"
+    },
+    "vehicle_type": {
+      "type": "string",
+      "title": "Vehicle Type",
+      "enum": [
+        "Car",
+        "Motorcycle",
+        "Bicycle"
+      ]
+    },
+    "rate_per_mile": {
+      "type": "number",
+      "title": "Rate Per Mile"
+    },
+    "purpose": {
+      "type": "string",
+      "title": "Purpose"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "stops": {
+      "type": "array",
+      "title": "Stops",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "postcode": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "return_journey": {
+      "type": "boolean",
+      "title": "Return Journey",
+      "default": false
+    },
+    "total_miles": {
+      "type": "number",
+      "title": "Total Miles"
+    },
+    "total_cost": {
+      "type": "number",
+      "title": "Total Cost"
+    },
+    "client_allocations": {
+      "type": "array",
+      "title": "Client Allocations",
+      "items": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "CRM Client ID"
+          },
+          "client_code": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "reimbursement_required": {
+      "type": "boolean",
+      "title": "Reimbursement Required",
+      "default": false
+    },
+    "reimbursement_paid": {
+      "type": "boolean",
+      "title": "Reimbursement Paid",
+      "default": false
+    },
+    "receipt_code": {
+      "type": "string",
+      "title": "Receipt Code"
+    },
+    "receipt_file": {
+      "type": "string",
+      "title": "Receipt File"
+    },
+    "receipt_url": {
+      "type": "string",
+      "title": "Receipt URL"
+    },
+    "route_image_url": {
+      "type": "string",
+      "title": "Route Image URL"
+    },
+    "route_image_code": {
+      "type": "string",
+      "title": "Route Image Code"
+    },
+    "month": {
+      "type": "string",
+      "title": "Month"
+    },
+    "year": {
+      "type": "number",
+      "title": "Year"
+    },
+    "drive_sync_failed": {
+      "type": "boolean",
+      "title": "Drive Sync Failed",
+      "default": false
+    }
+  },
+  "required": [
+    "date",
+    "vehicle_type",
+    "purpose",
+    "stops",
+    "client_allocations",
+    "staff_member"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {},
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

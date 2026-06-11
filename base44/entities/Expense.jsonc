@@ -1,0 +1,251 @@
+{
+  "name": "Expense",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "title": "Date"
+    },
+    "invoice_date": {
+      "type": "string",
+      "format": "date",
+      "title": "Invoice Date"
+    },
+    "client_allocations": {
+      "type": "array",
+      "title": "Client Allocations",
+      "items": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string",
+            "description": "CRM Client ID"
+          },
+          "client_code": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "percentage": {
+            "type": "number"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "paid_by": {
+      "type": "string",
+      "title": "Paid By",
+      "enum": [
+        "WCA",
+        "WSA",
+        "WDA",
+        "CB",
+        "ST",
+        "DJ",
+        "WD",
+        "WD1"
+      ]
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "actual_cost": {
+      "type": "number",
+      "title": "Actual Cost"
+    },
+    "paid_amount": {
+      "type": "number",
+      "title": "Paid Amount (GBP)"
+    },
+    "currency": {
+      "type": "string",
+      "title": "Original Currency",
+      "default": "GBP"
+    },
+    "original_amount": {
+      "type": "number",
+      "title": "Original Amount (Foreign Currency)"
+    },
+    "exchange_rate": {
+      "type": "number",
+      "title": "Exchange Rate (to GBP)"
+    },
+    "vat": {
+      "type": "boolean",
+      "title": "VAT Applicable",
+      "default": false
+    },
+    "receipt_code": {
+      "type": "string",
+      "title": "Receipt Code"
+    },
+    "reimbursement_required": {
+      "type": "boolean",
+      "title": "Reimbursement Required",
+      "default": false
+    },
+    "reimbursement_paid": {
+      "type": "boolean",
+      "title": "Reimbursement Paid",
+      "default": false
+    },
+    "month": {
+      "type": "string",
+      "title": "Month"
+    },
+    "year": {
+      "type": "number",
+      "title": "Year"
+    },
+    "submitted_by": {
+      "type": "string",
+      "title": "Submitted By"
+    },
+    "submitted_by_name": {
+      "type": "string",
+      "title": "Submitted By Name"
+    },
+    "receipt_file": {
+      "type": "string",
+      "title": "Receipt File"
+    },
+    "receipt_url": {
+      "type": "string",
+      "title": "Receipt URL"
+    },
+    "primary_receipt_file_url": {
+      "type": "string",
+      "title": "Primary Receipt File URL"
+    },
+    "receipt_files": {
+      "type": "array",
+      "title": "Receipt Files",
+      "items": {
+        "type": "object",
+        "properties": {
+          "file_url": {
+            "type": "string"
+          },
+          "public_receipt_url": {
+            "type": "string"
+          },
+          "drive_file_id": {
+            "type": "string"
+          },
+          "original_filename": {
+            "type": "string"
+          },
+          "mime_type": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "primary",
+              "supporting"
+            ]
+          },
+          "sort_order": {
+            "type": "number"
+          },
+          "ocr_used": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "title": "Source",
+      "enum": [
+        "manual",
+        "csv_import",
+        "mileage",
+        "email_intake"
+      ],
+      "default": "manual"
+    },
+    "status": {
+      "type": "string",
+      "title": "Status",
+      "enum": [
+        "draft",
+        "confirmed"
+      ],
+      "default": "confirmed"
+    },
+    "drive_sync_failed": {
+      "type": "boolean",
+      "title": "Drive Sync Failed",
+      "default": false
+    },
+    "is_admin_only_duplicate": {
+      "type": "boolean",
+      "title": "Admin Only Duplicate",
+      "default": false
+    }
+  },
+  "required": [
+    "date",
+    "description",
+    "paid_amount",
+    "paid_by",
+    "client_allocations"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "$and": [
+            {
+              "$or": [
+                {
+                  "created_by": "{{user.email}}"
+                },
+                {
+                  "data.submitted_by": "{{user.email}}"
+                }
+              ]
+            },
+            {
+              "data.is_admin_only_duplicate": false
+            }
+          ]
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

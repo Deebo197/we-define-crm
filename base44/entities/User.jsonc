@@ -1,0 +1,25 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "The role of the user in the app",
+      "enum": [
+        "admin",
+        "user"
+      ]
+    },
+    "paid_by_code": {
+      "type": "string",
+      "description": "Paid By code — company card / no reimbursement (e.g. WDA, WSA, WCA)"
+    },
+    "paid_by_code_personal": {
+      "type": "string",
+      "description": "Paid By code — personal / reimbursement required (e.g. DJ, ST, CB)"
+    }
+  },
+  "required": [
+    "role"
+  ]
+}

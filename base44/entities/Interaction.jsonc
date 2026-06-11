@@ -86,7 +86,7 @@
     },
     "notes": {
       "type": "array",
-      "description": "Structured note blocks \u2014 each typed, assigned to clients, with optional CROSSROADS tag",
+      "description": "Structured note blocks — each typed, assigned to clients, with optional CROSSROADS tag",
       "items": {
         "type": "object",
         "properties": {
@@ -119,40 +119,6 @@
               "SAii",
               "Both (CROSSROADS)"
             ]
-          }
-        }
-      }
-    },
-    "general_notes": {
-      "type": "string",
-      "description": "Legacy field"
-    },
-    "general_notes_assigned_clients": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      }
-    },
-    "client_specific_notes": {
-      "type": "array",
-      "description": "Legacy field",
-      "items": {
-        "type": "object",
-        "properties": {
-          "client_id": {
-            "type": "string"
-          },
-          "client_name": {
-            "type": "string"
-          },
-          "notes": {
-            "type": "string"
-          },
-          "tags": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
           }
         }
       }

@@ -18,9 +18,52 @@
       "type": "string",
       "description": "Job title"
     },
-    "client_role": {
+    "function": {
       "type": "string",
-      "description": "Role for this client e.g. GM, DOSM"
+      "enum": [
+        "Commercial",
+        "Product",
+        "Marketing",
+        "Press",
+        "Admin"
+      ],
+      "description": "What this person does — enables cross-operator filtering"
+    },
+    "seniority": {
+      "type": "string",
+      "enum": [
+        "Head/Director",
+        "Manager",
+        "Executive",
+        "Other"
+      ],
+      "description": "Seniority level"
+    },
+    "coverage": {
+      "type": "array",
+      "description": "This contact's own patch — destinations they sell/manage and which WDT clients. Self-standing, not inherited from the parent account. Primarily for Commercial-function contacts.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "type": "string",
+            "enum": [
+              "Maldives",
+              "Mauritius",
+              "UAE",
+              "Far East"
+            ],
+            "description": "Destination in this person's patch"
+          },
+          "clients": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "WDT client IDs this person sells/manages for this destination"
+          }
+        }
+      }
     },
     "company_id": {
       "type": "string",
@@ -75,26 +118,6 @@
       "type": "string",
       "description": "Home country"
     },
-    "dest_maldives": {
-      "type": "boolean",
-      "description": "Interested in Maldives",
-      "default": false
-    },
-    "dest_mauritius": {
-      "type": "boolean",
-      "description": "Interested in Mauritius",
-      "default": false
-    },
-    "dest_uae": {
-      "type": "boolean",
-      "description": "Interested in UAE",
-      "default": false
-    },
-    "dest_far_east": {
-      "type": "boolean",
-      "description": "Interested in Far East",
-      "default": false
-    },
     "notes": {
       "type": "string",
       "description": "General notes"
@@ -115,20 +138,6 @@
       "items": {
         "type": "string"
       }
-    },
-    "linked_clients": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "IDs of clients this contact is associated with"
-    },
-    "linked_client_names": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Denormalized client names"
     },
     "working_pattern": {
       "type": "object",

@@ -1,0 +1,112 @@
+import { Clock, CheckCircle2, AlertCircle, Loader2, FileText, Image, Eye, Layers } from "lucide-react";
+import { formatCurrency, formatDateUK } from "@/lib/constants";
+
+const STATUS_CONFIG = {
+  inbox:        { label: "Queued",       icon: Clock,         color: "#9699A6", bg: "rgba(150,153,166,0.1)" },
+  processing:   { label: "Processing",   icon: Loader2,       color: "#5A3DE6", bg: "rgba(90,61,230,0.1)", spin: true },
+  needs_review: { label: "Needs Review", icon: AlertCircle,   color: "#FDAB3D", bg: "rgba(253,171,61,0.12)" },
+  confirmed:    { label: "Confirmed",    icon: CheckCircle2,  color: "#00C875", bg: "rgba(0,200,117,0.12)" },
+  failed:       { label: "Failed",       icon: AlertCircle,   color: "#E2445C", bg: "rgba(226,68,92,0.12)" },
+};
+
+export default function InboxItemCard({ item, onClick, selectable, selected, onToggleSelect }) {
+  const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.inbox;
+  const Icon = cfg.icon;
+  const isPdf = item.mime_type === "application/pdf" || item.original_filename?.toLowerCase().endsWith(".pdf");
+  const fileCount = item.receipt_files?.length || 1;
+  const isClickable = item.status === "needs_review" || item.status === "failed" || item.status === "processing" || item.status === "inbox";
+
+  const handleClick = () => {
+    if (selectable) {
+      onToggleSelect?.(item.id);
+    } else if (isClickable) {
+      onClick(item);
+    }
+  };
+
+  return (
+    <div
+      onClick={handleClick}
+      className="rounded-[16px] p-4 transition-all duration-200 flex gap-3"
+      style={{
+        backgroundColor: selected ? "rgba(90,61,230,0.08)" : "var(--bg-surface)",
+        border: selected ? "1.5px solid rgba(90,61,230,0.5)" : "1px solid var(--border-soft)",
+        cursor: selectable ? "pointer" : isClickable ? "pointer" : "default",
+      }}
+      onMouseEnter={(e) => {
+        if (selectable || isClickable) e.currentTarget.style.backgroundColor = selected ? "rgba(90,61,230,0.12)" : "var(--bg-surface-2)";
+      }}
+      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = selected ? "rgba(90,61,230,0.08)" : "var(--bg-surface)"; }}
+    >
+      {/* Thumbnail / icon */}
+      <div
+        className="w-16 h-16 rounded-[10px] flex items-center justify-center flex-shrink-0 overflow-hidden"
+        style={{ backgroundColor: "var(--bg-surface-2)" }}
+      >
+        {isPdf ? (
+          <FileText className="h-7 w-7" style={{ color: "#E2445C" }} strokeWidth={1.5} />
+        ) : item.file_url ? (
+          <img src={item.file_url} alt="receipt" className="w-full h-full object-cover" />
+        ) : (
+          <Image className="h-7 w-7" style={{ color: "var(--text-tertiary)" }} strokeWidth={1.5} />
+        )}
+      </div>
+
+      {/* Details */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <span className="text-xs font-mono font-semibold" style={{ color: "#5A3DE6" }}>
+            {item.receipt_code}
+          </span>
+          <span
+            className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{ backgroundColor: cfg.bg, color: cfg.color }}
+          >
+            <Icon className={`h-2.5 w-2.5 ${cfg.spin ? "animate-spin" : ""}`} />
+            {cfg.label}
+          </span>
+        </div>
+
+        <p className="text-sm font-medium truncate" style={{ color: "var(--text-primary)" }}>
+          {item.extracted_supplier || item.extracted_description || item.original_filename || "Receipt"}
+        </p>
+
+        <div className="flex items-center gap-3 mt-1 flex-wrap">
+          {item.extracted_date && (
+            <span className="text-xs" style={{ color: "var(--text-tertiary)" }}>
+              {formatDateUK(item.extracted_date)}
+            </span>
+          )}
+          {item.extracted_amount > 0 && (
+            <span className="text-sm font-semibold tabular-nums" style={{ color: "var(--text-primary)" }}>
+              {formatCurrency(item.extracted_amount)}
+            </span>
+          )}
+          {item.ocr_error && item.status === "failed" && (
+            <span className="text-xs" style={{ color: "#E2445C" }}>OCR failed — click to enter manually</span>
+          )}
+        </div>
+      </div>
+
+      {/* Right side: file count badge + review arrow */}
+      <div className="flex flex-col items-end justify-between flex-shrink-0 ml-1">
+        {fileCount > 1 && (
+          <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-1.5 py-0.5 rounded-full mb-1"
+            style={{ backgroundColor: "rgba(0,200,117,0.1)", color: "#00C875" }}>
+            <Layers className="h-2.5 w-2.5" />{fileCount}
+          </span>
+        )}
+        {selectable ? (
+          <div
+            className="w-5 h-5 rounded-full border-2 flex items-center justify-center self-center"
+            style={{ borderColor: selected ? "#5A3DE6" : "var(--border-strong)", backgroundColor: selected ? "#5A3DE6" : "transparent" }}
+          >
+            {selected && <CheckCircle2 className="h-3 w-3 text-white" />}
+          </div>
+        ) : isClickable ? (
+          <Eye className="h-4 w-4 self-center" style={{ color: "var(--text-tertiary)" }} />
+        ) : null}
+      </div>
+    </div>
+  );
+}

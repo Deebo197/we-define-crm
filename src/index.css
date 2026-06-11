@@ -84,3 +84,35 @@
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }
+
+/* ── Expenses module bridge ───────────────────────────────────────────────
+   The ported Expenses pages reference these variables/utilities. They map
+   1:1 onto the Repevo light tokens (see tailwind.config.js) so the module
+   renders with the same canvas/surface/line/ink palette as the rest of the
+   app. Do not point these at dark values. */
+:root {
+  --bg-base: #F6F7FB;        /* canvas */
+  --bg-surface: #FFFFFF;     /* surface */
+  --bg-surface-2: #F6F7FB;   /* surface-secondary */
+  --bg-elevated: #FFFFFF;    /* surface-elevated */
+  --text-primary: #1F2430;   /* ink */
+  --text-secondary: #676879; /* muted */
+  --text-tertiary: #9699A6;  /* faint */
+  --border-soft: #E4E7EE;    /* line */
+  --border-strong: #CBD1DE;  /* line-strong */
+}
+
+.card-elevation {
+  /* mirrors shadow-card */
+  box-shadow: 0 1px 3px rgba(31, 36, 48, 0.06), 0 4px 16px rgba(31, 36, 48, 0.04);
+}
+
+.shimmer-line {
+  background: linear-gradient(90deg, transparent 0%, rgba(31, 36, 48, 0.06) 50%, transparent 100%) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.8s linear infinite;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}

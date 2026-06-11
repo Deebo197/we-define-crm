@@ -16,9 +16,19 @@ import {
   FolderOpen,
   ChevronLeft,
   ChevronRight,
-  LogOut
+  LogOut,
+  PlusCircle,
+  Inbox,
+  MapPin,
+  CreditCard,
+  List,
+  Landmark,
+  PieChart,
+  HelpCircle
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
+import ProfileCodePicker from "@/components/expenses/ProfileCodePicker";
 
 const navGroups = [
   {
@@ -45,7 +55,18 @@ const navGroups = [
   },
   {
     label: "Expenses",
-    items: [{ label: "Expenses", icon: Receipt, soon: true }],
+    items: [
+      { label: "Overview", icon: PieChart, path: "/expenses" },
+      { label: "Submit Expense", icon: PlusCircle, path: "/expenses/submit" },
+      { label: "My Expenses", icon: Receipt, path: "/expenses/mine" },
+      { label: "Receipt Inbox", icon: Inbox, path: "/expenses/inbox" },
+      { label: "Mileage", icon: MapPin, path: "/expenses/mileage" },
+      { label: "Reimbursements", icon: CreditCard, path: "/expenses/reimbursements" },
+      { label: "All Expenses", icon: List, path: "/expenses/all", adminOnly: true },
+      { label: "Accounts", icon: Landmark, path: "/expenses/accounts", adminOnly: true },
+      { label: "Client Report", icon: FileText, path: "/expenses/client-report", adminOnly: true },
+      { label: "Help & Guide", icon: HelpCircle, path: "/expenses/help" },
+    ],
   },
   {
     label: "Documents",
@@ -64,6 +85,8 @@ function SoonPill() {
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
+  const { user, isLoadingAuth } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   return (
     <aside
@@ -90,7 +113,9 @@ export default function Sidebar() {
               </p>
             )}
             <div className="space-y-0.5">
-              {group.items.map((item) => {
+              {group.items
+                .filter((item) => !item.adminOnly || isAdmin || isLoadingAuth)
+                .map((item) => {
                 if (item.soon) {
                   return (
                     <div
@@ -110,7 +135,7 @@ export default function Sidebar() {
                 }
                 const isActive =
                   location.pathname === item.path ||
-                  (item.path !== "/" && location.pathname.startsWith(item.path));
+                  (item.path !== "/" && item.path !== "/expenses" && location.pathname.startsWith(item.path));
                 return (
                   <Link
                     key={item.path}
@@ -137,6 +162,11 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="px-3 py-4 border-t border-line space-y-1">
+        <ProfileCodePicker
+          currentCode={user?.paid_by_code}
+          currentPersonalCode={user?.paid_by_code_personal}
+          collapsed={collapsed}
+        />
         <button
           onClick={() => base44.auth.logout()}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted hover:text-ink hover:bg-black/[0.03] transition-all w-full"

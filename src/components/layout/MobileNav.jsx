@@ -3,8 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Handshake, Globe, Users, Users2,
   MessageSquare, CheckSquare, Megaphone, FileText, Gauge, Receipt,
-  FolderOpen, Menu, X
+  FolderOpen, Menu, X, PieChart, PlusCircle, Inbox, MapPin,
+  CreditCard, List, Landmark, HelpCircle
 } from "lucide-react";
+import { useAuth } from "@/lib/AuthContext";
 
 const navGroups = [
   {
@@ -31,7 +33,18 @@ const navGroups = [
   },
   {
     label: "Expenses",
-    items: [{ label: "Expenses", icon: Receipt, soon: true }],
+    items: [
+      { label: "Overview", icon: PieChart, path: "/expenses" },
+      { label: "Submit Expense", icon: PlusCircle, path: "/expenses/submit" },
+      { label: "My Expenses", icon: Receipt, path: "/expenses/mine" },
+      { label: "Receipt Inbox", icon: Inbox, path: "/expenses/inbox" },
+      { label: "Mileage", icon: MapPin, path: "/expenses/mileage" },
+      { label: "Reimbursements", icon: CreditCard, path: "/expenses/reimbursements" },
+      { label: "All Expenses", icon: List, path: "/expenses/all", adminOnly: true },
+      { label: "Accounts", icon: Landmark, path: "/expenses/accounts", adminOnly: true },
+      { label: "Client Report", icon: FileText, path: "/expenses/client-report", adminOnly: true },
+      { label: "Help & Guide", icon: HelpCircle, path: "/expenses/help" },
+    ],
   },
   {
     label: "Documents",
@@ -42,6 +55,8 @@ const navGroups = [
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
+  const { user, isLoadingAuth } = useAuth();
+  const isAdmin = user?.role === "admin";
 
   return (
     <>
@@ -61,7 +76,9 @@ export default function MobileNav() {
                   {group.label}
                 </p>
                 <div className="space-y-1">
-                  {group.items.map((item) => {
+                  {group.items
+                    .filter((item) => !item.adminOnly || isAdmin || isLoadingAuth)
+                    .map((item) => {
                     if (item.soon) {
                       return (
                         <div

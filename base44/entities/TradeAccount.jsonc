@@ -11,9 +11,20 @@
       "enum": [
         "Tour Operator",
         "Travel Agent",
-        "Parent Company"
+        "Parent Company",
+        "Homeworker Network",
+        "OTA / Online"
       ],
       "description": "Account type"
+    },
+    "tier": {
+      "type": "string",
+      "enum": [
+        "Key",
+        "Mid",
+        "Long-tail"
+      ],
+      "description": "Global tier — account-level size/importance, independent of any one client"
     },
     "parent_company_id": {
       "type": "string",
@@ -51,18 +62,6 @@
       "type": "string",
       "description": "Country"
     },
-    "lat": {
-      "type": "number",
-      "description": "Latitude (auto-geocoded from address)"
-    },
-    "lng": {
-      "type": "number",
-      "description": "Longitude (auto-geocoded from address)"
-    },
-    "geocoded_at": {
-      "type": "string",
-      "description": "ISO timestamp of last geocode"
-    },
     "key_destinations": {
       "type": "array",
       "items": {
@@ -93,12 +92,14 @@
       "type": "string",
       "format": "date"
     },
-    "linked_clients": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Linked client IDs"
+    "archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft-deleted — hidden from all UI lists; purge via Base44 dashboard"
+    },
+    "archive_reason": {
+      "type": "string",
+      "description": "Why this record was archived (e.g. duplicate merged into another account)"
     }
   },
   "required": [

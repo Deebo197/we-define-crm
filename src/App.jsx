@@ -22,6 +22,19 @@ import TeamMembers from '@/pages/TeamMembers';
 import ImportTradeAccounts from '@/pages/ImportTradeAccounts';
 import ImportContacts from '@/pages/ImportContacts';
 
+// Expenses module
+import AdminRoute from '@/components/expenses/AdminRoute';
+import ExpensesOverview from '@/pages/expenses/ExpensesOverview';
+import SubmitExpense from '@/pages/expenses/SubmitExpense';
+import MyExpenses from '@/pages/expenses/MyExpenses';
+import AllExpenses from '@/pages/expenses/AllExpenses';
+import ReceiptInbox from '@/pages/expenses/ReceiptInbox';
+import MileageLog from '@/pages/expenses/MileageLog';
+import Reimbursements from '@/pages/expenses/Reimbursements';
+import Accounts from '@/pages/expenses/Accounts';
+import ClientReport from '@/pages/expenses/ClientReport';
+import ExpensesHelp from '@/pages/expenses/Help';
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
 
@@ -63,6 +76,17 @@ const AuthenticatedApp = () => {
         <Route path="/team" element={<TeamMembers />} />
         <Route path="/import-trade-accounts" element={<ImportTradeAccounts />} />
         <Route path="/import-contacts" element={<ImportContacts />} />
+        {/* Expenses module */}
+        <Route path="/expenses" element={<ExpensesOverview />} />
+        <Route path="/expenses/submit" element={<SubmitExpense />} />
+        <Route path="/expenses/mine" element={<MyExpenses />} />
+        <Route path="/expenses/all" element={<AdminRoute><AllExpenses /></AdminRoute>} />
+        <Route path="/expenses/inbox" element={<ReceiptInbox />} />
+        <Route path="/expenses/mileage" element={<MileageLog />} />
+        <Route path="/expenses/reimbursements" element={<Reimbursements />} />
+        <Route path="/expenses/accounts" element={<AdminRoute><Accounts /></AdminRoute>} />
+        <Route path="/expenses/client-report" element={<AdminRoute><ClientReport /></AdminRoute>} />
+        <Route path="/expenses/help" element={<ExpensesHelp />} />
       </Route>
       <Route path="*" element={<PageNotFound />} />
     </Routes>

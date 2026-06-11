@@ -22,31 +22,8 @@
         "Review",
         "Final"
       ],
-      "default": "Draft"
-    },
-    "activity_summary": {
-      "type": "string"
-    },
-    "key_interactions": {
-      "type": "string"
-    },
-    "market_insights": {
-      "type": "string"
-    },
-    "client_updates": {
-      "type": "string"
-    },
-    "marketing_activity": {
-      "type": "string"
-    },
-    "opportunities": {
-      "type": "string"
-    },
-    "challenges": {
-      "type": "string"
-    },
-    "actions_next_steps": {
-      "type": "string"
+      "default": "Draft",
+      "description": "Overall state of the month's reporting"
     },
     "is_grouped": {
       "type": "boolean",
@@ -57,6 +34,77 @@
       "type": "array",
       "items": {
         "type": "string"
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "description": "Auto-populated metric backbone for the client + month — queryable and trendable",
+      "properties": {
+        "interaction_count": {
+          "type": "number"
+        },
+        "actions_raised": {
+          "type": "number"
+        },
+        "actions_closed": {
+          "type": "number"
+        },
+        "campaigns_active": {
+          "type": "number"
+        },
+        "campaign_spend": {
+          "type": "number"
+        },
+        "coverage_entries": {
+          "type": "number"
+        },
+        "coverage_value": {
+          "type": "number"
+        },
+        "coverage_reach": {
+          "type": "number"
+        }
+      }
+    },
+    "metrics_generated_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the metrics snapshot was last generated"
+    },
+    "activity_lines": {
+      "type": "array",
+      "description": "Raw activity log for the month — auto-assembled from Interactions, editable, rendered in the client version's table and Excel export",
+      "items": {
+        "type": "object",
+        "properties": {
+          "interaction_id": {
+            "type": "string",
+            "description": "Source Interaction (empty for manually added lines)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "type": {
+            "type": "string",
+            "description": "Type of call e.g. Email / Telephone / Meeting / Event"
+          },
+          "company_name": {
+            "type": "string",
+            "description": "Company or agency name"
+          },
+          "contact_person": {
+            "type": "string"
+          },
+          "overview": {
+            "type": "string",
+            "description": "Overview & follow up required"
+          },
+          "follow_update": {
+            "type": "string",
+            "description": "Follow update — filled in as things progress"
+          }
+        }
       }
     }
   },

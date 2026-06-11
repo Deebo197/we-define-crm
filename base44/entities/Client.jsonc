@@ -10,9 +10,19 @@
       "type": "string",
       "enum": [
         "Hotel",
-        "DMC"
+        "DMC",
+        "Internal"
       ],
       "description": "Client type"
+    },
+    "code": {
+      "type": "string",
+      "description": "Short expense/allocation code e.g. HR, SL, SO, SA, EL, WD"
+    },
+    "is_internal": {
+      "type": "boolean",
+      "default": false,
+      "description": "Internal bucket (e.g. We Define Travel overheads) — excluded from client-facing CRM lists"
     },
     "reporting_group": {
       "type": "string",
