@@ -16,7 +16,7 @@
         "Internal",
         "Client"
       ],
-      "description": "Which rendering this is — internal tracking or client-facing"
+      "description": "Which rendering this is \u2014 internal tracking or client-facing"
     },
     "status": {
       "type": "string",
@@ -26,7 +26,7 @@
         "Final"
       ],
       "default": "Draft",
-      "description": "Per-version status — internal can be Final while client is still Draft"
+      "description": "Per-version status \u2014 internal can be Final while client is still Draft"
     },
     "cover_note": {
       "type": "string",

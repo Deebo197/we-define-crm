@@ -15,7 +15,7 @@
  * POST body: { date: "YYYY-MM-DD" }  (optional — defaults to today)
  * Returns:   { receipt_code: "R-260508-001" }
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.25';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 Deno.serve(async (req) => {
   try {

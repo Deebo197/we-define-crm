@@ -38,7 +38,7 @@
     },
     "metrics": {
       "type": "object",
-      "description": "Auto-populated metric backbone for the client + month — queryable and trendable",
+      "description": "Auto-populated metric backbone for the client + month \u2014 queryable and trendable",
       "properties": {
         "interaction_count": {
           "type": "number"
@@ -73,7 +73,7 @@
     },
     "activity_lines": {
       "type": "array",
-      "description": "Raw activity log for the month — auto-assembled from Interactions, editable, rendered in the client version's table and Excel export",
+      "description": "Raw activity log for the month \u2014 auto-assembled from Interactions, editable, rendered in the client version's table and Excel export",
       "items": {
         "type": "object",
         "properties": {
@@ -102,7 +102,7 @@
           },
           "follow_update": {
             "type": "string",
-            "description": "Follow update — filled in as things progress"
+            "description": "Follow update \u2014 filled in as things progress"
           }
         }
       }

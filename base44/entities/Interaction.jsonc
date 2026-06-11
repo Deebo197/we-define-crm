@@ -86,7 +86,7 @@
     },
     "notes": {
       "type": "array",
-      "description": "Structured note blocks — each typed, assigned to clients, with optional CROSSROADS tag",
+      "description": "Structured note blocks \u2014 each typed, assigned to clients, with optional CROSSROADS tag",
       "items": {
         "type": "object",
         "properties": {

@@ -22,7 +22,7 @@
     "is_internal": {
       "type": "boolean",
       "default": false,
-      "description": "Internal bucket (e.g. We Define Travel overheads) — excluded from client-facing CRM lists"
+      "description": "Internal bucket (e.g. We Define Travel overheads) \u2014 excluded from client-facing CRM lists"
     },
     "reporting_group": {
       "type": "string",

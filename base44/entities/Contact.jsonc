@@ -27,7 +27,7 @@
         "Press",
         "Admin"
       ],
-      "description": "What this person does — enables cross-operator filtering"
+      "description": "What this person does \u2014 enables cross-operator filtering"
     },
     "seniority": {
       "type": "string",
@@ -41,7 +41,7 @@
     },
     "coverage": {
       "type": "array",
-      "description": "This contact's own patch — destinations they sell/manage and which WDT clients. Self-standing, not inherited from the parent account. Primarily for Commercial-function contacts.",
+      "description": "This contact's own patch \u2014 destinations they sell/manage and which WDT clients. Self-standing, not inherited from the parent account. Primarily for Commercial-function contacts.",
       "items": {
         "type": "object",
         "properties": {

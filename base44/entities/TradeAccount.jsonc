@@ -24,7 +24,7 @@
         "Mid",
         "Long-tail"
       ],
-      "description": "Global tier — account-level size/importance, independent of any one client"
+      "description": "Global tier \u2014 account-level size/importance, independent of any one client"
     },
     "parent_company_id": {
       "type": "string",
@@ -95,7 +95,7 @@
     "archived": {
       "type": "boolean",
       "default": false,
-      "description": "Soft-deleted — hidden from all UI lists; purge via Base44 dashboard"
+      "description": "Soft-deleted \u2014 hidden from all UI lists; purge via Base44 dashboard"
     },
     "archive_reason": {
       "type": "string",
