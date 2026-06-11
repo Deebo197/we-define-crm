@@ -143,11 +143,11 @@ export default function Contacts() {
     <div>
       <PageHeader title="Contacts" subtitle="People across your network" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Contact" />
       <div className="flex justify-end gap-2 mb-2 -mt-4">
-        <Button type="button" variant="ghost" onClick={exportToCSV} className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
+        <Button type="button" variant="ghost" onClick={exportToCSV} className="text-faint hover:text-ink text-xs gap-1.5 h-8">
           <Download className="w-3.5 h-3.5" /> Export CSV
         </Button>
         <Link to="/import-contacts">
-          <Button type="button" variant="ghost" className="text-[#6C6C80] hover:text-white text-xs gap-1.5 h-8">
+          <Button type="button" variant="ghost" className="text-faint hover:text-ink text-xs gap-1.5 h-8">
             <Upload className="w-3.5 h-3.5" /> Import CSV
           </Button>
         </Link>
@@ -160,12 +160,12 @@ export default function Contacts() {
       {/* Delete confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface rounded-2xl border border-white/[0.08] p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className="text-white font-medium mb-2">Delete Contact</h3>
-            <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete <span className="text-white font-medium">{confirmDelete.name}</span>? This cannot be undone.</p>
+          <div className="bg-surface rounded-2xl shadow-card border border-line p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className="text-ink font-medium mb-2">Delete Contact</h3>
+            <p className="text-muted text-sm mb-5">Are you sure you want to delete <span className="text-ink font-medium">{confirmDelete.name}</span>? This cannot be undone.</p>
             <div className="flex gap-3 justify-end">
-              <Button type="button" variant="ghost" onClick={() => setConfirmDelete(null)} className="text-[#6C6C80] hover:text-white">Cancel</Button>
-              <Button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="bg-[#FF5C7A] hover:bg-[#FF5C7A]/80 text-white rounded-xl px-5">
+              <Button type="button" variant="ghost" onClick={() => setConfirmDelete(null)} className="text-faint hover:text-ink">Cancel</Button>
+              <Button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="bg-danger hover:bg-danger/80 text-white rounded-xl px-5">
                 {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </Button>
             </div>
@@ -176,14 +176,14 @@ export default function Contacts() {
       {/* Search + View Toggle */}
       <div className="flex gap-3 mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
-          <Input placeholder="Search by name, company, or role..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-faint" />
+          <Input placeholder="Search by name, company, or role..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-line text-ink placeholder:text-faint rounded-xl h-10" />
         </div>
-        <div className="flex gap-1 bg-surface border border-white/[0.06] rounded-xl p-1">
-          <button type="button" onClick={() => setView("grid")} className={`p-2 rounded-lg transition-all ${view === "grid" ? "bg-white/[0.08] text-white" : "text-[#6C6C80] hover:text-white"}`}>
+        <div className="flex gap-1 bg-surface border border-line rounded-xl p-1">
+          <button type="button" onClick={() => setView("grid")} className={`p-2 rounded-lg transition-all ${view === "grid" ? "bg-black/[0.04] text-ink" : "text-faint hover:text-ink"}`}>
             <LayoutGrid className="w-4 h-4" />
           </button>
-          <button type="button" onClick={() => setView("list")} className={`p-2 rounded-lg transition-all ${view === "list" ? "bg-white/[0.08] text-white" : "text-[#6C6C80] hover:text-white"}`}>
+          <button type="button" onClick={() => setView("list")} className={`p-2 rounded-lg transition-all ${view === "list" ? "bg-black/[0.04] text-ink" : "text-faint hover:text-ink"}`}>
             <List className="w-4 h-4" />
           </button>
         </div>
@@ -204,8 +204,8 @@ export default function Contacts() {
             onClick={() => setDestFilter(f.key)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
               destFilter === f.key
-                ? "bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white border-transparent shadow-lg shadow-[#7F5BFF]/20"
-                : "bg-white/[0.03] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.16] hover:text-white"
+                ? "bg-primary hover:bg-primary-hover text-white border-transparent shadow-lg shadow-primary/20"
+                : "bg-canvas text-faint border-line hover:border-line-strong hover:text-ink"
             }`}
           >
             {f.label}
@@ -229,8 +229,8 @@ export default function Contacts() {
             onClick={() => setFunctionFilter(f.key)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
               functionFilter === f.key
-                ? "bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white border-transparent shadow-lg shadow-[#7F5BFF]/20"
-                : "bg-white/[0.03] text-[#6C6C80] border-white/[0.08] hover:border-white/[0.16] hover:text-white"
+                ? "bg-primary hover:bg-primary-hover text-white border-transparent shadow-lg shadow-primary/20"
+                : "bg-canvas text-faint border-line hover:border-line-strong hover:text-ink"
             }`}
           >
             {f.label}
@@ -243,35 +243,35 @@ export default function Contacts() {
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((contact, i) => (
-            <div key={contact.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => openEdit(contact)}>
-              <button type="button" onClick={(e) => handleDelete(e, contact)} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all">
+            <div key={contact.id} className="bg-surface rounded-2xl shadow-card border border-line p-5 hover:border-line-strong hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => openEdit(contact)}>
+              <button type="button" onClick={(e) => handleDelete(e, contact)} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-faint hover:text-danger hover:bg-danger/10 transition-all">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7F5BFF]/20 to-[#3A1DFF]/10 flex items-center justify-center shrink-0">
-                  <span className="text-[#7F5BFF] font-medium text-sm">{contact.name?.charAt(0)?.toUpperCase()}</span>
+                <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+                  <span className="text-primary font-medium text-sm">{contact.name?.charAt(0)?.toUpperCase()}</span>
                 </div>
                 <div className="min-w-0">
-                  <h3 className="text-white font-medium text-sm group-hover:text-[#7F5BFF] transition-colors truncate">{contact.name}</h3>
-                  <p className="text-[#6C6C80] text-xs truncate">{contact.role}{contact.company_name ? ` · ${contact.company_name}` : ""}</p>
+                  <h3 className="text-ink font-medium text-sm group-hover:text-primary transition-colors truncate">{contact.name}</h3>
+                  <p className="text-faint text-xs truncate">{contact.role}{contact.company_name ? ` · ${contact.company_name}` : ""}</p>
                 </div>
               </div>
               <div className="space-y-1 mt-3">
-                {contact.email && <span className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{contact.email}</span></span>}
-                {contact.phone && <span className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{contact.phone}</span>}
+                {contact.email && <span className="text-faint text-xs flex items-center gap-1.5"><Mail className="w-3 h-3 shrink-0" /><span className="truncate">{contact.email}</span></span>}
+                {contact.phone && <span className="text-faint text-xs flex items-center gap-1.5"><Phone className="w-3 h-3 shrink-0" />{contact.phone}</span>}
               </div>
               {/* Coverage badges */}
               {contact.coverage?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-2">
                   {contact.coverage.map(cv => (
-                    <span key={cv.destination} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{cv.destination}</span>
+                    <span key={cv.destination} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-white">{cv.destination}</span>
                   ))}
                 </div>
               )}
               {contact.tags?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mt-1">
                   {contact.tags.map(tag => (
-                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">{tag}</span>
+                    <span key={tag} className="px-2 py-0.5 rounded-full text-[10px] bg-primary/10 text-primary border border-primary/20">{tag}</span>
                   ))}
                 </div>
               )}
@@ -280,26 +280,26 @@ export default function Contacts() {
         </div>
       ) : (
         /* List view */
-        <div className="bg-surface rounded-2xl border border-white/[0.06] overflow-hidden">
+        <div className="bg-surface rounded-2xl shadow-card border border-line overflow-hidden">
           {filtered.map((contact, i) => (
-            <div key={contact.id} onClick={() => openEdit(contact)} className={`flex items-center gap-4 px-5 py-3.5 hover:bg-white/[0.03] cursor-pointer group transition-all ${i !== filtered.length - 1 ? "border-b border-white/[0.04]" : ""}`}>
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7F5BFF]/20 to-[#3A1DFF]/10 flex items-center justify-center shrink-0">
-                <span className="text-[#7F5BFF] font-medium text-xs">{contact.name?.charAt(0)?.toUpperCase()}</span>
+            <div key={contact.id} onClick={() => openEdit(contact)} className={`flex items-center gap-4 px-5 py-3.5 hover:bg-black/[0.03] cursor-pointer group transition-all ${i !== filtered.length - 1 ? "border-b border-line" : ""}`}>
+              <div className="w-8 h-8 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+                <span className="text-primary font-medium text-xs">{contact.name?.charAt(0)?.toUpperCase()}</span>
               </div>
               <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-4 gap-2 items-center">
-                <span className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{contact.name}</span>
-                <span className="text-[#6C6C80] text-xs truncate">{contact.role || "—"}</span>
-                <span className="text-[#6C6C80] text-xs truncate hidden sm:block">{contact.company_name || "—"}</span>
+                <span className="text-ink text-sm font-medium group-hover:text-primary transition-colors truncate">{contact.name}</span>
+                <span className="text-faint text-xs truncate">{contact.role || "—"}</span>
+                <span className="text-faint text-xs truncate hidden sm:block">{contact.company_name || "—"}</span>
                 <div className="hidden sm:flex flex-wrap gap-1">
                   {contact.coverage?.length > 0
                     ? contact.coverage.map(cv => (
-                        <span key={cv.destination} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#7F5BFF] text-white">{cv.destination}</span>
+                        <span key={cv.destination} className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-primary text-white">{cv.destination}</span>
                       ))
-                    : <span className="text-[#6C6C80] text-xs">{contact.email || "—"}</span>
+                    : <span className="text-faint text-xs">{contact.email || "—"}</span>
                   }
                 </div>
               </div>
-              <button type="button" onClick={(e) => handleDelete(e, contact)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all shrink-0">
+              <button type="button" onClick={(e) => handleDelete(e, contact)} className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-faint hover:text-danger hover:bg-danger/10 transition-all shrink-0">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
             </div>

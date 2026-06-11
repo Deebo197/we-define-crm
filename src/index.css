@@ -4,83 +4,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Repevo light design system — single theme, defined once.
+   Token reference (see tailwind.config.js):
+   canvas #F6F7FB · surface #FFFFFF · line #E4E7EE · ink #1F2430
+   muted #676879 · faint #9699A6 · primary #5A3DE6 (soft #EEEAFF, hover #4C30C9)
+   status: success #00C875 · warning #FDAB3D · info #579BFC · danger #E2445C
+           growing #9CD326 · neutral #C4C7D4 */
 @layer base {
   :root {
     --font-inter: 'Inter', sans-serif;
 
-    --background: 240 14% 4%;
-    --foreground: 0 0% 100%;
-    --card: 240 14% 6%;
-    --card-foreground: 0 0% 100%;
-    --popover: 240 14% 8%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 255 100% 68%;
+    --background: 228 38% 97%;        /* canvas #F6F7FB */
+    --foreground: 222 22% 15%;        /* ink #1F2430 */
+    --card: 0 0% 100%;
+    --card-foreground: 222 22% 15%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 22% 15%;
+    --primary: 250 77% 57%;           /* #5A3DE6 */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 14% 10%;
-    --secondary-foreground: 240 10% 70%;
-    --muted: 240 14% 12%;
-    --muted-foreground: 240 10% 55%;
-    --accent: 255 100% 55%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 348 100% 68%;
+    --secondary: 228 25% 95%;
+    --secondary-foreground: 222 22% 15%;
+    --muted: 228 25% 95%;
+    --muted-foreground: 237 8% 44%;   /* #676879 */
+    --accent: 251 100% 96%;           /* primary-soft #EEEAFF */
+    --accent-foreground: 222 22% 15%;
+    --destructive: 351 73% 58%;       /* #E2445C */
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.06;
-    --input: 0 0% 100% / 0.06;
-    --ring: 255 100% 68%;
-    --chart-1: 255 100% 68%;
-    --chart-2: 160 64% 55%;
-    --chart-3: 37 100% 64%;
-    --chart-4: 348 100% 68%;
-    --chart-5: 200 80% 60%;
+    --border: 222 23% 91%;            /* line #E4E7EE */
+    --input: 222 23% 91%;
+    --ring: 250 77% 57%;
+    --chart-1: 250 77% 57%;           /* primary */
+    --chart-2: 155 100% 39%;          /* success */
+    --chart-3: 215 96% 66%;           /* info */
+    --chart-4: 34 98% 62%;            /* warning */
+    --chart-5: 351 73% 58%;           /* danger */
     --radius: 0.625rem;
-    --sidebar-background: 240 14% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 255 100% 68%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 22% 15%;
+    --sidebar-primary: 250 77% 57%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 14% 10%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 100% / 0.06;
-    --sidebar-ring: 255 100% 68%;
-
-    --success: 155 64% 55%;
-    --warning: 37 100% 64%;
-    --danger: 348 100% 68%;
-  }
-
-  .dark {
-    --background: 240 14% 4%;
-    --foreground: 0 0% 100%;
-    --card: 240 14% 6%;
-    --card-foreground: 0 0% 100%;
-    --popover: 240 14% 8%;
-    --popover-foreground: 0 0% 100%;
-    --primary: 255 100% 68%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 240 14% 10%;
-    --secondary-foreground: 240 10% 70%;
-    --muted: 240 14% 12%;
-    --muted-foreground: 240 10% 55%;
-    --accent: 255 100% 55%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 348 100% 68%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 100% / 0.06;
-    --input: 0 0% 100% / 0.06;
-    --ring: 255 100% 68%;
-    --chart-1: 255 100% 68%;
-    --chart-2: 160 64% 55%;
-    --chart-3: 37 100% 64%;
-    --chart-4: 348 100% 68%;
-    --chart-5: 200 80% 60%;
-    --radius: 0.625rem;
-    --sidebar-background: 240 14% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 255 100% 68%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 14% 10%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 100% / 0.06;
-    --sidebar-ring: 255 100% 68%;
+    --sidebar-accent: 251 100% 96%;
+    --sidebar-accent-foreground: 250 77% 57%;
+    --sidebar-border: 222 23% 91%;
+    --sidebar-ring: 250 77% 57%;
   }
 }
 
@@ -93,82 +59,6 @@
   }
 }
 
-/* Light theme overrides */
-.light-theme {
-  --background: 220 20% 97%;
-  --foreground: 240 14% 10%;
-  --card: 0 0% 100%;
-  --card-foreground: 240 14% 10%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 240 14% 10%;
-  --primary: 255 80% 55%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 220 15% 92%;
-  --secondary-foreground: 240 14% 25%;
-  --muted: 220 15% 94%;
-  --muted-foreground: 240 10% 40%;
-  --accent: 255 80% 55%;
-  --accent-foreground: 0 0% 100%;
-  --destructive: 348 90% 55%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 220 15% 85%;
-  --input: 220 15% 85%;
-  --ring: 255 80% 55%;
-  --sidebar-background: 220 20% 96%;
-  --sidebar-foreground: 240 14% 15%;
-  --sidebar-primary: 255 80% 55%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 220 15% 90%;
-  --sidebar-accent-foreground: 240 14% 15%;
-  --sidebar-border: 220 15% 85%;
-  --sidebar-ring: 255 80% 55%;
-}
-
-.light-theme body {
-  background-color: hsl(220 20% 97%);
-  color: hsl(240 14% 10%);
-}
-
-/* Surfaces */
-.light-theme .bg-surface { background-color: hsl(0 0% 100%) !important; }
-.light-theme .bg-surface-secondary { background-color: hsl(220 15% 94%) !important; }
-.light-theme .bg-surface-elevated { background-color: hsl(0 0% 100%) !important; }
-
-/* Borders */
-.light-theme [class*="border-white/"] { border-color: hsl(220 15% 85%) !important; }
-
-/* Muted/secondary text — make dark */
-.light-theme .text-\[\#6C6C80\] { color: hsl(240 8% 38%) !important; }
-.light-theme .text-\[\#A1A1B5\] { color: hsl(240 8% 28%) !important; }
-
-/* White text — make dark */
-.light-theme .text-white { color: hsl(240 14% 10%) !important; }
-
-/* White backgrounds used for subtle fills */
-.light-theme [class*="bg-white/"] { background-color: hsl(220 15% 92%) !important; }
-.light-theme [class*="hover:bg-white/"] { background-color: transparent !important; }
-
-/* Inputs */
-.light-theme input, .light-theme textarea, .light-theme select {
-  color: hsl(240 14% 10%) !important;
-  background-color: hsl(220 15% 94%) !important;
-  border-color: hsl(220 15% 82%) !important;
-}
-.light-theme input::placeholder, .light-theme textarea::placeholder {
-  color: hsl(240 8% 50%) !important;
-}
-
-/* Sidebar nav text */
-.light-theme aside .text-\[\#A1A1B5\] { color: hsl(240 8% 30%) !important; }
-.light-theme aside .text-\[\#6C6C80\] { color: hsl(240 8% 40%) !important; }
-.light-theme aside .hover\:text-white:hover { color: hsl(240 14% 10%) !important; }
-
-/* Card / panel headings */
-.light-theme h1, .light-theme h2, .light-theme h3 { color: hsl(240 14% 10%) !important; }
-
-/* Gradient text backgrounds won't look right — override link-style text */
-.light-theme .group-hover\:text-\[\#7F5BFF\]:hover { color: hsl(255 80% 50%) !important; }
-
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
@@ -177,11 +67,11 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
+  background: rgba(31, 36, 48, 0.14);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.2);
+  background: rgba(31, 36, 48, 0.24);
 }
 
 /* Shimmer loading */
@@ -190,7 +80,7 @@
   100% { background-position: 200% 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, rgba(31, 36, 48, 0.05) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
 }

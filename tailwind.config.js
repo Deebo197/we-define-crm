@@ -26,16 +26,18 @@ module.exports = {
           foreground: 'hsl(var(--popover-foreground))',
         },
         primary: {
-          DEFAULT: 'hsl(var(--primary))',
-          foreground: 'hsl(var(--primary-foreground))',
+          DEFAULT: '#5A3DE6',
+          hover: '#4C30C9',
+          soft: '#EEEAFF',
+          foreground: '#FFFFFF',
         },
         secondary: {
           DEFAULT: 'hsl(var(--secondary))',
           foreground: 'hsl(var(--secondary-foreground))',
         },
         muted: {
-          DEFAULT: 'hsl(var(--muted))',
-          foreground: 'hsl(var(--muted-foreground))',
+          DEFAULT: '#676879',
+          foreground: '#676879',
         },
         accent: {
           DEFAULT: 'hsl(var(--accent))',
@@ -48,9 +50,21 @@ module.exports = {
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',
-        success: 'hsl(var(--success))',
-        warning: 'hsl(var(--warning))',
-        danger: 'hsl(var(--danger))',
+        // Repevo design tokens
+        canvas: '#F6F7FB',
+        line: {
+          DEFAULT: '#E4E7EE',
+          strong: '#CBD1DE',
+        },
+        ink: '#1F2430',
+        faint: '#9699A6',
+        // Status palette — single source of truth (see src/lib/statusColors.js)
+        success: '#00C875',
+        warning: '#FDAB3D',
+        info: '#579BFC',
+        danger: '#E2445C',
+        growing: '#9CD326',
+        neutral: '#C4C7D4',
         chart: {
           1: 'hsl(var(--chart-1))',
           2: 'hsl(var(--chart-2))',
@@ -69,10 +83,13 @@ module.exports = {
           ring: 'hsl(var(--sidebar-ring))',
         },
         surface: {
-          DEFAULT: '#14141B',
-          secondary: '#1C1C26',
-          elevated: '#22222E',
+          DEFAULT: '#FFFFFF',
+          secondary: '#F6F7FB',
+          elevated: '#FFFFFF',
         },
+      },
+      boxShadow: {
+        card: '0 1px 3px rgba(31,36,48,.06), 0 4px 16px rgba(31,36,48,.04)',
       },
       keyframes: {
         'accordion-down': {

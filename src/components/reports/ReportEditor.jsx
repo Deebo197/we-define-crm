@@ -17,7 +17,7 @@ import {
 } from "./reportUtils";
 import { exportActivityExcel } from "./exportActivityExcel";
 
-const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
+const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 
 const SECTIONS = [
   { key: "activity_summary",   label: "Activity Summary",     required: true  },
@@ -71,15 +71,15 @@ function buildPdfHtml(report, version) {
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap');
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Inter', Arial, sans-serif; color: #1a1a2e; background: #fff; padding: 48px 60px; max-width: 860px; margin: 0 auto; }
-    header { margin-bottom: 40px; border-bottom: 2px solid #7F5BFF; padding-bottom: 20px; }
-    .brand { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #7F5BFF; margin-bottom: 10px; }
+    header { margin-bottom: 40px; border-bottom: 2px solid #5A3DE6; padding-bottom: 20px; }
+    .brand { font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: #5A3DE6; margin-bottom: 10px; }
     h1 { font-size: 24px; font-weight: 600; color: #0d0d1a; margin-bottom: 4px; }
     .meta { font-size: 13px; color: #888; }
     .status { display: inline-block; margin-left: 8px; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
       background: ${version.status === "Final" ? "#d1fae5" : version.status === "Review" ? "#fef3c7" : "#f1f5f9"};
       color: ${version.status === "Final" ? "#065f46" : version.status === "Review" ? "#92400e" : "#64748b"}; }
     .section { margin-bottom: 32px; }
-    h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #7F5BFF; margin-bottom: 10px; }
+    h2 { font-size: 11px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #5A3DE6; margin-bottom: 10px; }
     p { font-size: 14px; line-height: 1.85; color: #374151; margin-bottom: 10px; }
     footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #9ca3af; display: flex; justify-content: space-between; }
   </style>
@@ -361,29 +361,29 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
     <div className="max-w-5xl mx-auto animate-fade-in-up">
       {/* Header bar */}
       <div className="flex items-center gap-3 mb-5 flex-wrap">
-        <button onClick={onBack} className="text-[#6C6C80] hover:text-white transition-colors">
+        <button onClick={onBack} className="text-faint hover:text-ink transition-colors">
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold text-white truncate">{report.title}</h1>
-          <p className="text-[#6C6C80] text-sm">
-            {report.is_grouped ? <span className="text-[#FFB547]">CROSSROADS</span> : report.client_name}
+          <h1 className="text-xl font-semibold text-ink truncate">{report.title}</h1>
+          <p className="text-faint text-sm">
+            {report.is_grouped ? <span className="text-warning">CROSSROADS</span> : report.client_name}
             {" · "}{monthLabel(report.month)}
           </p>
         </div>
         <StatusBadge status={report.status} />
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || versionsLoading}
-          className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-5 h-9 text-sm gap-2">
+          className="bg-primary hover:bg-primary-hover text-white rounded-xl px-5 h-9 text-sm gap-2">
           {saveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
           {saveMutation.isPending ? "Saving…" : "Save"}
         </Button>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 mb-6 p-1 bg-surface rounded-xl border border-white/[0.06] w-fit">
+      <div className="flex gap-1 mb-6 p-1 bg-surface rounded-xl border border-line w-fit">
         {tabs.map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? "bg-[#7F5BFF]/15 text-[#A78BFF]" : "text-[#6C6C80] hover:text-white"}`}>
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${tab === t.id ? "bg-primary/15 text-primary" : "text-faint hover:text-ink"}`}>
             {t.label}
           </button>
         ))}
@@ -392,30 +392,30 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
       {/* ===================== OVERVIEW / BACKBONE ===================== */}
       {tab === "overview" && (
         <div className="space-y-5">
-          <div className="bg-surface rounded-2xl border border-white/[0.06] p-6 space-y-5">
+          <div className="bg-surface rounded-2xl shadow-card border border-line p-6 space-y-5">
             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <Label className="text-[#A1A1B5] text-xs mb-1.5">Title</Label>
+                <Label className="text-muted text-xs mb-1.5">Title</Label>
                 <Input value={report.title} onChange={(e) => setReport(r => ({ ...r, title: e.target.value }))} className={inputClass} />
               </div>
               <div>
-                <Label className="text-[#A1A1B5] text-xs mb-1.5">Client</Label>
+                <Label className="text-muted text-xs mb-1.5">Client</Label>
                 <Select value={report.client_id || ""} onValueChange={handleClientChange}>
                   <SelectTrigger className={inputClass}><SelectValue placeholder="Select client" /></SelectTrigger>
-                  <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectContent className="bg-surface-elevated border-line">
                     {clients.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div>
-                <Label className="text-[#A1A1B5] text-xs mb-1.5">Month</Label>
+                <Label className="text-muted text-xs mb-1.5">Month</Label>
                 <Input type="month" value={report.month} onChange={(e) => setReport(r => ({ ...r, month: e.target.value }))} className={inputClass} />
               </div>
               <div>
-                <Label className="text-[#A1A1B5] text-xs mb-1.5">Overall status</Label>
+                <Label className="text-muted text-xs mb-1.5">Overall status</Label>
                 <Select value={report.status} onValueChange={(v) => setReport(r => ({ ...r, status: v }))}>
                   <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectContent className="bg-surface-elevated border-line">
                     {["Draft", "Review", "Final"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
@@ -424,10 +424,10 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
 
             {/* CROSSROADS grouped toggle */}
             {report.client_id && isCrossroads(report.client_name) && crossroadsClients.length > 1 && (
-              <div className="flex items-center gap-3 p-3 rounded-xl bg-[#FFB547]/5 border border-[#FFB547]/20">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-warning/5 border border-warning/20">
                 <div className="flex-1">
-                  <p className="text-[#FFB547] text-xs font-semibold">CROSSROADS Grouped Report</p>
-                  <p className="text-[#6C6C80] text-xs mt-0.5">
+                  <p className="text-warning text-xs font-semibold">CROSSROADS Grouped Report</p>
+                  <p className="text-faint text-xs mt-0.5">
                     {report.is_grouped
                       ? `Covering ${crossroadsClients.map(c => c.name).join(" & ")} under CROSSROADS`
                       : `Report for ${report.client_name} only`}
@@ -438,7 +438,7 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
                   is_grouped: !r.is_grouped,
                   grouped_client_ids: !r.is_grouped ? crossroadsClients.map(c => c.id) : [r.client_id],
                 }))}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${report.is_grouped ? "bg-[#FFB547]/20 text-[#FFB547] border-[#FFB547]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${report.is_grouped ? "bg-warning/20 text-warning border-warning/30" : "bg-canvas text-faint border-line hover:border-line-strong"}`}>
                   {report.is_grouped ? "Grouped ✓" : "Group as CROSSROADS"}
                 </button>
               </div>
@@ -446,11 +446,11 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
 
             <div className="flex items-center gap-3 flex-wrap">
               <Button type="button" onClick={handleAutoDraft} disabled={drafting || versionsLoading || reportClientIds.length === 0}
-                className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-5 h-9 text-sm gap-2">
+                className="bg-primary hover:bg-primary-hover text-white rounded-xl px-5 h-9 text-sm gap-2">
                 {drafting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                 {drafting ? "Drafting…" : "Auto-draft from CRM"}
               </Button>
-              <p className="text-[#6C6C80] text-xs">
+              <p className="text-faint text-xs">
                 {drafting
                   ? "Assembling activity log, metrics and internal narrative — may take ~20s…"
                   : "Builds the activity log, metrics snapshot and internal narrative from this month's CRM data."}
@@ -461,20 +461,20 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
           {/* Metrics grid */}
           <div>
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-[#A1A1B5] text-xs font-medium uppercase tracking-wider">Month metrics</h3>
+              <h3 className="text-muted text-xs font-medium uppercase tracking-wider">Month metrics</h3>
               {report.metrics_generated_date && (
-                <p className="text-[#6C6C80] text-xs">Generated {new Date(report.metrics_generated_date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                <p className="text-faint text-xs">Generated {new Date(report.metrics_generated_date + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
               )}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {METRIC_CARDS.map(({ key, label, currency }) => {
                 const value = report.metrics?.[key];
                 return (
-                  <div key={key} className="bg-surface rounded-xl border border-white/[0.06] p-4">
-                    <p className="text-white text-lg font-semibold">
+                  <div key={key} className="bg-surface rounded-xl border border-line p-4">
+                    <p className="text-ink text-lg font-semibold">
                       {value == null ? "—" : currency ? `£${Number(value).toLocaleString("en-GB")}` : Number(value).toLocaleString("en-GB")}
                     </p>
-                    <p className="text-[#6C6C80] text-xs mt-0.5">{label}</p>
+                    <p className="text-faint text-xs mt-0.5">{label}</p>
                   </div>
                 );
               })}
@@ -486,51 +486,51 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
       {/* ===================== CLIENT VERSION ===================== */}
       {tab === "client" && (
         versionsLoading || !clientVersion ? (
-          <div className="flex items-center gap-2 text-[#6C6C80] text-sm py-12 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> Loading version…</div>
+          <div className="flex items-center gap-2 text-faint text-sm py-12 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> Loading version…</div>
         ) : (
           <div className="space-y-5">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <Label className="text-[#A1A1B5] text-xs">Version status</Label>
+                <Label className="text-muted text-xs">Version status</Label>
                 <Select value={clientVersion.status || "Draft"} onValueChange={(v) => setClientVersion(cv => ({ ...cv, status: v }))}>
                   <SelectTrigger className={`${inputClass} w-28 h-9`}><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectContent className="bg-surface-elevated border-line">
                     {["Draft", "Review", "Final"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex-1" />
-              <Button type="button" variant="ghost" onClick={addLine} className="text-[#A1A1B5] hover:text-white gap-1.5 h-9">
+              <Button type="button" variant="ghost" onClick={addLine} className="text-muted hover:text-ink gap-1.5 h-9">
                 <Plus className="w-4 h-4" /><span className="text-xs">Add line</span>
               </Button>
               <Button type="button" onClick={handleExcelExport} disabled={lines.length === 0}
-                className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-4 h-9 text-sm gap-2">
+                className="bg-primary hover:bg-primary-hover text-white rounded-xl px-4 h-9 text-sm gap-2">
                 <FileSpreadsheet className="w-4 h-4" /> Export to Excel
               </Button>
             </div>
 
             <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Cover note <span className="text-[#6C6C80]">· optional, appears above the table in the export</span></Label>
+              <Label className="text-muted text-xs mb-1.5">Cover note <span className="text-faint">· optional, appears above the table in the export</span></Label>
               <Textarea value={clientVersion.cover_note || ""} onChange={(e) => setClientVersion(cv => ({ ...cv, cover_note: e.target.value }))}
                 className={`${inputClass} min-h-[60px]`} placeholder="Short note to the client for this month…" />
             </div>
 
             {/* Activity log table */}
-            <div className="bg-surface rounded-2xl border border-white/[0.06] overflow-x-auto">
+            <div className="bg-surface rounded-2xl shadow-card border border-line overflow-x-auto">
               <table className="w-full text-sm min-w-[900px]">
                 <thead>
-                  <tr className="border-b border-white/[0.06]">
+                  <tr className="border-b border-line">
                     {["#", "Date", "Type of Call", "Company or Agency Name", "Contact Person", "Overview & Follow up required", "Follow Update", ""].map((h, i) => (
-                      <th key={i} className="text-left text-[#A1A1B5] text-xs font-medium px-3 py-3 whitespace-nowrap">{h}</th>
+                      <th key={i} className="text-left text-muted text-xs font-medium px-3 py-3 whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {lines.length === 0 ? (
-                    <tr><td colSpan={8} className="text-center text-[#6C6C80] text-sm py-10">No activity lines yet — use Auto-draft from CRM on the Overview tab, or add a line manually.</td></tr>
+                    <tr><td colSpan={8} className="text-center text-faint text-sm py-10">No activity lines yet — use Auto-draft from CRM on the Overview tab, or add a line manually.</td></tr>
                   ) : lines.map((line, idx) => (
-                    <tr key={idx} className="border-b border-white/[0.04] align-top">
-                      <td className="px-3 py-2 text-[#6C6C80] text-xs pt-4">{idx + 1}</td>
+                    <tr key={idx} className="border-b border-line align-top">
+                      <td className="px-3 py-2 text-faint text-xs pt-4">{idx + 1}</td>
                       <td className="px-3 py-2 w-36">
                         <Input type="date" value={line.date || ""} onChange={(e) => updateLine(idx, "date", e.target.value)} className={`${inputClass} h-8 text-xs`} />
                       </td>
@@ -550,7 +550,7 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
                         <Textarea value={line.follow_update || ""} onChange={(e) => updateLine(idx, "follow_update", e.target.value)} className={`${inputClass} min-h-[60px] text-xs`} />
                       </td>
                       <td className="px-2 py-2 pt-4">
-                        <button type="button" onClick={() => deleteLine(idx)} className="p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all">
+                        <button type="button" onClick={() => deleteLine(idx)} className="p-1.5 rounded-lg text-faint hover:text-danger hover:bg-danger/10 transition-all">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -566,47 +566,47 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
       {/* ===================== INTERNAL VERSION ===================== */}
       {tab === "internal" && (
         versionsLoading || !internalVersion ? (
-          <div className="flex items-center gap-2 text-[#6C6C80] text-sm py-12 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> Loading version…</div>
+          <div className="flex items-center gap-2 text-faint text-sm py-12 justify-center"><Loader2 className="w-4 h-4 animate-spin" /> Loading version…</div>
         ) : (
           <div className="space-y-5">
             <div className="flex items-center gap-3 flex-wrap">
               <div className="flex items-center gap-2">
-                <Label className="text-[#A1A1B5] text-xs">Version status</Label>
+                <Label className="text-muted text-xs">Version status</Label>
                 <Select value={internalVersion.status || "Draft"} onValueChange={(v) => setInternalVersion(iv => ({ ...iv, status: v }))}>
                   <SelectTrigger className={`${inputClass} w-28 h-9`}><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectContent className="bg-surface-elevated border-line">
                     {["Draft", "Review", "Final"].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
               <div className="flex-1" />
-              <Button type="button" variant="ghost" onClick={handlePdfExport} className="text-[#A1A1B5] hover:text-white gap-1.5 h-9">
+              <Button type="button" variant="ghost" onClick={handlePdfExport} className="text-muted hover:text-ink gap-1.5 h-9">
                 <Download className="w-4 h-4" /><span className="text-xs">Export PDF</span>
               </Button>
             </div>
 
             {/* Market intelligence generator */}
-            <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-3">
+            <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-3">
               <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-[#7F5BFF]" />
-                <h3 className="text-white text-sm font-medium">Market intelligence</h3>
+                <Globe className="w-4 h-4 text-primary" />
+                <h3 className="text-ink text-sm font-medium">Market intelligence</h3>
               </div>
-              <p className="text-[#6C6C80] text-xs">Pulls last month's UK travel-trade news (TTG, Travel Weekly, Travolution and similar) for the selected destinations into Market Insights.</p>
+              <p className="text-faint text-xs">Pulls last month's UK travel-trade news (TTG, Travel Weekly, Travolution and similar) for the selected destinations into Market Insights.</p>
               <div className="flex flex-wrap gap-2">
                 {DESTINATIONS.map(d => (
                   <button key={d} type="button" onClick={() => toggleDest(d)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selectedDests.includes(d) ? "bg-[#7F5BFF]/15 text-[#A78BFF] border-[#7F5BFF]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${selectedDests.includes(d) ? "bg-primary/15 text-primary border-primary/30" : "bg-canvas text-faint border-line hover:border-line-strong"}`}>
                     {d}
                   </button>
                 ))}
               </div>
               <div className="flex items-center gap-3">
                 <Button type="button" onClick={handleMarketIntel} disabled={intelLoading || selectedDests.length === 0}
-                  className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-4 h-9 text-sm gap-2">
+                  className="bg-primary hover:bg-primary-hover text-white rounded-xl px-4 h-9 text-sm gap-2">
                   {intelLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   {intelLoading ? "Generating…" : "Generate market intelligence"}
                 </Button>
-                {intelLoading && <p className="text-[#6C6C80] text-xs">Searching the web — may take ~20s…</p>}
+                {intelLoading && <p className="text-faint text-xs">Searching the web — may take ~20s…</p>}
               </div>
             </div>
 
@@ -614,8 +614,8 @@ Write 2-4 short paragraphs of flowing prose in UK English. No bullet points, no 
             <div className="space-y-4">
               {SECTIONS.map(({ key, label, required }) => (
                 <div key={key}>
-                  <Label className="text-[#A1A1B5] text-xs mb-1.5">
-                    {label}{!required && <span className="text-[#6C6C80] ml-1">· optional</span>}
+                  <Label className="text-muted text-xs mb-1.5">
+                    {label}{!required && <span className="text-faint ml-1">· optional</span>}
                   </Label>
                   <Textarea
                     value={internalVersion[key] || ""}

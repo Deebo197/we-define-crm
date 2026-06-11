@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap } from "lucide-react";
 
-const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
+const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 const types = ["Meeting (In-Person)", "Meeting (Virtual)", "Call", "Email", "Event", "FAM Feedback", "Marketing Discussion"];
 
 // CROSSROADS clients detection
@@ -28,10 +28,10 @@ function CrossroadsTag({ value, onChange }) {
         <button key={t} type="button" onClick={() => onChange(value === t ? "" : t)}
           className={`px-2.5 py-1 rounded-lg text-[10px] font-semibold tracking-wide border transition-all ${
             value === t
-              ? t === "Both (CROSSROADS)" ? "bg-[#FFB547]/20 text-[#FFB547] border-[#FFB547]/40"
-                : t === "Hard Rock" ? "bg-[#FF5C7A]/20 text-[#FF5C7A] border-[#FF5C7A]/40"
-                : "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/40"
-              : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+              ? t === "Both (CROSSROADS)" ? "bg-warning/20 text-warning border-warning/40"
+                : t === "Hard Rock" ? "bg-danger/20 text-danger border-danger/40"
+                : "bg-success/20 text-success border-success/40"
+              : "bg-canvas text-faint border-line hover:border-line-strong"
           }`}>
           {t}
         </button>
@@ -45,8 +45,8 @@ function ClientChip({ client, selected, onToggle }) {
     <button type="button" onClick={() => onToggle(client)}
       className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
         selected
-          ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30"
-          : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+          ? "bg-primary/20 text-primary border-primary/30"
+          : "bg-canvas text-faint border-line hover:border-line-strong"
       }`}>
       {client.name}
     </button>
@@ -56,9 +56,9 @@ function ClientChip({ client, selected, onToggle }) {
 // Parsed note block from AI — user assigns to a client
 function NoteBlock({ note, clients, linkedClientIds, onAssign, onUpdate, onRemove }) {
   const typeColors = {
-    general: "text-[#A1A1B5] border-white/[0.06]",
-    client: "text-[#7F5BFF] border-[#7F5BFF]/20",
-    action: "text-[#FFB547] border-[#FFB547]/20",
+    general: "text-muted border-line",
+    client: "text-primary border-primary/20",
+    action: "text-warning border-warning/20",
   };
   const typeLabels = { general: "Market / General", client: "Client Update", action: "Action Point" };
   const linkedClients = clients.filter(c => linkedClientIds.includes(c.id));
@@ -66,10 +66,10 @@ function NoteBlock({ note, clients, linkedClientIds, onAssign, onUpdate, onRemov
   return (
     <div className={`rounded-xl border p-4 space-y-3 bg-surface-secondary ${typeColors[note.type] || typeColors.general}`}>
       <div className="flex items-start justify-between gap-2">
-        <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${typeColors[note.type] || typeColors.general} bg-white/[0.02]`}>
+        <span className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${typeColors[note.type] || typeColors.general} bg-canvas`}>
           {typeLabels[note.type] || "General"}
         </span>
-        <button type="button" onClick={onRemove} className="text-[#6C6C80] hover:text-white mt-0.5"><X className="w-3.5 h-3.5" /></button>
+        <button type="button" onClick={onRemove} className="text-faint hover:text-ink mt-0.5"><X className="w-3.5 h-3.5" /></button>
       </div>
 
       <Textarea
@@ -81,21 +81,21 @@ function NoteBlock({ note, clients, linkedClientIds, onAssign, onUpdate, onRemov
       {/* Assign to client(s) */}
       {linkedClients.length > 0 && (
         <div>
-          <p className="text-[#6C6C80] text-[10px] mb-1.5">Assign to:</p>
+          <p className="text-faint text-[10px] mb-1.5">Assign to:</p>
           <div className="flex flex-wrap gap-1.5">
             {/* "All clients" shortcut */}
             <button type="button" onClick={() => onAssign("__all__")}
               className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${
                 note.assigned_clients?.length === linkedClientIds.length && linkedClientIds.length > 0
-                  ? "bg-[#FFB547]/20 text-[#FFB547] border-[#FFB547]/40"
-                  : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+                  ? "bg-warning/20 text-warning border-warning/40"
+                  : "bg-canvas text-faint border-line hover:border-line-strong"
               }`}>All</button>
             {linkedClients.map(c => (
               <button key={c.id} type="button" onClick={() => onAssign(c.id)}
                 className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${
                   note.assigned_clients?.includes(c.id)
-                    ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30"
-                    : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+                    ? "bg-primary/20 text-primary border-primary/30"
+                    : "bg-canvas text-faint border-line hover:border-line-strong"
                 }`}>{c.name}</button>
             ))}
           </div>
@@ -318,27 +318,27 @@ Return a JSON array of note objects. Each object must have:
     <form onSubmit={handleSubmit} className="space-y-4 animate-fade-in-up">
 
       {/* ── Meta ── */}
-      <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
+      <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Title *</Label>
+            <Label className="text-muted text-xs mb-1.5">Title *</Label>
             <Input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className={inputClass} required placeholder="e.g. Call with Kuoni re: Maldives Summer" />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Date</Label>
+            <Label className="text-muted text-xs mb-1.5">Date</Label>
             <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className={inputClass} />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Type</Label>
+            <Label className="text-muted text-xs mb-1.5">Type</Label>
             <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
               <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+              <SelectContent className="bg-surface-elevated border-line">
                 {types.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
           <div ref={companyRef} className="relative">
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Company / Organisation</Label>
+            <Label className="text-muted text-xs mb-1.5">Company / Organisation</Label>
             <Input
               value={form.company_name}
               onChange={(e) => { setForm({ ...form, company_name: e.target.value }); setCompanyOpen(true); }}
@@ -348,31 +348,31 @@ Return a JSON array of note objects. Each object must have:
               autoComplete="off"
             />
             {companyOpen && companySuggestions.length > 0 && (
-              <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1C1C26] border border-white/[0.10] rounded-xl shadow-xl overflow-hidden">
+              <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-surface border border-line rounded-xl shadow-xl overflow-hidden">
                 {companySuggestions.map(s => (
                   <button
                     key={s.id}
                     type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { setForm(prev => ({ ...prev, company_name: s.name, company_id: s.id, company_type: s.source === "trade" ? "TradeAccount" : "OtherPartner" })); setCompanyOpen(false); }}
-                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-white/[0.04] transition-colors group"
+                    className="w-full flex items-center justify-between px-3 py-2.5 text-left hover:bg-black/[0.03] transition-colors group"
                   >
-                    <span className="text-white text-sm group-hover:text-[#7F5BFF] transition-colors">{s.name}</span>
-                    <span className="text-[#6C6C80] text-[10px] bg-white/[0.04] px-2 py-0.5 rounded-full">{s.label}</span>
+                    <span className="text-ink text-sm group-hover:text-primary transition-colors">{s.name}</span>
+                    <span className="text-faint text-[10px] bg-canvas px-2 py-0.5 rounded-full">{s.label}</span>
                   </button>
                 ))}
               </div>
             )}
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Next Action Date</Label>
+            <Label className="text-muted text-xs mb-1.5">Next Action Date</Label>
             <Input type="date" value={form.next_action_date} onChange={(e) => setForm({ ...form, next_action_date: e.target.value })} className={inputClass} />
           </div>
         </div>
 
         {/* Clients */}
         <div>
-          <Label className="text-[#A1A1B5] text-xs mb-2 block">Clients in this meeting</Label>
+          <Label className="text-muted text-xs mb-2 block">Clients in this meeting</Label>
           <div className="flex flex-wrap gap-2">
             {clients.map(c => <ClientChip key={c.id} client={c} selected={form.linked_clients.includes(c.id)} onToggle={toggleClient} />)}
           </div>
@@ -381,11 +381,11 @@ Return a JSON array of note objects. Each object must have:
         {/* Contacts */}
         {contacts.length > 0 && (
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-2 block">Contacts present</Label>
+            <Label className="text-muted text-xs mb-2 block">Contacts present</Label>
             <div className="flex flex-wrap gap-2">
               {contacts.map(c => (
                 <button key={c.id} type="button" onClick={() => toggleContact(c)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.contact_ids.includes(c.id) ? "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.contact_ids.includes(c.id) ? "bg-success/20 text-success border-success/30" : "bg-canvas text-faint border-line hover:border-line-strong"}`}>
                   {c.name}
                 </button>
               ))}
@@ -395,7 +395,7 @@ Return a JSON array of note objects. Each object must have:
 
         {/* Internal Team */}
         <div>
-          <Label className="text-[#A1A1B5] text-xs mb-1.5">WDT Team</Label>
+          <Label className="text-muted text-xs mb-1.5">WDT Team</Label>
           <div className="flex flex-wrap gap-2">
             {teamMembers.map(m => (
               <button key={m.id} type="button" onClick={() => {
@@ -409,8 +409,8 @@ Return a JSON array of note objects. Each object must have:
               }}
                 className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
                   form.internal_team.includes(m.full_name)
-                    ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30"
-                    : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+                    ? "bg-primary/20 text-primary border-primary/30"
+                    : "bg-canvas text-faint border-line hover:border-line-strong"
                 }`}>
                 {m.full_name}
               </button>
@@ -421,11 +421,11 @@ Return a JSON array of note objects. Each object must have:
         {/* Campaigns */}
         {campaigns.length > 0 && (
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-2 block">Linked Campaigns</Label>
+            <Label className="text-muted text-xs mb-2 block">Linked Campaigns</Label>
             <div className="flex flex-wrap gap-2">
               {campaigns.map(c => (
                 <button key={c.id} type="button" onClick={() => toggleCampaign(c)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.linked_campaigns.includes(c.id) ? "bg-[#3DDC97]/20 text-[#3DDC97] border-[#3DDC97]/30" : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"}`}>
+                  className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${form.linked_campaigns.includes(c.id) ? "bg-success/20 text-success border-success/30" : "bg-canvas text-faint border-line hover:border-line-strong"}`}>
                   {c.name}
                 </button>
               ))}
@@ -435,15 +435,15 @@ Return a JSON array of note objects. Each object must have:
       </div>
 
       {/* ── Transcript + AI ── */}
-      <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-3">
+      <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-3">
         <div className="flex items-center justify-between">
-          <button type="button" onClick={() => setShowTranscript(v => !v)} className="flex items-center gap-2 text-white font-medium text-sm">
+          <button type="button" onClick={() => setShowTranscript(v => !v)} className="flex items-center gap-2 text-ink font-medium text-sm">
             {showTranscript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
             Paste Notes / Transcript
           </button>
           <Button type="button" onClick={handleAiRewrite}
             disabled={aiLoading || (!form.raw_transcript)}
-            className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-4 h-8 text-xs gap-1">
+            className="bg-primary hover:bg-primary-hover text-white rounded-xl px-4 h-8 text-xs gap-1">
             {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
             {aiLoading ? "Processing…" : "AI Parse & Rewrite"}
           </Button>
@@ -457,22 +457,22 @@ Return a JSON array of note objects. Each object must have:
           />
         )}
         {form.raw_transcript && !showTranscript && (
-          <p className="text-[#6C6C80] text-xs">Transcript saved · <button type="button" className="text-[#7F5BFF] hover:underline" onClick={() => setShowTranscript(true)}>show</button></p>
+          <p className="text-faint text-xs">Transcript saved · <button type="button" className="text-primary hover:underline" onClick={() => setShowTranscript(true)}>show</button></p>
         )}
       </div>
 
       {/* ── Notes ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h3 className="text-white font-medium text-sm">Notes <span className="text-[#6C6C80] font-normal">({form.notes.length})</span></h3>
+          <h3 className="text-ink font-medium text-sm">Notes <span className="text-faint font-normal">({form.notes.length})</span></h3>
           <div className="flex gap-1.5">
             {[
-              { type: "general", label: "+ General", color: "text-[#A1A1B5]" },
-              { type: "client", label: "+ Client", color: "text-[#7F5BFF]" },
-              { type: "action", label: "+ Action", color: "text-[#FFB547]" },
+              { type: "general", label: "+ General", color: "text-muted" },
+              { type: "client", label: "+ Client", color: "text-primary" },
+              { type: "action", label: "+ Action", color: "text-warning" },
             ].map(({ type, label, color }) => (
               <button key={type} type="button" onClick={() => addBlankNote(type)}
-                className={`text-xs px-3 py-1 rounded-lg bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.12] ${color} transition-all`}>
+                className={`text-xs px-3 py-1 rounded-lg bg-canvas border border-line hover:border-line-strong ${color} transition-all`}>
                 {label}
               </button>
             ))}
@@ -480,10 +480,10 @@ Return a JSON array of note objects. Each object must have:
         </div>
 
         {form.notes.length === 0 && (
-          <div className="text-center py-8 rounded-2xl border border-dashed border-white/[0.06]">
-            <Zap className="w-5 h-5 text-[#6C6C80] mx-auto mb-2" />
-            <p className="text-[#6C6C80] text-sm">Paste notes above and click <span className="text-[#7F5BFF]">AI Parse & Rewrite</span>,</p>
-            <p className="text-[#6C6C80] text-sm">or add notes manually using the buttons above.</p>
+          <div className="text-center py-8 rounded-2xl border border-dashed border-line">
+            <Zap className="w-5 h-5 text-faint mx-auto mb-2" />
+            <p className="text-faint text-sm">Paste notes above and click <span className="text-primary">AI Parse & Rewrite</span>,</p>
+            <p className="text-faint text-sm">or add notes manually using the buttons above.</p>
           </div>
         )}
 
@@ -501,7 +501,7 @@ Return a JSON array of note objects. Each object must have:
       </div>
 
       <div className="flex justify-end gap-3 pt-2">
-        <Button type="submit" disabled={createMutation.isPending} className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-8 h-11">
+        <Button type="submit" disabled={createMutation.isPending} className="bg-primary hover:bg-primary-hover text-white rounded-xl px-8 h-11">
           {createMutation.isPending ? "Saving…" : interaction ? "Update Interaction" : "Save Interaction"}
         </Button>
       </div>

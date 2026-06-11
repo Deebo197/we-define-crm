@@ -13,12 +13,12 @@ function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
   return (
     <div className="flex items-start gap-3">
-      <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
-        <Icon className="w-3.5 h-3.5 text-[#6C6C80]" />
+      <div className="w-7 h-7 rounded-lg bg-canvas flex items-center justify-center shrink-0 mt-0.5">
+        <Icon className="w-3.5 h-3.5 text-faint" />
       </div>
       <div>
-        <p className="text-[#6C6C80] text-[10px] uppercase tracking-wider font-medium">{label}</p>
-        <p className="text-white text-sm mt-0.5">{value}</p>
+        <p className="text-faint text-[10px] uppercase tracking-wider font-medium">{label}</p>
+        <p className="text-ink text-sm mt-0.5">{value}</p>
       </div>
     </div>
   );
@@ -103,15 +103,15 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-8">
-        <button type="button" onClick={onBack} className="flex items-center gap-2 text-[#6C6C80] hover:text-white transition-colors group">
+        <button type="button" onClick={onBack} className="flex items-center gap-2 text-faint hover:text-ink transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-0.5 transition-transform" />
           <span className="text-sm">Contacts</span>
         </button>
         <div className="flex gap-2">
-          <Button type="button" variant="ghost" onClick={() => setEditing(true)} className="text-[#A1A1B5] hover:text-white gap-1.5 text-sm h-9">
+          <Button type="button" variant="ghost" onClick={() => setEditing(true)} className="text-muted hover:text-ink gap-1.5 text-sm h-9">
             <Pencil className="w-4 h-4" /> Edit
           </Button>
-          <Button type="button" variant="ghost" onClick={() => setConfirmDelete(true)} className="text-[#FF5C7A]/60 hover:text-[#FF5C7A] gap-1.5 text-sm h-9">
+          <Button type="button" variant="ghost" onClick={() => setConfirmDelete(true)} className="text-danger/60 hover:text-danger gap-1.5 text-sm h-9">
             <Trash2 className="w-4 h-4" /> Delete
           </Button>
         </div>
@@ -144,26 +144,26 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
           transition={{ duration: 0.3, delay: 0.05, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* Profile hero */}
-          <div className="bg-surface rounded-2xl border border-white/[0.06] p-6 mb-5">
+          <div className="bg-surface rounded-2xl shadow-card border border-line p-6 mb-5">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7F5BFF]/30 to-[#3A1DFF]/10 flex items-center justify-center shrink-0">
-                <span className="text-[#7F5BFF] font-bold text-2xl">{contact.name?.charAt(0)?.toUpperCase()}</span>
+              <div className="w-16 h-16 rounded-2xl bg-primary-soft flex items-center justify-center shrink-0">
+                <span className="text-primary font-bold text-2xl">{contact.name?.charAt(0)?.toUpperCase()}</span>
               </div>
               <div className="min-w-0">
-                <h1 className="text-xl font-semibold text-white">{contact.name}</h1>
-                {contact.role && <p className="text-[#A1A1B5] text-sm mt-0.5">{contact.role}</p>}
+                <h1 className="text-xl font-semibold text-ink">{contact.name}</h1>
+                {contact.role && <p className="text-muted text-sm mt-0.5">{contact.role}</p>}
                 {contact.company_name && (
-                  <p className="text-[#6C6C80] text-sm">{contact.company_name}</p>
+                  <p className="text-faint text-sm">{contact.company_name}</p>
                 )}
                 {(contact.function || contact.seniority) && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {contact.function && (
-                      <span className="px-2.5 py-1 rounded-full text-xs bg-[#7F5BFF]/10 text-[#7F5BFF] border border-[#7F5BFF]/20">
+                      <span className="px-2.5 py-1 rounded-full text-xs bg-primary/10 text-primary border border-primary/20">
                         {contact.function}
                       </span>
                     )}
                     {contact.seniority && (
-                      <span className="px-2.5 py-1 rounded-full text-xs bg-white/[0.06] text-[#A1A1B5] border border-white/[0.08]">
+                      <span className="px-2.5 py-1 rounded-full text-xs bg-black/[0.04] text-muted border border-line">
                         {contact.seniority}
                       </span>
                     )}
@@ -174,8 +174,8 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
           </div>
 
           {/* Coverage — shown prominently */}
-          <div className="bg-surface rounded-2xl border border-[#7F5BFF]/20 p-5 mb-5">
-            <h2 className="text-[#7F5BFF] text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
+          <div className="bg-surface rounded-2xl shadow-card border border-primary/20 p-5 mb-5">
+            <h2 className="text-primary text-xs font-bold uppercase tracking-wider mb-3 flex items-center gap-2">
               <Building2 className="w-3.5 h-3.5" /> Coverage
             </h2>
             {contact.coverage?.length > 0 ? (
@@ -186,40 +186,40 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                     .filter(Boolean);
                   return (
                     <div key={entry.destination} className="flex flex-wrap items-center gap-2">
-                      <span className="px-3 py-1.5 rounded-xl text-xs font-medium bg-[#3DDC97]/10 text-[#3DDC97] border border-[#3DDC97]/20">
+                      <span className="px-3 py-1.5 rounded-xl text-xs font-medium bg-success/10 text-success border border-success/20">
                         {entry.destination}
                       </span>
                       {names.length > 0 ? names.map(name => (
-                        <span key={name} className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-[#7F5BFF] text-white shadow-lg shadow-[#7F5BFF]/20">
+                        <span key={name} className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-white shadow-lg shadow-primary/20">
                           {name}
                         </span>
                       )) : (
-                        <span className="text-[#6C6C80] text-xs">No clients assigned</span>
+                        <span className="text-faint text-xs">No clients assigned</span>
                       )}
                     </div>
                   );
                 })}
               </div>
             ) : (
-              <p className="text-[#6C6C80] text-sm">No coverage recorded for this contact</p>
+              <p className="text-faint text-sm">No coverage recorded for this contact</p>
             )}
           </div>
 
           <div className="grid sm:grid-cols-2 gap-5">
             {/* Contact Info */}
-            <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
-              <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider">Contact Info</h2>
+            <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-4">
+              <h2 className="text-faint text-xs font-semibold uppercase tracking-wider">Contact Info</h2>
               <InfoRow icon={Mail} label="Email" value={contact.email} />
               <InfoRow icon={Phone} label="Phone" value={contact.phone} />
               <InfoRow icon={Smartphone} label="Mobile" value={contact.mobile} />
               {contact.linkedin && (
                 <div className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
-                    <Linkedin className="w-3.5 h-3.5 text-[#6C6C80]" />
+                  <div className="w-7 h-7 rounded-lg bg-canvas flex items-center justify-center shrink-0 mt-0.5">
+                    <Linkedin className="w-3.5 h-3.5 text-faint" />
                   </div>
                   <div>
-                    <p className="text-[#6C6C80] text-[10px] uppercase tracking-wider font-medium">LinkedIn</p>
-                    <a href={contact.linkedin} target="_blank" rel="noopener noreferrer" className="text-[#7F5BFF] text-sm hover:underline mt-0.5 block truncate max-w-[200px]">View Profile</a>
+                    <p className="text-faint text-[10px] uppercase tracking-wider font-medium">LinkedIn</p>
+                    <a href={contact.linkedin} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline mt-0.5 block truncate max-w-[200px]">View Profile</a>
                   </div>
                 </div>
               )}
@@ -228,9 +228,9 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
 
             {/* Work Address (from Trade Account) */}
             {tradeAccount && (
-              <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
-                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
-                  <Building2 className="w-3.5 h-3.5 text-[#7F5BFF]" /> Work — {tradeAccount.name}
+              <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-4">
+                <h2 className="text-faint text-xs font-semibold uppercase tracking-wider flex items-center gap-2">
+                  <Building2 className="w-3.5 h-3.5 text-primary" /> Work — {tradeAccount.name}
                 </h2>
                 {(tradeAccount.address_line1 || tradeAccount.city) ? (
                   <InfoRow icon={MapPin} label="Office Address" value={[tradeAccount.address_line1, tradeAccount.city, tradeAccount.county, tradeAccount.address_postcode, tradeAccount.address_country].filter(Boolean).join(", ")} />
@@ -238,12 +238,12 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                 {tradeAccount.phone && <InfoRow icon={Phone} label="Office Phone" value={tradeAccount.phone} />}
                 {tradeAccount.website && (
                   <div className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0 mt-0.5">
-                      <Globe className="w-3.5 h-3.5 text-[#6C6C80]" />
+                    <div className="w-7 h-7 rounded-lg bg-canvas flex items-center justify-center shrink-0 mt-0.5">
+                      <Globe className="w-3.5 h-3.5 text-faint" />
                     </div>
                     <div>
-                      <p className="text-[#6C6C80] text-[10px] uppercase tracking-wider font-medium">Website</p>
-                      <a href={tradeAccount.website} target="_blank" rel="noopener noreferrer" className="text-[#7F5BFF] text-sm hover:underline mt-0.5 flex items-center gap-1">
+                      <p className="text-faint text-[10px] uppercase tracking-wider font-medium">Website</p>
+                      <a href={tradeAccount.website} target="_blank" rel="noopener noreferrer" className="text-primary text-sm hover:underline mt-0.5 flex items-center gap-1">
                         Visit site <ExternalLink className="w-3 h-3" />
                       </a>
                     </div>
@@ -253,22 +253,22 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
             )}
 
             {/* Home Address */}
-            <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 space-y-4">
-              <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider">Home Address</h2>
+            <div className="bg-surface rounded-2xl shadow-card border border-line p-5 space-y-4">
+              <h2 className="text-faint text-xs font-semibold uppercase tracking-wider">Home Address</h2>
               {address ? (
                 <InfoRow icon={MapPin} label="Address" value={address} />
               ) : (
-                <p className="text-[#6C6C80] text-sm">No home address on record</p>
+                <p className="text-faint text-sm">No home address on record</p>
               )}
             </div>
 
             {/* Tags */}
             {contact.tags?.length > 0 && (
-              <div className="bg-surface rounded-2xl border border-white/[0.06] p-5">
-                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3">Tags</h2>
+              <div className="bg-surface rounded-2xl shadow-card border border-line p-5">
+                <h2 className="text-faint text-xs font-semibold uppercase tracking-wider mb-3">Tags</h2>
                 <div className="flex flex-wrap gap-2">
                   {contact.tags.map(tag => (
-                    <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-white/[0.06] text-[#A1A1B5] border border-white/[0.08]">
+                    <span key={tag} className="px-2.5 py-1 rounded-full text-xs bg-black/[0.04] text-muted border border-line">
                       {tag}
                     </span>
                   ))}
@@ -278,9 +278,9 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
 
             {/* Notes */}
             {contact.notes && (
-              <div className="bg-surface rounded-2xl border border-white/[0.06] p-5 sm:col-span-2">
-                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3">Notes</h2>
-                <p className="text-[#A1A1B5] text-sm leading-relaxed whitespace-pre-wrap">{contact.notes}</p>
+              <div className="bg-surface rounded-2xl shadow-card border border-line p-5 sm:col-span-2">
+                <h2 className="text-faint text-xs font-semibold uppercase tracking-wider mb-3">Notes</h2>
+                <p className="text-muted text-sm leading-relaxed whitespace-pre-wrap">{contact.notes}</p>
               </div>
             )}
           </div>
@@ -288,54 +288,54 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
           {/* Next Action */}
           {nextAction && (
             <div className="mt-5">
-              <Link to="/actions" className="bg-surface rounded-2xl border border-white/[0.06] p-4 hover:border-white/[0.12] transition-all group block">
-                <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
+              <Link to="/actions" className="bg-surface rounded-2xl shadow-card border border-line p-4 hover:border-line-strong transition-all group block">
+                <h2 className="text-faint text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-1.5">
                   <CheckSquare className="w-3.5 h-3.5" /> Next Action
                 </h2>
-                <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors">{nextAction.description}</p>
+                <p className="text-ink text-sm font-medium group-hover:text-primary transition-colors">{nextAction.description}</p>
                 {nextAction.due_date && (
-                  <p className={`text-xs mt-1 flex items-center gap-1 ${isPast(new Date(nextAction.due_date)) ? "text-[#FF5C7A]" : "text-[#6C6C80]"}`}>
+                  <p className={`text-xs mt-1 flex items-center gap-1 ${isPast(new Date(nextAction.due_date)) ? "text-danger" : "text-faint"}`}>
                     <Clock className="w-3 h-3" />
                     Due {format(new Date(nextAction.due_date), "MMM d, yyyy")}
                   </p>
                 )}
-                {nextAction.owner && <p className="text-[#6C6C80] text-xs mt-1">Owner: {nextAction.owner}</p>}
+                {nextAction.owner && <p className="text-faint text-xs mt-1">Owner: {nextAction.owner}</p>}
               </Link>
             </div>
           )}
 
           {/* Full Interaction History */}
-          <div className="mt-5 bg-surface rounded-2xl border border-white/[0.06] p-5">
-            <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+          <div className="mt-5 bg-surface rounded-2xl shadow-card border border-line p-5">
+            <h2 className="text-faint text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
               <MessageSquare className="w-3.5 h-3.5" /> Interaction History
               {contactInteractions.length > 0 && (
-                <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-white/[0.06] text-[#A1A1B5]">{contactInteractions.length}</span>
+                <span className="ml-auto px-2 py-0.5 rounded-full text-[10px] bg-black/[0.04] text-muted">{contactInteractions.length}</span>
               )}
             </h2>
             {contactInteractions.length === 0 ? (
-              <p className="text-[#6C6C80] text-sm">No interactions recorded with this contact yet.</p>
+              <p className="text-faint text-sm">No interactions recorded with this contact yet.</p>
             ) : (
               <div className="space-y-2">
                 {contactInteractions.map(interaction => (
                   <Link
                     key={interaction.id}
                     to={`/interactions/${interaction.id}`}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.04] hover:border-[#7F5BFF]/30 hover:bg-[#7F5BFF]/5 transition-all group block"
+                    className="flex items-start gap-3 p-3 rounded-xl bg-canvas border border-line hover:border-primary/30 hover:bg-primary/5 transition-all group block"
                   >
-                    <div className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center shrink-0 text-sm">
+                    <div className="w-8 h-8 rounded-lg bg-canvas flex items-center justify-center shrink-0 text-sm">
                       {{"Meeting (In-Person)":"🤝","Meeting (Virtual)":"💻","Call":"📞","Email":"✉️","Event":"🎪","FAM Feedback":"📋","Marketing Discussion":"📣"}[interaction.type] || "💬"}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{interaction.title}</p>
+                      <p className="text-ink text-sm font-medium group-hover:text-primary transition-colors truncate">{interaction.title}</p>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                        <span className="text-[#6C6C80] text-xs">{interaction.type}</span>
+                        <span className="text-faint text-xs">{interaction.type}</span>
                         {interaction.linked_client_names?.length > 0 && (
-                          <span className="text-[#6C6C80] text-xs">· {interaction.linked_client_names.join(", ")}</span>
+                          <span className="text-faint text-xs">· {interaction.linked_client_names.join(", ")}</span>
                         )}
                       </div>
                     </div>
                     {interaction.date && (
-                      <span className="text-[#6C6C80] text-xs shrink-0 flex items-center gap-1">
+                      <span className="text-faint text-xs shrink-0 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
                         {format(new Date(interaction.date), "d MMM yyyy")}
                       </span>
@@ -348,8 +348,8 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
 
           {/* Colleagues at same company */}
           {colleagues.length > 0 && (
-            <div className="mt-5 bg-surface rounded-2xl border border-white/[0.06] p-5">
-              <h2 className="text-[#6C6C80] text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
+            <div className="mt-5 bg-surface rounded-2xl shadow-card border border-line p-5">
+              <h2 className="text-faint text-xs font-semibold uppercase tracking-wider mb-4 flex items-center gap-2">
                 <Users className="w-3.5 h-3.5" /> Colleagues at {contact.company_name}
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -358,14 +358,14 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
                     key={c.id}
                     type="button"
                     onClick={() => onViewContact && onViewContact(c)}
-                    className="flex items-center gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/[0.06] hover:border-white/[0.14] hover:bg-white/[0.04] transition-all text-left group"
+                    className="flex items-center gap-3 p-3 rounded-xl bg-canvas border border-line hover:border-line-strong hover:bg-black/[0.03] transition-all text-left group"
                   >
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#7F5BFF]/20 to-[#3A1DFF]/10 flex items-center justify-center shrink-0">
-                      <span className="text-[#7F5BFF] font-medium text-sm">{c.name?.charAt(0)?.toUpperCase()}</span>
+                    <div className="w-9 h-9 rounded-full bg-primary-soft flex items-center justify-center shrink-0">
+                      <span className="text-primary font-medium text-sm">{c.name?.charAt(0)?.toUpperCase()}</span>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-white text-sm font-medium group-hover:text-[#7F5BFF] transition-colors truncate">{c.name}</p>
-                      <p className="text-[#6C6C80] text-xs truncate">{c.role || "—"}</p>
+                      <p className="text-ink text-sm font-medium group-hover:text-primary transition-colors truncate">{c.name}</p>
+                      <p className="text-faint text-xs truncate">{c.role || "—"}</p>
                     </div>
                   </button>
                 ))}
@@ -388,13 +388,13 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-surface rounded-2xl border border-white/[0.08] p-6 max-w-sm w-full mx-4 shadow-2xl"
+              className="bg-surface rounded-2xl shadow-card border border-line p-6 max-w-sm w-full mx-4 shadow-2xl"
             >
-              <h3 className="text-white font-medium mb-2">Delete Contact</h3>
-              <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete <span className="text-white font-medium">{contact.name}</span>? This cannot be undone.</p>
+              <h3 className="text-ink font-medium mb-2">Delete Contact</h3>
+              <p className="text-muted text-sm mb-5">Are you sure you want to delete <span className="text-ink font-medium">{contact.name}</span>? This cannot be undone.</p>
               <div className="flex gap-3 justify-end">
-                <Button type="button" variant="ghost" onClick={() => setConfirmDelete(false)} className="text-[#6C6C80] hover:text-white">Cancel</Button>
-                <Button type="button" onClick={() => deleteMutation.mutate(contact.id)} disabled={deleteMutation.isPending} className="bg-[#FF5C7A] hover:bg-[#FF5C7A]/80 text-white rounded-xl px-5">
+                <Button type="button" variant="ghost" onClick={() => setConfirmDelete(false)} className="text-faint hover:text-ink">Cancel</Button>
+                <Button type="button" onClick={() => deleteMutation.mutate(contact.id)} disabled={deleteMutation.isPending} className="bg-danger hover:bg-danger/80 text-white rounded-xl px-5">
                   {deleteMutation.isPending ? "Deleting..." : "Delete"}
                 </Button>
               </div>

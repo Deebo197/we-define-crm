@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
+const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 
 export default function OtherPartners() {
   const [showForm, setShowForm] = useState(false);
@@ -65,38 +65,38 @@ export default function OtherPartners() {
       <PageHeader title="Other Partners" subtitle="Press, airlines, tourist boards" action={() => openForm(null)} actionLabel="Add Partner" />
 
       {showForm && (
-        <div className="bg-surface rounded-2xl border border-white/[0.06] p-6 mb-6 animate-fade-in-up">
+        <div className="bg-surface rounded-2xl shadow-card border border-line p-6 mb-6 animate-fade-in-up">
           <div className="flex items-center justify-between mb-5">
-            <h2 className="text-white font-medium">{editing ? "Edit Partner" : "New Partner"}</h2>
-            <button onClick={() => { setShowForm(false); setEditing(null); }} className="text-[#6C6C80] hover:text-white"><X className="w-5 h-5" /></button>
+            <h2 className="text-ink font-medium">{editing ? "Edit Partner" : "New Partner"}</h2>
+            <button onClick={() => { setShowForm(false); setEditing(null); }} className="text-faint hover:text-ink"><X className="w-5 h-5" /></button>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <div>
-                <Label className="text-[#A1A1B5] text-xs mb-1.5">Name *</Label>
+                <Label className="text-muted text-xs mb-1.5">Name *</Label>
                 <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputClass} required />
               </div>
               <div>
-                <Label className="text-[#A1A1B5] text-xs mb-1.5">Type</Label>
+                <Label className="text-muted text-xs mb-1.5">Type</Label>
                 <Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v })}>
                   <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-                  <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                  <SelectContent className="bg-surface-elevated border-line">
                     {["Press", "Airline", "Tourist Board", "DMO", "Technology", "Other"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
             </div>
             <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Notes</Label>
+              <Label className="text-muted text-xs mb-1.5">Notes</Label>
               <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} className={`${inputClass} min-h-[80px]`} />
             </div>
             <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Opportunity Notes</Label>
+              <Label className="text-muted text-xs mb-1.5">Opportunity Notes</Label>
               <Textarea value={form.opportunity_notes} onChange={(e) => setForm({ ...form, opportunity_notes: e.target.value })} className={`${inputClass} min-h-[80px]`} />
             </div>
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="ghost" onClick={() => { setShowForm(false); setEditing(null); }} className="text-[#A1A1B5] hover:text-white">Cancel</Button>
-              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-6">
+              <Button type="button" variant="ghost" onClick={() => { setShowForm(false); setEditing(null); }} className="text-muted hover:text-ink">Cancel</Button>
+              <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} className="bg-primary hover:bg-primary-hover text-white rounded-xl px-6">
                 {(createMutation.isPending || updateMutation.isPending) ? "Saving..." : editing ? "Update" : "Create"}
               </Button>
             </div>
@@ -106,12 +106,12 @@ export default function OtherPartners() {
 
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-surface rounded-2xl border border-white/[0.08] p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className="text-white font-medium mb-2">Delete Partner</h3>
-            <p className="text-[#A1A1B5] text-sm mb-5">Are you sure you want to delete <span className="text-white font-medium">{confirmDelete.name}</span>? This cannot be undone.</p>
+          <div className="bg-surface rounded-2xl shadow-card border border-line p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 className="text-ink font-medium mb-2">Delete Partner</h3>
+            <p className="text-muted text-sm mb-5">Are you sure you want to delete <span className="text-ink font-medium">{confirmDelete.name}</span>? This cannot be undone.</p>
             <div className="flex gap-3 justify-end">
-              <button type="button" onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-[#6C6C80] hover:text-white transition-colors">Cancel</button>
-              <button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="px-5 py-2 text-sm bg-[#FF5C7A] hover:bg-[#FF5C7A]/80 text-white rounded-xl">
+              <button type="button" onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-faint hover:text-ink transition-colors">Cancel</button>
+              <button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="px-5 py-2 text-sm bg-danger hover:bg-danger/80 text-white rounded-xl">
                 {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </button>
             </div>
@@ -120,8 +120,8 @@ export default function OtherPartners() {
       )}
 
       <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
-        <Input placeholder="Search partners..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-faint" />
+        <Input placeholder="Search partners..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-line text-ink placeholder:text-faint rounded-xl h-10" />
       </div>
 
       {isLoading ? <ShimmerCard count={3} /> : filtered.length === 0 ? (
@@ -129,13 +129,13 @@ export default function OtherPartners() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((p, i) => (
-            <div key={p.id} className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => openForm(p)}>
-              <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDelete(p); }} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-[#6C6C80] hover:text-[#FF5C7A] hover:bg-[#FF5C7A]/10 transition-all">
+            <div key={p.id} className="bg-surface rounded-2xl shadow-card border border-line p-5 hover:border-line-strong hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group relative" style={{ animationDelay: `${i * 0.03}s` }} onClick={() => openForm(p)}>
+              <button type="button" onClick={(e) => { e.stopPropagation(); setConfirmDelete(p); }} className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-faint hover:text-danger hover:bg-danger/10 transition-all">
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
-              <h3 className="text-white font-medium text-sm group-hover:text-[#7F5BFF] transition-colors">{p.name}</h3>
-              <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-white/[0.04] text-[#A1A1B5] border border-white/[0.06]">{p.type}</span>
-              {p.notes && <p className="text-[#6C6C80] text-xs mt-2 line-clamp-2">{p.notes}</p>}
+              <h3 className="text-ink font-medium text-sm group-hover:text-primary transition-colors">{p.name}</h3>
+              <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-xs bg-canvas text-muted border border-line">{p.type}</span>
+              {p.notes && <p className="text-faint text-xs mt-2 line-clamp-2">{p.notes}</p>}
             </div>
           ))}
         </div>

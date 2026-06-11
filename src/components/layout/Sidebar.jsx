@@ -11,102 +11,142 @@ import {
   CheckSquare,
   Megaphone,
   FileText,
+  Gauge,
+  Receipt,
+  FolderOpen,
   ChevronLeft,
   ChevronRight,
-  LogOut,
-  Sun,
-  Moon
+  LogOut
 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { useTheme } from "@/lib/ThemeContext";
 
-const navItems = [
-  { label: "Dashboard", icon: LayoutDashboard, path: "/" },
-  { label: "Clients", icon: Building2, path: "/clients" },
-  { label: "Trade Accounts", icon: Handshake, path: "/trade-accounts" },
-  { label: "Other Partners", icon: Globe, path: "/other-partners" },
-  { label: "Contacts", icon: Users, path: "/contacts" },
-  { label: "Interactions", icon: MessageSquare, path: "/interactions" },
-  { label: "Actions", icon: CheckSquare, path: "/actions" },
-  { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
-  { label: "Reports", icon: FileText, path: "/reports" },
-  { label: "Team Members", icon: Users2, path: "/team" },
+const navGroups = [
+  {
+    label: "CRM",
+    items: [
+      { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+      { label: "Clients", icon: Building2, path: "/clients" },
+      { label: "Trade Accounts", icon: Handshake, path: "/trade-accounts" },
+      { label: "Other Partners", icon: Globe, path: "/other-partners" },
+      { label: "Contacts", icon: Users, path: "/contacts" },
+      { label: "Interactions", icon: MessageSquare, path: "/interactions" },
+      { label: "Actions", icon: CheckSquare, path: "/actions" },
+      { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
+      { label: "Team Members", icon: Users2, path: "/team" },
+    ],
+  },
+  {
+    label: "Reporting",
+    items: [{ label: "Reports", icon: FileText, path: "/reports" }],
+  },
+  {
+    label: "Competitor Analysis",
+    items: [{ label: "MarketGauge", icon: Gauge, soon: true }],
+  },
+  {
+    label: "Expenses",
+    items: [{ label: "Expenses", icon: Receipt, soon: true }],
+  },
+  {
+    label: "Documents",
+    items: [{ label: "Document Library", icon: FolderOpen, soon: true }],
+  },
 ];
+
+function SoonPill() {
+  return (
+    <span className="ml-auto text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-primary-soft text-primary">
+      Soon
+    </span>
+  );
+}
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { theme, toggle } = useTheme();
 
   return (
     <aside
-      className={`fixed left-0 top-0 h-screen bg-surface border-r border-white/[0.06] flex flex-col z-50 transition-all duration-300 ${
+      className={`fixed left-0 top-0 h-screen bg-surface border-r border-line flex flex-col z-50 transition-all duration-300 ${
         collapsed ? "w-[72px]" : "w-[240px]"
       }`}
     >
       {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-white/[0.06]">
+      <div className="h-16 flex items-center px-5 border-b border-line">
         {!collapsed ? (
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7F5BFF] to-[#3A1DFF] flex items-center justify-center">
-              <span className="text-white font-bold text-sm">W</span>
-            </div>
-            <span className="text-white font-semibold text-sm tracking-tight">We Define Travel</span>
-          </div>
+          <img src="/brand/repevo-wordmark.svg" alt="Repevo" className="h-6" />
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#7F5BFF] to-[#3A1DFF] flex items-center justify-center mx-auto">
-            <span className="text-white font-bold text-sm">W</span>
-          </div>
+          <img src="/brand/repevo-favicon.svg" alt="Repevo" className="w-8 rounded mx-auto" />
         )}
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-        {navItems.map((item) => {
-          const isActive = location.pathname === item.path || 
-            (item.path !== "/" && location.pathname.startsWith(item.path));
-          return (
-            <Link
-              key={item.path}
-              to={item.path}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                isActive
-                  ? "bg-gradient-to-r from-[#7F5BFF]/20 to-transparent text-white"
-                  : "text-[#A1A1B5] hover:text-white hover:bg-white/[0.04]"
-              }`}
-            >
-              <item.icon className={`w-[18px] h-[18px] flex-shrink-0 ${
-                isActive ? "text-[#7F5BFF]" : "text-[#6C6C80] group-hover:text-[#A1A1B5]"
-              }`} />
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 py-4 px-3 overflow-y-auto">
+        {navGroups.map((group) => (
+          <div key={group.label} className="mb-4">
+            {!collapsed && (
+              <p className="px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-faint">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                if (item.soon) {
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-faint cursor-default select-none"
+                      title={`${item.label} — coming soon`}
+                    >
+                      <item.icon className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
+                      {!collapsed && (
+                        <>
+                          <span>{item.label}</span>
+                          <SoonPill />
+                        </>
+                      )}
+                    </div>
+                  );
+                }
+                const isActive =
+                  location.pathname === item.path ||
+                  (item.path !== "/" && location.pathname.startsWith(item.path));
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                      isActive
+                        ? "bg-primary-soft text-primary"
+                        : "text-muted hover:text-ink hover:bg-black/[0.03]"
+                    }`}
+                  >
+                    <item.icon
+                      className={`w-[18px] h-[18px] flex-shrink-0 ${
+                        isActive ? "text-primary" : "text-faint group-hover:text-muted"
+                      }`}
+                    />
+                    {!collapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t border-white/[0.06] space-y-1">
-        <button
-          onClick={toggle}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#A1A1B5] hover:text-white hover:bg-white/[0.04] transition-all w-full"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-[18px] h-[18px] flex-shrink-0 text-[#6C6C80]" />
-          ) : (
-            <Moon className="w-[18px] h-[18px] flex-shrink-0 text-[#6C6C80]" />
-          )}
-          {!collapsed && <span>{theme === "dark" ? "Light Mode" : "Dark Mode"}</span>}
-        </button>
+      <div className="px-3 py-4 border-t border-line space-y-1">
         <button
           onClick={() => base44.auth.logout()}
-          className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#A1A1B5] hover:text-white hover:bg-white/[0.04] transition-all w-full`}
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted hover:text-ink hover:bg-black/[0.03] transition-all w-full"
         >
-          <LogOut className="w-[18px] h-[18px] flex-shrink-0 text-[#6C6C80]" />
+          <LogOut className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
           {!collapsed && <span>Sign Out</span>}
         </button>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-[#6C6C80] hover:text-[#A1A1B5] transition-all w-full"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-faint hover:text-muted transition-all w-full"
         >
           {collapsed ? (
             <ChevronRight className="w-[18px] h-[18px] mx-auto" />

@@ -61,8 +61,8 @@ export default function TeamMembers() {
       )}
 
       <div className="relative mb-6 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6C6C80]" />
-        <Input placeholder="Search team…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-xl h-10" />
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-faint" />
+        <Input placeholder="Search team…" value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10 bg-surface border-line text-ink placeholder:text-faint rounded-xl h-10" />
       </div>
 
       {isLoading ? <ShimmerCard count={3} /> : filtered.length === 0 ? (
@@ -71,7 +71,7 @@ export default function TeamMembers() {
         <div className="space-y-6">
           {active.length > 0 && (
             <div>
-              <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider mb-3">Active</p>
+              <p className="text-faint text-xs font-medium uppercase tracking-wider mb-3">Active</p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {active.map((member, i) => (
                   <MemberCard key={member.id} member={member} delay={i * 0.03} onClick={() => { setEditing(member); setShowForm(true); }} />
@@ -81,7 +81,7 @@ export default function TeamMembers() {
           )}
           {inactive.length > 0 && (
             <div>
-              <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider mb-3">Inactive</p>
+              <p className="text-faint text-xs font-medium uppercase tracking-wider mb-3">Inactive</p>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 {inactive.map((member, i) => (
                   <MemberCard key={member.id} member={member} delay={i * 0.03} onClick={() => { setEditing(member); setShowForm(true); }} />
@@ -99,25 +99,25 @@ function MemberCard({ member, delay, onClick }) {
   return (
     <div
       onClick={onClick}
-      className="bg-surface rounded-2xl border border-white/[0.06] p-5 hover:border-white/[0.12] hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group"
+      className="bg-surface rounded-2xl shadow-card border border-line p-5 hover:border-line-strong hover:scale-[1.01] transition-all duration-300 cursor-pointer animate-fade-in-up group"
       style={{ animationDelay: `${delay}s` }}
     >
       <div className="flex items-center gap-3 mb-3">
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7F5BFF]/20 to-[#3A1DFF]/10 flex items-center justify-center flex-shrink-0">
-          <span className="text-[#7F5BFF] font-semibold text-sm">{member.full_name?.charAt(0)?.toUpperCase()}</span>
+        <div className="w-10 h-10 rounded-full bg-primary-soft flex items-center justify-center flex-shrink-0">
+          <span className="text-primary font-semibold text-sm">{member.full_name?.charAt(0)?.toUpperCase()}</span>
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="text-white font-medium text-sm group-hover:text-[#7F5BFF] transition-colors truncate">{member.full_name}</h3>
-          {member.job_title && <p className="text-[#6C6C80] text-xs truncate">{member.job_title}</p>}
+          <h3 className="text-ink font-medium text-sm group-hover:text-primary transition-colors truncate">{member.full_name}</h3>
+          {member.job_title && <p className="text-faint text-xs truncate">{member.job_title}</p>}
         </div>
         <StatusBadge status={member.status} />
       </div>
       <div className="space-y-1">
         {member.email && (
-          <p className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Mail className="w-3 h-3" />{member.email}</p>
+          <p className="text-faint text-xs flex items-center gap-1.5"><Mail className="w-3 h-3" />{member.email}</p>
         )}
         {member.phone && (
-          <p className="text-[#6C6C80] text-xs flex items-center gap-1.5"><Phone className="w-3 h-3" />{member.phone}</p>
+          <p className="text-faint text-xs flex items-center gap-1.5"><Phone className="w-3 h-3" />{member.phone}</p>
         )}
       </div>
     </div>

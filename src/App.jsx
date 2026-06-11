@@ -4,7 +4,6 @@ import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
-import { ThemeProvider } from '@/lib/ThemeContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 import AppLayout from '@/components/layout/AppLayout';
@@ -28,12 +27,10 @@ const AuthenticatedApp = () => {
 
   if (isLoadingPublicSettings || isLoadingAuth) {
     return (
-      <div className="fixed inset-0 flex items-center justify-center bg-[#0B0B0F]">
+      <div className="fixed inset-0 flex items-center justify-center bg-canvas">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#7F5BFF] to-[#3A1DFF] flex items-center justify-center">
-            <span className="text-white font-bold text-lg">W</span>
-          </div>
-          <div className="w-6 h-6 border-2 border-[#7F5BFF]/30 border-t-[#7F5BFF] rounded-full animate-spin"></div>
+          <img src="/brand/repevo-favicon.svg" alt="Repevo" className="w-10 h-10 rounded-xl" />
+          <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin"></div>
         </div>
       </div>
     );
@@ -74,16 +71,14 @@ const AuthenticatedApp = () => {
 
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <AuthProvider>
+      <QueryClientProvider client={queryClientInstance}>
+        <Router>
+          <AuthenticatedApp />
+        </Router>
+        <Toaster />
+      </QueryClientProvider>
+    </AuthProvider>
   )
 }
 

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { X } from "lucide-react";
 
-const inputClass = "bg-surface-secondary border-white/[0.06] text-white placeholder:text-[#6C6C80] rounded-lg focus:border-[#7F5BFF] focus:ring-[#7F5BFF]/20";
+const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 const NONE = "__none__";
 
 export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
@@ -58,10 +58,10 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
   };
 
   return (
-    <div className="bg-surface rounded-2xl border border-white/[0.06] p-6 mb-6 animate-fade-in-up">
+    <div className="bg-surface rounded-2xl shadow-card border border-line p-6 mb-6 animate-fade-in-up">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-white font-medium">{client ? "Edit Client" : "New Client"}</h2>
-        <button type="button" onClick={onCancel} className="text-[#6C6C80] hover:text-white transition-colors">
+        <h2 className="text-ink font-medium">{client ? "Edit Client" : "New Client"}</h2>
+        <button type="button" onClick={onCancel} className="text-faint hover:text-ink transition-colors">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -69,7 +69,7 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid sm:grid-cols-2 gap-4">
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Name *</Label>
+            <Label className="text-muted text-xs mb-1.5">Name *</Label>
             <Input
               value={form.name}
               onChange={(e) => setForm(f => ({ ...f, name: e.target.value }))}
@@ -79,17 +79,17 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
             />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Type</Label>
+            <Label className="text-muted text-xs mb-1.5">Type</Label>
             <Select value={form.type} onValueChange={(v) => setForm(f => ({ ...f, type: v }))}>
               <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+              <SelectContent className="bg-surface-elevated border-line">
                 <SelectItem value="Hotel">Hotel</SelectItem>
                 <SelectItem value="DMC">DMC</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Reporting Group</Label>
+            <Label className="text-muted text-xs mb-1.5">Reporting Group</Label>
             <Input
               value={form.reporting_group}
               onChange={(e) => setForm(f => ({ ...f, reporting_group: e.target.value }))}
@@ -98,10 +98,10 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
             />
           </div>
           <div>
-            <Label className="text-[#A1A1B5] text-xs mb-1.5">Status</Label>
+            <Label className="text-muted text-xs mb-1.5">Status</Label>
             <Select value={form.status} onValueChange={(v) => setForm(f => ({ ...f, status: v }))}>
               <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
-              <SelectContent className="bg-surface-elevated border-white/[0.06]">
+              <SelectContent className="bg-surface-elevated border-line">
                 <SelectItem value="Active">Active</SelectItem>
                 <SelectItem value="Onboarding">Onboarding</SelectItem>
                 <SelectItem value="Paused">Paused</SelectItem>
@@ -112,13 +112,13 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
         </div>
 
         {teamMembers.length > 0 && (
-          <div className="border-t border-white/[0.06] pt-4 space-y-3">
-            <p className="text-[#6C6C80] text-xs font-medium uppercase tracking-wider">WDT Team</p>
+          <div className="border-t border-line pt-4 space-y-3">
+            <p className="text-faint text-xs font-medium uppercase tracking-wider">WDT Team</p>
             <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Lead</Label>
+              <Label className="text-muted text-xs mb-1.5">Lead</Label>
               <Select value={form.lead_team_member_id || NONE} onValueChange={handleLeadChange}>
                 <SelectTrigger className={inputClass}><SelectValue placeholder="Select lead…" /></SelectTrigger>
-                <SelectContent className="bg-surface-elevated border-white/[0.06]">
+                <SelectContent className="bg-surface-elevated border-line">
                   <SelectItem value={NONE}>None</SelectItem>
                   {teamMembers.map(m => (
                     <SelectItem key={m.id} value={m.id}>
@@ -129,7 +129,7 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
               </Select>
             </div>
             <div>
-              <Label className="text-[#A1A1B5] text-xs mb-1.5">Supporting</Label>
+              <Label className="text-muted text-xs mb-1.5">Supporting</Label>
               <div className="flex flex-wrap gap-2">
                 {teamMembers.map(m => (
                   <button
@@ -138,8 +138,8 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
                     onClick={() => toggleSupporting(m)}
                     className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
                       (form.supporting_team_member_ids ?? []).includes(m.id)
-                        ? "bg-[#7F5BFF]/20 text-[#7F5BFF] border-[#7F5BFF]/30"
-                        : "bg-white/[0.02] text-[#6C6C80] border-white/[0.06] hover:border-white/[0.12]"
+                        ? "bg-primary/20 text-primary border-primary/30"
+                        : "bg-canvas text-faint border-line hover:border-line-strong"
                     }`}
                   >
                     {m.full_name}
@@ -151,7 +151,7 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
         )}
 
         <div>
-          <Label className="text-[#A1A1B5] text-xs mb-1.5">Notes</Label>
+          <Label className="text-muted text-xs mb-1.5">Notes</Label>
           <Textarea
             value={form.notes}
             onChange={(e) => setForm(f => ({ ...f, notes: e.target.value }))}
@@ -159,7 +159,7 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
           />
         </div>
         <div>
-          <Label className="text-[#A1A1B5] text-xs mb-1.5">Internal Notes</Label>
+          <Label className="text-muted text-xs mb-1.5">Internal Notes</Label>
           <Textarea
             value={form.internal_notes}
             onChange={(e) => setForm(f => ({ ...f, internal_notes: e.target.value }))}
@@ -168,13 +168,13 @@ export default function ClientForm({ client, onSubmit, onCancel, isLoading }) {
         </div>
 
         <div className="flex justify-end gap-3 pt-2">
-          <Button type="button" variant="ghost" onClick={onCancel} className="text-[#A1A1B5] hover:text-white">
+          <Button type="button" variant="ghost" onClick={onCancel} className="text-muted hover:text-ink">
             Cancel
           </Button>
           <Button
             type="submit"
             disabled={isLoading}
-            className="bg-gradient-to-r from-[#7F5BFF] to-[#6F3BFF] text-white rounded-xl px-6"
+            className="bg-primary hover:bg-primary-hover text-white rounded-xl px-6"
           >
             {isLoading ? "Saving..." : client ? "Update" : "Create"}
           </Button>
