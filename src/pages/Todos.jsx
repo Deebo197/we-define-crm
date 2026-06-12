@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActivePeople } from "@/api/people";
 import { useAuth } from "@/lib/AuthContext";
 import PageHeader from "@/components/ui/PageHeader";
 import ShimmerCard from "@/components/ui/ShimmerCard";
@@ -45,7 +46,7 @@ export default function Todos() {
   // Contacts cached once for type-ahead (2,000+ records, searched client-side).
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list("-created_date"),
+    queryFn: () => listActivePeople("-created_date"),
     staleTime: 10 * 60 * 1000,
   });
 

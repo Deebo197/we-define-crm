@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActivePeople } from "@/api/people";
 import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { useReferenceList } from "@/api/crm";
 import { Handshake, Search, Upload, Download, Trash2, MapPin, Navigation, Map, List, SlidersHorizontal, X, Loader2, Building2 } from "lucide-react";
@@ -393,7 +394,7 @@ export default function TradeAccounts() {
 
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list(),
+    queryFn: () => listActivePeople(),
   });
 
   const createMutation = useMutation({

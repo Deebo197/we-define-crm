@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActivePeople } from "@/api/people";
 import { Building2, Search, Mail, Phone, Users, ChevronRight } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -93,7 +94,7 @@ export default function Clients() {
 
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list(),
+    queryFn: () => listActivePeople(),
   });
 
   const createMutation = useMutation({

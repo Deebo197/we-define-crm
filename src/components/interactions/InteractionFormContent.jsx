@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActivePeople } from "@/api/people";
 import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -255,7 +256,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   // records fetched once and searched client-side; never rendered in full.
   const { data: contacts = [] } = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list("-created_date"),
+    queryFn: () => listActivePeople("-created_date"),
     staleTime: 10 * 60 * 1000,
   });
   const { data: campaigns = [] } = useQuery({ queryKey: ["campaigns"], queryFn: () => base44.entities.Campaign.list() });

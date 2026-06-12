@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "./base44Client";
+import { listActivePeople, listActiveSeats } from "./people";
 import { listActiveTradeAccounts } from "./tradeAccounts";
 
 // ─── Shared CRM query hooks ──────────────────────────────────────────────────
@@ -21,7 +22,7 @@ export function useCompanies() {
 export function usePeople() {
   return useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list("-created_date"),
+    queryFn: () => listActivePeople("-created_date"),
     staleTime: FIVE_MINUTES,
   });
 }
@@ -29,7 +30,7 @@ export function usePeople() {
 export function useRoleSeats() {
   return useQuery({
     queryKey: ["role-seats"],
-    queryFn: () => base44.entities.RoleSeat.list("-updated_date", 10000),
+    queryFn: () => listActiveSeats("-updated_date", 10000),
     staleTime: FIVE_MINUTES,
   });
 }

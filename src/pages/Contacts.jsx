@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActivePeople } from "@/api/people";
 import { Users, Search, Mail, Upload, Download, LayoutGrid, List, Trash2, Phone } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import EmptyState from "@/components/ui/EmptyState";
@@ -29,7 +30,7 @@ export default function Contacts() {
 
   const { data: contacts = [], isLoading } = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list("-created_date"),
+    queryFn: () => listActivePeople("-created_date"),
   });
   const { data: seats = [] } = useRoleSeats();
   const { data: companies = [] } = useCompanies();

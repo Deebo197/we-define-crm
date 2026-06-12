@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { listActivePeople } from "@/api/people";
 import {
   ArrowLeft, Building2, Users, MessageSquare, CheckSquare,
   Megaphone, FileText, Pencil, Calendar, Clock, ChevronRight
@@ -58,7 +59,7 @@ export default function ClientDetail() {
 
   const { data: allContacts = [] } = useQuery({
     queryKey: ["contacts"],
-    queryFn: () => base44.entities.Contact.list(),
+    queryFn: () => listActivePeople(),
   });
 
   const { data: allInteractions = [], isLoading: loadingInteractions } = useQuery({
