@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { listActiveTradeAccounts } from "@/api/tradeAccounts";
+import { useReferenceList } from "@/api/crm";
 import { Handshake, Search, Upload, Download, Trash2, MapPin, Navigation, Map, List, SlidersHorizontal, X, Loader2, Building2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -9,7 +10,6 @@ import EmptyState from "@/components/ui/EmptyState";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import TradeAccountForm from "@/components/trade/TradeAccountForm";
 import TradeAccountDetail from "@/components/trade/TradeAccountDetail";
-import ContactDetail from "@/components/contacts/ContactDetail";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,7 +20,6 @@ import { toneHexFor } from "@/lib/statusColors";
 
 const GOOGLE_API_KEY = "AIzaSyAN-qJFLomJZNCpaFjacQk5K2j_wlu8b5U";
 
-const TYPE_FILTERS = ["All", "Tour Operator", "Travel Agency", "Homeworker Network", "OTA / Online"];
 const RADIUS_OPTIONS = [5, 10, 20, 50];
 
 const typeStyles = {
@@ -162,6 +161,8 @@ function MapView({ accounts, visitCenter, visitRadius, onSelectAccount }) {
 
 // ─── Plan a Visit panel ──────────────────────────────────────────────────────
 function PlanVisit({ accounts, contacts, onSelectAccount }) {
+  const { values: subTypeOptions } = useReferenceList("company_subtype");
+  const TYPE_FILTERS = ["All", ...subTypeOptions];
   const [locationQuery, setLocationQuery] = useState("");
   const [radius, setRadius] = useState(20);
   const [typeFilter, setTypeFilter] = useState("All");
@@ -237,7 +238,7 @@ function PlanVisit({ accounts, contacts, onSelectAccount }) {
               <SelectValue />
             </SelectTrigger>
             <SelectContent className="bg-surface-elevated border-line">
-              {TYPE_FILTERS.map(t => <SelectItem key={t} value={t}>{t === "All" ? "All types" : t + "s"}</SelectItem>)}
+              {TYPE_FILTERS.map(t => <SelectItem key={t} value={t}>{t === "All" ? "All types" : t}</SelectItem>)}
             </SelectContent>
           </Select>
 
@@ -254,7 +255,7 @@ function PlanVisit({ accounts, contacts, onSelectAccount }) {
           <p className="text-faint text-xs mt-3 flex items-center gap-1">
             <MapPin className="w-3 h-3 text-primary" />
             Showing results within <span className="text-ink font-medium mx-1">{radius} miles</span> of <span className="text-ink font-medium mx-1">{visitLabel}</span>
-            {typeFilter !== "All" && <> · <span className="text-primary font-medium">{typeFilter}s only</span></>}
+            {typeFilter !== "All" && <> · <span className="text-primary font-medium">{typeFilter} only</span></>}
           </p>
         )}
       </div>
@@ -265,8 +266,8 @@ function PlanVisit({ accounts, contacts, onSelectAccount }) {
           <div className="flex items-center justify-between mb-3">
             <p className="text-faint text-sm">
               {results.length === 0
-                ? "No accounts found in this area"
-                : <><span className="text-ink font-medium">{results.length}</span> account{results.length !== 1 ? "s" : ""} found</>
+                ? "No companies found in this area"
+                : <><span className="text-ink font-medium">{results.length}</span> compan{results.length !== 1 ? "ies" : "y"} found</>
               }
             </p>
             {results.length > 0 && (
@@ -361,8 +362,8 @@ function PlanVisit({ accounts, contacts, onSelectAccount }) {
       {results === null && (
         <div className="bg-surface rounded-2xl shadow-card border border-line p-10 text-center">
           <Navigation className="w-8 h-8 text-primary/40 mx-auto mb-3" />
-          <p className="text-faint text-sm">Enter a location above to find nearby accounts</p>
-          <p className="text-faint text-xs mt-1">Works best when accounts have addresses saved</p>
+          <p className="text-faint text-sm">Enter a location above to find nearby companies</p>
+          <p className="text-faint text-xs mt-1">Works best when companies have addresses saved</p>
         </div>
       )}
     </div>
@@ -371,12 +372,13 @@ function PlanVisit({ accounts, contacts, onSelectAccount }) {
 
 // ─── Main page ───────────────────────────────────────────────────────────────
 export default function TradeAccounts() {
+  const { values: subTypeOptions } = useReferenceList("company_subtype");
+  const TYPE_FILTERS = ["All", ...subTypeOptions];
   const [searchParams] = useSearchParams();
   const [mode, setMode] = useState("browse"); // "browse" | "visit" | "map"
   const [showForm, setShowForm] = useState(searchParams.get("new") === "true");
   const [editing, setEditing] = useState(null);
   const [viewing, setViewing] = useState(null);
-  const [viewingContact, setViewingContact] = useState(null);
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [confirmDelete, setConfirmDelete] = useState(null);
@@ -491,24 +493,12 @@ export default function TradeAccounts() {
     URL.revokeObjectURL(url);
   };
 
-  if (viewingContact) {
-    return (
-      <ContactDetail
-        contact={viewingContact}
-        onBack={() => setViewingContact(null)}
-        onDeleted={() => setViewingContact(null)}
-        onViewContact={(c) => setViewingContact(c)}
-      />
-    );
-  }
-
   if (viewing && !showForm) {
     return (
       <TradeAccountDetail
         account={viewing}
         onBack={() => setViewing(null)}
         onEdit={() => { setEditing(viewing); setShowForm(true); }}
-        onViewContact={(contact) => setViewingContact(contact)}
       />
     );
   }
@@ -516,17 +506,17 @@ export default function TradeAccounts() {
   return (
     <div>
       <PageHeader
-        title="Trade Accounts"
-        subtitle="Tour operators and travel agents"
+        title="Companies"
+        subtitle="Tour operators, travel agencies and networks"
         action={() => { setEditing(null); setShowForm(true); }}
-        actionLabel="Add Account"
+        actionLabel="Add Company"
       />
 
       {/* Delete confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-surface rounded-2xl shadow-card border border-line p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className="text-ink font-medium mb-2">Delete Trade Account</h3>
+            <h3 className="text-ink font-medium mb-2">Delete Company</h3>
             <p className="text-muted text-sm mb-5">Are you sure you want to delete <span className="text-ink font-medium">{confirmDelete.name}</span>?</p>
             <div className="flex gap-3 justify-end">
               <button type="button" onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-faint hover:text-ink transition-colors">Cancel</button>
@@ -613,7 +603,7 @@ export default function TradeAccounts() {
                       : "bg-canvas text-faint border-line hover:border-line-strong hover:text-ink"
                   }`}
                 >
-                  {f === "All" ? "All" : f + "s"}
+                  {f}
                 </button>
               ))}
             </div>
@@ -640,7 +630,7 @@ export default function TradeAccounts() {
           )}
 
           {isLoading ? <ShimmerCard count={4} /> : filtered.length === 0 ? (
-            <EmptyState icon={Handshake} title="No trade accounts" description={search ? "No accounts match your search" : "Add your first tour operator or agent"} action={() => setShowForm(true)} actionLabel="Add Account" />
+            <EmptyState icon={Handshake} title="No companies" description={search ? "No companies match your search" : "Add your first tour operator or agency"} action={() => setShowForm(true)} actionLabel="Add Company" />
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((account, i) => (
@@ -709,14 +699,14 @@ export default function TradeAccounts() {
           {geocodedCount === 0 ? (
             <div className="bg-surface rounded-2xl shadow-card border border-line p-10 text-center">
               <Map className="w-8 h-8 text-primary/40 mx-auto mb-3" />
-              <p className="text-faint text-sm">No accounts have been mapped yet</p>
-              <p className="text-faint text-xs mt-1">Add addresses to your trade accounts and they'll appear here automatically</p>
+              <p className="text-faint text-sm">No companies have been mapped yet</p>
+              <p className="text-faint text-xs mt-1">Add addresses to your companies and they'll appear here automatically</p>
             </div>
           ) : (
             <>
               <p className="text-faint text-xs flex items-center gap-1">
                 <MapPin className="w-3 h-3 text-success" />
-                Showing <span className="text-ink font-medium mx-1">{geocodedCount}</span> of <span className="text-ink font-medium mx-1">{accounts.length}</span> accounts with mapped locations. Colour = relationship strength.
+                Showing <span className="text-ink font-medium mx-1">{geocodedCount}</span> of <span className="text-ink font-medium mx-1">{accounts.length}</span> companies with mapped locations. Colour = relationship strength.
               </p>
               {/* Type filter for map */}
               <div className="flex gap-2 flex-wrap">
@@ -730,7 +720,7 @@ export default function TradeAccounts() {
                         : "bg-canvas text-faint border-line hover:text-ink"
                     }`}
                   >
-                    {f === "All" ? "All types" : f + "s"}
+                    {f === "All" ? "All types" : f}
                   </button>
                 ))}
               </div>

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, Search } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { openGlobalSearch } from "@/components/crm/GlobalSearch";
 import { navGroups, isItemActive, useCollapsedGroups } from "./navGroups";
 
 export default function MobileNav() {
@@ -15,9 +16,14 @@ export default function MobileNav() {
     <>
       <div className="fixed top-0 left-0 right-0 h-14 bg-surface border-b border-line flex items-center justify-between px-4 z-50">
         <img src="/brand/repevo-wordmark.svg" alt="Repevo" className="h-5" />
-        <button onClick={() => setOpen(!open)} className="text-ink p-1">
-          {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={() => { setOpen(false); openGlobalSearch(); }} className="text-ink p-1" title="Search companies and people">
+            <Search className="w-5 h-5" />
+          </button>
+          <button onClick={() => setOpen(!open)} className="text-ink p-1">
+            {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {open && (

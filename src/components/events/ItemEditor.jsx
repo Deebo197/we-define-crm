@@ -142,7 +142,7 @@ export default function ItemEditor({ item, days, isNew, contacts, tradeAccounts,
           {/* Where: company (Meetings) or venue (everything else) */}
           {isMeeting ? (
             <div ref={companyRef} className="relative">
-              <Label className="text-muted text-xs mb-1.5">Company (trade account)</Label>
+              <Label className="text-muted text-xs mb-1.5">Company</Label>
               <Input
                 value={draft.company_name || ""}
                 onChange={(e) => { set({ company_name: e.target.value, company_id: "" }); setCompanyOpen(true); }}
@@ -160,13 +160,13 @@ export default function ItemEditor({ item, days, isNew, contacts, tradeAccounts,
                       className="w-full flex items-center justify-between gap-2 px-3 py-2.5 text-left hover:bg-black/[0.03] transition-colors group">
                       <span className="text-ink text-sm group-hover:text-primary transition-colors truncate">{a.name}</span>
                       <span className="text-faint text-[10px] bg-canvas px-2 py-0.5 rounded-full shrink-0">
-                        {[a.city, a.address_postcode].filter(Boolean).join(", ") || a.type || "Trade Account"}
+                        {[a.city, a.address_postcode].filter(Boolean).join(", ") || a.type || "Company"}
                       </span>
                     </button>
                   ))}
                 </div>
               )}
-              <p className="text-faint text-[11px] mt-1.5">Picking a company auto-fills the address from the trade account.</p>
+              <p className="text-faint text-[11px] mt-1.5">Picking a company auto-fills the address from the company record.</p>
             </div>
           ) : (
             <div>

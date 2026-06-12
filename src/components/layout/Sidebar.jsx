@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, ChevronDown, LogOut } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import ProfileCodePicker from "@/components/expenses/ProfileCodePicker";
+import { GlobalSearchTrigger } from "@/components/crm/GlobalSearch";
 import { navGroups, isItemActive, useCollapsedGroups } from "./navGroups";
 
 function SoonPill() {
@@ -34,6 +35,11 @@ export default function Sidebar() {
         ) : (
           <img src="/brand/repevo-favicon.svg" alt="Repevo" className="w-8 rounded mx-auto" />
         )}
+      </div>
+
+      {/* Global search */}
+      <div className="px-3 pt-3">
+        <GlobalSearchTrigger collapsed={collapsed} />
       </div>
 
       {/* Navigation */}

@@ -5,11 +5,11 @@ import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { Link } from "react-router-dom";
 import {
   Building2, Handshake, MessageSquare, CheckSquare, Megaphone,
-  ArrowRight, Calendar, Clock, User, FileText
+  ArrowRight, Clock, FileText
 } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ShimmerCard from "@/components/ui/ShimmerCard";
-import { format, isAfter, isBefore, addDays } from "date-fns";
+import { format, isBefore, addDays } from "date-fns";
 import { toneFor } from "@/lib/statusColors";
 
 function StatCard({ icon: Icon, label, value, gradient }) {
@@ -84,7 +84,7 @@ export default function Dashboard() {
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 animate-fade-in-up" style={{ animationDelay: "0.05s" }}>
         <StatCard icon={Building2} label="Active Clients" value={clients.filter(c => c.status === "Active").length} gradient="bg-primary" />
-        <StatCard icon={Handshake} label="Trade Accounts" value={tradeAccounts.length} gradient="bg-success" />
+        <StatCard icon={Handshake} label="Companies" value={tradeAccounts.length} gradient="bg-success" />
         <StatCard icon={CheckSquare} label="Open Actions" value={openActions.length} gradient="bg-warning" />
         <StatCard icon={Megaphone} label="Active Campaigns" value={campaigns.length} gradient="bg-danger" />
       </div>

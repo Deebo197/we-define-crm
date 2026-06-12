@@ -2,10 +2,13 @@ import React from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import MobileNav from "./MobileNav";
+import GlobalSearchDialog from "@/components/crm/GlobalSearch";
 
 export default function AppLayout() {
   return (
     <div className="min-h-screen bg-background">
+      {/* Global ⌘K search — mounted once for the whole app */}
+      <GlobalSearchDialog />
       {/* Desktop sidebar */}
       <div className="hidden lg:block">
         <Sidebar />

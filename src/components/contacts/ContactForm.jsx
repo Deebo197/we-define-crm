@@ -1,30 +1,39 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { base44 } from "@/api/base44Client";
 import { listActiveTradeAccounts } from "@/api/tradeAccounts";
+import { useReferenceList, useRoleSeats, LOCATION_TYPES, DESTINATION_STRENGTHS } from "@/api/crm";
+import { currentSeatFor } from "@/api/seats";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronRight } from "lucide-react";
 
 const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 const NONE = "__none__";
 
-const DESTINATIONS = ["Maldives", "Mauritius", "UAE", "Far East"];
 const FUNCTIONS = ["Commercial", "Product", "Marketing", "Press", "Admin"];
 const SENIORITIES = ["Head/Director", "Manager", "Executive", "Other"];
 
+/**
+ * Person form. onSubmit(contactData, seatTitle) — the job-title field reads
+ * from and writes to the person's CURRENT RoleSeat title; callers must sync
+ * the seat (see syncSeatTitle in src/api/seats.js).
+ */
 export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) {
   const { data: tradeAccounts = [] } = useQuery({
     queryKey: ["trade-accounts"],
     queryFn: () => listActiveTradeAccounts(),
   });
-  const { data: clients = [] } = useQuery({
-    queryKey: ["clients"],
-    queryFn: () => base44.entities.Client.list(),
-  });
+  const { data: seats = [] } = useRoleSeats();
+
+  // Reference-list driven pickers — never hardcoded
+  const { values: destinationOptions } = useReferenceList("destination");
+  const { values: sectorOptions } = useReferenceList("sector");
+  const { values: specialismOptions } = useReferenceList("specialism");
+
+  const currentSeat = contact ? currentSeatFor(contact.id, seats) : null;
 
   const [form, setForm] = useState({
     first_name: contact?.first_name ?? "",
@@ -33,6 +42,7 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     role: contact?.role ?? "",
     function: contact?.function ?? "",
     seniority: contact?.seniority ?? "",
+    location_type: contact?.location_type ?? "",
     company_id: contact?.company_id ?? "",
     company_name: contact?.company_name ?? "",
     company_type: contact?.company_type ?? "TradeAccount",
@@ -46,6 +56,8 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     home_postcode: contact?.home_postcode ?? "",
     home_country: contact?.home_country ?? "",
     coverage: contact?.coverage ?? [],
+    sector_override: contact?.sector_override ?? "",
+    specialisms_override: contact?.specialisms_override ?? [],
     notes: contact?.notes ?? "",
     linkedin: contact?.linkedin ?? "",
     birthday: contact?.birthday ?? "",
@@ -54,7 +66,20 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     working_pattern: contact?.working_pattern ?? {},
   });
 
+  // Job title now lives on the person's seat (contact.role is legacy fallback)
+  const [seatTitle, setSeatTitle] = useState(currentSeat?.title || contact?.role || "");
+  const [seatTitleTouched, setSeatTitleTouched] = useState(false);
+  const [showOverrides, setShowOverrides] = useState(
+    !!(contact?.coverage?.length || contact?.sector_override || contact?.specialisms_override?.length)
+  );
   const [tagInput, setTagInput] = useState("");
+
+  // Seats can load after first render — adopt the seat title once, unless the
+  // user has already typed.
+  React.useEffect(() => {
+    if (!seatTitleTouched && currentSeat?.title) setSeatTitle(currentSeat.title);
+     
+  }, [currentSeat?.title]);
 
   const handleTradeAccountChange = (v) => {
     if (v === NONE) {
@@ -73,24 +98,29 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
     setForm(f => ({ ...f, ...updates }));
   };
 
-  const toggleDestination = (destination) => {
+  // ── Override targeting (coverage = per-person destination overrides) ──
+  const toggleCoverageDestination = (destination) => {
     setForm(f => ({
       ...f,
       coverage: f.coverage.some(c => c.destination === destination)
         ? f.coverage.filter(c => c.destination !== destination)
-        : [...f.coverage, { destination, clients: [] }],
+        : [...f.coverage, { destination, strength: "Core" }],
     }));
   };
 
-  const toggleCoverageClient = (destination, clientId) => {
+  const setCoverageStrength = (destination, strength) => {
     setForm(f => ({
       ...f,
-      coverage: f.coverage.map(c => c.destination !== destination ? c : {
-        ...c,
-        clients: (c.clients ?? []).includes(clientId)
-          ? (c.clients ?? []).filter(id => id !== clientId)
-          : [...(c.clients ?? []), clientId],
-      }),
+      coverage: f.coverage.map(c => c.destination === destination ? { ...c, strength } : c),
+    }));
+  };
+
+  const toggleSpecialismOverride = (s) => {
+    setForm(f => ({
+      ...f,
+      specialisms_override: f.specialisms_override.includes(s)
+        ? f.specialisms_override.filter(x => x !== s)
+        : [...f.specialisms_override, s],
     }));
   };
 
@@ -102,13 +132,14 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(form);
+    // role kept in sync with the seat title so legacy list views stay accurate
+    onSubmit({ ...form, role: seatTitle }, seatTitle);
   };
 
   return (
     <div className="bg-surface rounded-2xl shadow-card border border-line p-6 mb-6 animate-fade-in-up">
       <div className="flex items-center justify-between mb-5">
-        <h2 className="text-ink font-medium">{contact ? "Edit Contact" : "New Contact"}</h2>
+        <h2 className="text-ink font-medium">{contact ? "Edit Person" : "New Person"}</h2>
         <button type="button" onClick={onCancel} className="text-faint hover:text-ink"><X className="w-5 h-5" /></button>
       </div>
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -129,7 +160,12 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
           </div>
           <div>
             <Label className="text-muted text-xs mb-1.5">Job Title</Label>
-            <Input value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} className={inputClass} />
+            <Input
+              value={seatTitle}
+              onChange={e => { setSeatTitle(e.target.value); setSeatTitleTouched(true); }}
+              className={inputClass}
+              placeholder="Saved to their current seat"
+            />
           </div>
           <div>
             <Label className="text-muted text-xs mb-1.5">Function</Label>
@@ -148,6 +184,16 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
               <SelectContent className="bg-surface-elevated border-line">
                 <SelectItem value={NONE}>None</SelectItem>
                 {SENIORITIES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-muted text-xs mb-1.5">Location Type</Label>
+            <Select value={form.location_type || NONE} onValueChange={v => setForm(f => ({ ...f, location_type: v === NONE ? "" : v }))}>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Select location type..." /></SelectTrigger>
+              <SelectContent className="bg-surface-elevated border-line">
+                <SelectItem value={NONE}>None</SelectItem>
+                {LOCATION_TYPES.map(v => <SelectItem key={v} value={v}>{v}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -175,11 +221,11 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
 
         {/* Company */}
         <div className="border-t border-line pt-4 space-y-3">
-          <p className="text-faint text-xs font-medium uppercase tracking-wider">Company (Trade Account)</p>
+          <p className="text-faint text-xs font-medium uppercase tracking-wider">Company</p>
           <div>
             <Label className="text-muted text-xs mb-1.5">Company Name</Label>
             <Select value={form.company_id || NONE} onValueChange={handleTradeAccountChange}>
-              <SelectTrigger className={inputClass}><SelectValue placeholder="Select trade account..." /></SelectTrigger>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Select company..." /></SelectTrigger>
               <SelectContent className="bg-surface-elevated border-line">
                 <SelectItem value={NONE}>None</SelectItem>
                 {tradeAccounts.map(a => <SelectItem key={a.id} value={a.id}>{a.name}</SelectItem>)}
@@ -188,46 +234,108 @@ export default function ContactForm({ contact, onSubmit, onCancel, isLoading }) 
           </div>
         </div>
 
-
-
-        {/* Coverage */}
+        {/* Override targeting — collapsed by default; exceptions only */}
         <div className="border-t border-line pt-4">
-          <div className="flex items-center gap-2 mb-3">
-            <p className="text-muted text-xs font-bold uppercase tracking-wider">Coverage</p>
-            <span className="text-[10px] text-faint italic">Which destinations does this person sell or manage, and for which of your clients?</span>
-          </div>
-          <div className="space-y-3">
-            {DESTINATIONS.map(destination => {
-              const entry = form.coverage.find(c => c.destination === destination);
-              return (
-                <div key={destination}>
-                  <button type="button" onClick={() => toggleDestination(destination)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${entry ? "bg-success/20 text-success border-success/30" : "bg-canvas text-faint border-line hover:border-line-strong"}`}>
-                    {destination}
-                  </button>
-                  {entry && (
-                    clients.length === 0 ? (
-                      <p className="text-faint text-xs mt-2">No clients found in system.</p>
-                    ) : (
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {clients.map(client => (
-                          <button key={client.id} type="button" onClick={() => toggleCoverageClient(destination, client.id)}
-                            className={`px-4 py-2 rounded-xl text-xs font-semibold transition-all border flex items-center gap-1.5 ${
-                              (entry.clients ?? []).includes(client.id)
-                                ? "bg-primary text-white border-primary shadow-lg shadow-primary/20"
-                                : "bg-canvas text-faint border-line hover:border-line-strong hover:text-ink"
-                            }`}>
-                            {(entry.clients ?? []).includes(client.id) && <span className="text-muted">✓</span>}
-                            {client.name}
-                          </button>
-                        ))}
+          <button
+            type="button"
+            onClick={() => setShowOverrides(s => !s)}
+            className="flex items-center gap-2 text-muted text-xs font-bold uppercase tracking-wider hover:text-ink transition-colors"
+          >
+            {showOverrides ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
+            Override targeting
+            {(form.coverage.length > 0 || form.sector_override || form.specialisms_override.length > 0) && (
+              <span className="px-1.5 py-0.5 rounded-full text-[9px] bg-warning/[0.18] text-[#B26B00] normal-case tracking-normal">overrides set</span>
+            )}
+          </button>
+          <p className="text-faint text-[11px] mt-1.5">
+            By default this person inherits destinations, sector and specialisms from their company.
+            Only set values here when this person is an exception — anything set below replaces the
+            company's values for them.
+          </p>
+
+          {showOverrides && (
+            <div className="mt-3 space-y-4 rounded-xl border border-warning/20 bg-warning/[0.04] p-4">
+              {/* Destination coverage override */}
+              <div>
+                <Label className="text-muted text-xs mb-1.5">Destination coverage (override)</Label>
+                <div className="space-y-2 mt-1.5">
+                  {destinationOptions.map(destination => {
+                    const entry = form.coverage.find(c => c.destination === destination);
+                    return (
+                      <div key={destination} className="flex items-center gap-2 flex-wrap">
+                        <button
+                          type="button"
+                          onClick={() => toggleCoverageDestination(destination)}
+                          className={`px-3 py-1.5 rounded-xl text-xs font-medium transition-all border ${
+                            entry ? "bg-success/20 text-[#00804C] border-success/30" : "bg-canvas text-faint border-line hover:border-line-strong"
+                          }`}
+                        >
+                          {destination}
+                        </button>
+                        {entry && (
+                          <div className="flex gap-1 bg-canvas border border-line rounded-xl p-0.5">
+                            {DESTINATION_STRENGTHS.map(strength => (
+                              <button
+                                key={strength}
+                                type="button"
+                                onClick={() => setCoverageStrength(destination, strength)}
+                                className={`px-2.5 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                                  (entry.strength || "Core") === strength ? "bg-primary text-white" : "text-faint hover:text-ink"
+                                }`}
+                              >
+                                {strength}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )
+                    );
+                  })}
+                  {destinationOptions.length === 0 && (
+                    <p className="text-faint text-xs">No destinations in the reference list yet.</p>
                   )}
                 </div>
-              );
-            })}
-          </div>
+                <p className="text-faint text-[10px] mt-1.5">Leave all unselected to inherit the company's destinations.</p>
+              </div>
+
+              {/* Sector override */}
+              <div>
+                <Label className="text-muted text-xs mb-1.5">Sector (override)</Label>
+                <Select value={form.sector_override || NONE} onValueChange={v => setForm(f => ({ ...f, sector_override: v === NONE ? "" : v }))}>
+                  <SelectTrigger className={inputClass}><SelectValue placeholder="Inherit from company" /></SelectTrigger>
+                  <SelectContent className="bg-surface-elevated border-line">
+                    <SelectItem value={NONE}>Inherit from company</SelectItem>
+                    {sectorOptions.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Specialisms override */}
+              <div>
+                <Label className="text-muted text-xs mb-1.5">Specialisms (override)</Label>
+                <div className="flex flex-wrap gap-1.5 mt-1.5">
+                  {specialismOptions.map(s => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => toggleSpecialismOverride(s)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+                        form.specialisms_override.includes(s)
+                          ? "bg-primary text-white border-transparent shadow-lg shadow-primary/20"
+                          : "bg-canvas text-faint border-line hover:border-line-strong hover:text-ink"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                  {specialismOptions.length === 0 && (
+                    <p className="text-faint text-xs">No specialisms in the reference list yet.</p>
+                  )}
+                </div>
+                <p className="text-faint text-[10px] mt-1.5">Leave all unselected to inherit the company's specialisms.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Home Address */}

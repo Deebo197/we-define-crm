@@ -166,8 +166,8 @@ export default function ImportTradeAccounts() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-ink tracking-tight">Import Trade Accounts</h1>
-          <p className="text-muted text-sm mt-1">Upload a CSV to bulk-import trade accounts</p>
+          <h1 className="text-2xl font-semibold text-ink tracking-tight">Import Companies</h1>
+          <p className="text-muted text-sm mt-1">Upload a CSV to bulk-import companies</p>
         </div>
       </div>
 
@@ -276,7 +276,7 @@ export default function ImportTradeAccounts() {
           <div className="flex gap-2 pt-2">
             <Button type="button" onClick={() => { setResults(null); if (fileRef.current) fileRef.current.value = ""; }} variant="ghost" className="text-faint hover:text-ink text-sm">Import More</Button>
             <Link to="/trade-accounts">
-              <Button type="button" className="bg-primary hover:bg-primary-hover text-white rounded-xl px-5 text-sm">View Trade Accounts</Button>
+              <Button type="button" className="bg-primary hover:bg-primary-hover text-white rounded-xl px-5 text-sm">View Companies</Button>
             </Link>
           </div>
         </div>

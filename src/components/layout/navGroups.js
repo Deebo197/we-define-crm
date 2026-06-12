@@ -26,6 +26,7 @@ import {
   PoundSterling,
   Settings,
   ListTodo,
+  Crosshair,
 } from "lucide-react";
 
 export const navGroups = [
@@ -34,15 +35,17 @@ export const navGroups = [
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/" },
       { label: "Clients", icon: Building2, path: "/clients" },
-      { label: "Trade Accounts", icon: Handshake, path: "/trade-accounts" },
+      { label: "Companies", icon: Handshake, path: "/trade-accounts" },
       { label: "Other Partners", icon: Globe, path: "/other-partners" },
-      { label: "Contacts", icon: Users, path: "/contacts" },
+      { label: "People", icon: Users, path: "/contacts" },
+      { label: "Targeting", icon: Crosshair, path: "/targeting" },
       { label: "Interactions", icon: MessageSquare, path: "/interactions" },
       { label: "Actions", icon: CheckSquare, path: "/actions" },
       { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
       { label: "Events", icon: CalendarDays, path: "/events" },
       { label: "Team", icon: Users2, path: "/team" },
       { label: "To-dos", icon: ListTodo, path: "/todos" },
+      { label: "Reference Lists", icon: Settings, path: "/settings/lists", adminOnly: true },
     ],
   },
   {

@@ -47,6 +47,10 @@ export const STATUS_TONE = {
   New: "info",
   "At Risk": "warning",
   Dormant: "neutral",
+  // Role seat status
+  Occupied: "success",
+  Vacant: "danger",
+  "Temp-covered": "warning",
   // Report / version status
   Draft: "neutral",
   Review: "warning",

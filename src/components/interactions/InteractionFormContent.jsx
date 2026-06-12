@@ -291,7 +291,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     if (!q) return [];
     const tas = tradeAccounts
       .filter(a => a.name?.toLowerCase().includes(q))
-      .map(a => ({ id: a.id, name: a.name, label: a.type || "Trade Account", source: "trade" }));
+      .map(a => ({ id: a.id, name: a.name, label: a.type || "Company", source: "trade" }));
     const ops = otherPartners
       .filter(p => p.name?.toLowerCase().includes(q))
       .map(p => ({ id: p.id, name: p.name, label: p.type || "Partner", source: "partner" }));

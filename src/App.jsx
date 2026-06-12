@@ -25,6 +25,10 @@ import TeamMembers from '@/pages/TeamMembers';
 import ImportTradeAccounts from '@/pages/ImportTradeAccounts';
 import ImportContacts from '@/pages/ImportContacts';
 import Todos from '@/pages/Todos';
+import CompanyPage from '@/pages/CompanyPage';
+import PersonPage from '@/pages/PersonPage';
+import Targeting from '@/pages/Targeting';
+import ReferenceLists from '@/pages/ReferenceLists';
 
 // Document library
 import Documents from '@/pages/Documents';
@@ -81,8 +85,12 @@ const AuthenticatedApp = () => {
         <Route path="/clients" element={<Clients />} />
         <Route path="/clients/:id" element={<ClientDetail />} />
         <Route path="/trade-accounts" element={<TradeAccounts />} />
+        <Route path="/trade-accounts/:id" element={<CompanyPage />} />
         <Route path="/other-partners" element={<OtherPartners />} />
         <Route path="/contacts" element={<Contacts />} />
+        <Route path="/contacts/:id" element={<PersonPage />} />
+        <Route path="/targeting" element={<Targeting />} />
+        <Route path="/settings/lists" element={<AdminRoute><ReferenceLists /></AdminRoute>} />
         <Route path="/interactions" element={<Interactions />} />
         <Route path="/interactions/:id" element={<InteractionDetail />} />
         <Route path="/interactions/:id/:mode" element={<InteractionDetail />} />

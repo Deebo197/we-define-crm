@@ -127,13 +127,14 @@ export default function ImportContacts() {
         company_id = accountMap[companyName.toLowerCase()] ?? "";
         if (!company_id) {
           results.unlinked++;
-          results.errors.push(`Contact "${mapped.name}" — Company "${companyName}" not found in Trade Accounts`);
+          results.errors.push(`Contact "${mapped.name}" — Company "${companyName}" not found in Companies`);
         }
       }
 
+      // Coverage rows are per-person destination OVERRIDES { destination, strength }
       const coverage = COVERAGE_COLUMNS
         .filter(({ field }) => parseBool(mapped[field]))
-        .map(({ destination }) => ({ destination, clients: [] }));
+        .map(({ destination }) => ({ destination, strength: "Core" }));
       const fn = matchEnum(FUNCTIONS, mapped.function);
       const seniority = matchEnum(SENIORITIES, mapped.seniority);
 
@@ -187,8 +188,8 @@ export default function ImportContacts() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
         <div>
-          <h1 className="text-2xl font-semibold text-ink tracking-tight">Import Contacts</h1>
-          <p className="text-muted text-sm mt-1">Upload a CSV to bulk-import contacts and link them to trade accounts</p>
+          <h1 className="text-2xl font-semibold text-ink tracking-tight">Import People</h1>
+          <p className="text-muted text-sm mt-1">Upload a CSV to bulk-import people and link them to companies</p>
         </div>
       </div>
 
@@ -197,13 +198,13 @@ export default function ImportContacts() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-ink font-medium mb-2">CSV Format</h2>
-            <p className="text-muted text-sm mb-3">Contacts are linked to Trade Accounts via <span className="text-ink font-medium">Company Name</span> (must match exactly). Supported columns:</p>
+            <p className="text-muted text-sm mb-3">People are linked to Companies via <span className="text-ink font-medium">Company Name</span> (must match exactly). Supported columns:</p>
             <div className="flex flex-wrap gap-2">
               {["First Name", "Last Name", "Full Name", "Job Title", "Function", "Seniority", "Company Name", "Email", "Phone", "Mobile", "Home Address Line 1", "Home Address Line 2", "City", "County", "Postcode", "Country", "Maldives", "Mauritius", "UAE", "Far East", "Notes"].map(f => (
                 <span key={f} className="px-2.5 py-1 rounded-lg text-xs bg-canvas text-muted border border-line font-mono">{f}</span>
               ))}
             </div>
-            <p className="text-faint text-xs mt-3">Destination columns accept: <span className="text-ink">Yes / No / True / False / 1 / 0</span> and set the contact's coverage. Function accepts: <span className="text-ink">Commercial / Product / Marketing / Press / Admin</span>. Seniority accepts: <span className="text-ink">Head/Director / Manager / Executive / Other</span>. Import Trade Accounts first to enable company linking.</p>
+            <p className="text-faint text-xs mt-3">Destination columns accept: <span className="text-ink">Yes / No / True / False / 1 / 0</span> and set the contact's coverage. Function accepts: <span className="text-ink">Commercial / Product / Marketing / Press / Admin</span>. Seniority accepts: <span className="text-ink">Head/Director / Manager / Executive / Other</span>. Import Companies first to enable company linking.</p>
           </div>
           <Button type="button" onClick={downloadTemplate} variant="outline" className="shrink-0 text-muted border-line hover:text-ink text-xs gap-2">
             <Download className="w-4 h-4" /> Template
@@ -212,11 +213,11 @@ export default function ImportContacts() {
         {tradeAccounts.length === 0 && (
           <div className="mt-4 flex items-center gap-2 bg-warning/10 border border-warning/20 rounded-xl px-4 py-3">
             <AlertCircle className="w-4 h-4 text-warning shrink-0" />
-            <p className="text-warning text-xs">No Trade Accounts found. <Link to="/import-trade-accounts" className="underline hover:text-ink">Import Trade Accounts first</Link> to enable company linking.</p>
+            <p className="text-warning text-xs">No companies found. <Link to="/import-trade-accounts" className="underline hover:text-ink">Import Companies first</Link> to enable company linking.</p>
           </div>
         )}
         {tradeAccounts.length > 0 && (
-          <p className="text-faint text-xs mt-3">{tradeAccounts.length} trade accounts available for linking.</p>
+          <p className="text-faint text-xs mt-3">{tradeAccounts.length} companies available for linking.</p>
         )}
       </div>
 

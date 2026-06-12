@@ -11,6 +11,9 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useSearchParams, Link } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { useRoleSeats, useCompanies, useReferenceList } from "@/api/crm";
+import { syncSeatTitle } from "@/api/seats";
+import { effectiveDestinations } from "@/lib/targeting";
 
 export default function Contacts() {
   const [searchParams] = useSearchParams();
@@ -28,15 +31,34 @@ export default function Contacts() {
     queryKey: ["contacts"],
     queryFn: () => base44.entities.Contact.list("-created_date"),
   });
+  const { data: seats = [] } = useRoleSeats();
+  const { data: companies = [] } = useCompanies();
+  const { values: destinationOptions } = useReferenceList("destination");
+  const companiesById = React.useMemo(() => new Map(companies.map(c => [c.id, c])), [companies]);
 
   const createMutation = useMutation({
-    mutationFn: (data) => base44.entities.Contact.create(data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contacts"] }); setShowForm(false); },
+    mutationFn: async ({ data, seatTitle }) => {
+      const created = await base44.entities.Contact.create(data);
+      await syncSeatTitle({ person: created, seats, title: seatTitle });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["role-seats"] });
+      setShowForm(false);
+    },
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Contact.update(id, data),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contacts"] }); setEditing(null); setShowForm(false); },
+    mutationFn: async ({ id, data, seatTitle }) => {
+      await base44.entities.Contact.update(id, data);
+      await syncSeatTitle({ person: { ...editing, ...data, id }, seats, title: seatTitle });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["role-seats"] });
+      setEditing(null);
+      setShowForm(false);
+    },
   });
 
   const deleteMutation = useMutation({
@@ -44,8 +66,10 @@ export default function Contacts() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contacts"] }); setConfirmDelete(null); },
   });
 
-  const handleSubmit = (data) => {
-    editing ? updateMutation.mutate({ id: editing.id, data }) : createMutation.mutate(data);
+  const handleSubmit = (data, seatTitle) => {
+    editing
+      ? updateMutation.mutate({ id: editing.id, data, seatTitle })
+      : createMutation.mutate({ data, seatTitle });
   };
 
   const openEdit = (contact) => {
@@ -62,7 +86,9 @@ export default function Contacts() {
       c.name?.toLowerCase().includes(search.toLowerCase()) ||
       c.company_name?.toLowerCase().includes(search.toLowerCase()) ||
       c.role?.toLowerCase().includes(search.toLowerCase());
-    const matchesDest = !destFilter || c.coverage?.some(cv => cv.destination === destFilter);
+    const matchesDest =
+      !destFilter ||
+      effectiveDestinations(c, companiesById.get(c.company_id)).some(cv => cv.destination === destFilter);
     const matchesFunction = !functionFilter || c.function === functionFilter;
     return matchesSearch && matchesDest && matchesFunction;
   });
@@ -71,8 +97,8 @@ export default function Contacts() {
     const headers = [
       "Full Name", "First Name", "Last Name", "Job Title", "Company", "Company Type",
       "Email", "Phone", "Mobile", "LinkedIn",
-      "Function", "Seniority",
-      "Maldives", "Mauritius", "UAE", "Far East",
+      "Function", "Seniority", "Location Type",
+      ...destinationOptions,
       "Home Address Line 1", "Home City", "Home County", "Home Postcode", "Home Country",
       "Tags", "Birthday", "Notes"
     ];
@@ -89,10 +115,10 @@ export default function Contacts() {
       c.linkedin ?? "",
       c.function ?? "",
       c.seniority ?? "",
-      c.coverage?.some(cv => cv.destination === "Maldives") ? "Yes" : "No",
-      c.coverage?.some(cv => cv.destination === "Mauritius") ? "Yes" : "No",
-      c.coverage?.some(cv => cv.destination === "UAE") ? "Yes" : "No",
-      c.coverage?.some(cv => cv.destination === "Far East") ? "Yes" : "No",
+      c.location_type ?? "",
+      ...destinationOptions.map(d =>
+        effectiveDestinations(c, companiesById.get(c.company_id)).some(cv => cv.destination === d) ? "Yes" : "No"
+      ),
       c.home_address_line1 ?? "",
       c.home_city ?? "",
       c.home_county ?? "",
@@ -141,7 +167,7 @@ export default function Contacts() {
 
   return (
     <div>
-      <PageHeader title="Contacts" subtitle="People across your network" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Contact" />
+      <PageHeader title="People" subtitle="Everyone across your network" action={() => { setEditing(null); setShowForm(true); }} actionLabel="Add Person" />
       <div className="flex justify-end gap-2 mb-2 -mt-4">
         <Button type="button" variant="ghost" onClick={exportToCSV} className="text-faint hover:text-ink text-xs gap-1.5 h-8">
           <Download className="w-3.5 h-3.5" /> Export CSV
@@ -161,7 +187,7 @@ export default function Contacts() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-surface rounded-2xl shadow-card border border-line p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className="text-ink font-medium mb-2">Delete Contact</h3>
+            <h3 className="text-ink font-medium mb-2">Delete Person</h3>
             <p className="text-muted text-sm mb-5">Are you sure you want to delete <span className="text-ink font-medium">{confirmDelete.name}</span>? This cannot be undone.</p>
             <div className="flex gap-3 justify-end">
               <Button type="button" variant="ghost" onClick={() => setConfirmDelete(null)} className="text-faint hover:text-ink">Cancel</Button>
@@ -189,15 +215,9 @@ export default function Contacts() {
         </div>
       </div>
 
-      {/* Destination filter chips */}
+      {/* Destination filter chips — reference-list driven */}
       <div className="flex flex-wrap gap-2 mb-4 animate-fade-in-up" style={{ animationDelay: "0.08s" }}>
-        {[
-          { key: "", label: "All" },
-          { key: "Maldives",  label: "🏝 Maldives" },
-          { key: "Mauritius", label: "🌴 Mauritius" },
-          { key: "UAE",       label: "🏙 UAE" },
-          { key: "Far East",  label: "🗺 Far East" },
-        ].map(f => (
+        {[{ key: "", label: "All" }, ...destinationOptions.map(d => ({ key: d, label: d }))].map(f => (
           <button
             key={f.key}
             type="button"
@@ -239,7 +259,7 @@ export default function Contacts() {
       </div>
 
       {isLoading ? <ShimmerCard count={4} /> : filtered.length === 0 ? (
-        <EmptyState icon={Users} title="No contacts" description="Start building your contact network" action={() => setShowForm(true)} actionLabel="Add Contact" />
+        <EmptyState icon={Users} title="No people" description="Start building your network" action={() => setShowForm(true)} actionLabel="Add Person" />
       ) : view === "grid" ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((contact, i) => (
