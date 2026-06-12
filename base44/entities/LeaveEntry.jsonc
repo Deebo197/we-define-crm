@@ -1,0 +1,80 @@
+{
+  "name": "LeaveEntry",
+  "type": "object",
+  "properties": {
+    "team_member_email": {
+      "type": "string",
+      "description": "Email of the team member this entry belongs to"
+    },
+    "team_member_name": {
+      "type": "string",
+      "description": "Denormalized team member name"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "Annual Leave",
+        "Sick",
+        "Business Travel",
+        "Other"
+      ],
+      "default": "Annual Leave",
+      "description": "Only Annual Leave counts against the allowance"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "half_day_start": {
+      "type": "boolean",
+      "default": false,
+      "description": "First day is a half day"
+    },
+    "half_day_end": {
+      "type": "boolean",
+      "default": false,
+      "description": "Last day is a half day"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "team_member_email",
+    "type",
+    "start_date",
+    "end_date"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.team_member_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_member_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -20,12 +20,12 @@ import { toneHexFor } from "@/lib/statusColors";
 
 const GOOGLE_API_KEY = "AIzaSyAN-qJFLomJZNCpaFjacQk5K2j_wlu8b5U";
 
-const TYPE_FILTERS = ["All", "Tour Operator", "Travel Agent", "Parent Company"];
+const TYPE_FILTERS = ["All", "Tour Operator", "Travel Agency", "Homeworker Network", "OTA / Online"];
 const RADIUS_OPTIONS = [5, 10, 20, 50];
 
 const typeStyles = {
   "Tour Operator": "bg-primary/10 text-primary border-primary/20",
-  "Travel Agent": "bg-success/10 text-success border-success/20",
+  "Travel Agency": "bg-success/10 text-success border-success/20",
   "Parent Company": "bg-warning/10 text-warning border-warning/20",
 };
 

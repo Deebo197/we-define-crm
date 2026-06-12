@@ -24,6 +24,28 @@
       ],
       "default": "Active"
     },
+    "birthday": {
+      "type": "string",
+      "format": "date",
+      "description": "Birthday \u2014 shown on the Team page"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Joined WDT \u2014 drives work anniversaries"
+    },
+    "annual_leave_allowance": {
+      "type": "number",
+      "description": "Annual leave allowance in days (per calendar year, excl. bank holidays); empty until set"
+    },
+    "contracted_hours_per_week": {
+      "type": "number",
+      "description": "Contracted paid hours per week \u2014 weekly work logs tally against this"
+    },
+    "calendar_colour": {
+      "type": "string",
+      "description": "Hex colour for this person's calendar entries"
+    },
     "notes": {
       "type": "string"
     }

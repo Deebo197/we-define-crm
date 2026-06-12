@@ -1,0 +1,75 @@
+{
+  "name": "Document",
+  "type": "object",
+  "properties": {
+    "client_id": {
+      "type": "string",
+      "description": "CRM Client this document belongs to"
+    },
+    "client_name": {
+      "type": "string",
+      "description": "Denormalized client name"
+    },
+    "title": {
+      "type": "string",
+      "description": "Display title"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Presentation",
+        "Fact Sheet",
+        "Menu",
+        "Rates",
+        "Imagery",
+        "Contract",
+        "Other"
+      ],
+      "default": "Other",
+      "description": "Document category for filtering"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Uploaded file URL"
+    },
+    "original_filename": {
+      "type": "string"
+    },
+    "mime_type": {
+      "type": "string"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "Bytes"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "uploaded_by_name": {
+      "type": "string",
+      "description": "Denormalized uploader name"
+    }
+  },
+  "required": [
+    "client_id",
+    "title",
+    "file_url"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {},
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -117,7 +117,7 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
             <Select value={form.type} onValueChange={v => setForm(f => ({ ...f, type: v }))}>
               <SelectTrigger className={inputClass}><SelectValue /></SelectTrigger>
               <SelectContent className="bg-surface-elevated border-line">
-                {["Tour Operator", "Travel Agent", "Parent Company"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                {["Tour Operator", "Travel Agency", "Homeworker Network", "OTA / Online", "Other"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>

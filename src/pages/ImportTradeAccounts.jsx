@@ -43,7 +43,7 @@ const FIELD_MAP = {
   "Notes": "notes",
 };
 
-const VALID_TYPES = ["Tour Operator", "Travel Agent", "Parent Company"];
+const VALID_TYPES = ["Tour Operator", "Travel Agency", "Homeworker Network", "OTA / Online", "Other"];
 
 export default function ImportTradeAccounts() {
   const fileRef = useRef(null);
@@ -182,7 +182,7 @@ export default function ImportTradeAccounts() {
                 <span key={f} className="px-2.5 py-1 rounded-lg text-xs bg-canvas text-muted border border-line font-mono">{f}</span>
               ))}
             </div>
-            <p className="text-faint text-xs mt-3">Type must be one of: <span className="text-ink">Tour Operator, Travel Agent, Parent Company</span>. If an Account Name already exists, the record will be <span className="text-ink">updated</span> rather than duplicated. Key Destinations can be semicolon-separated.</p>
+            <p className="text-faint text-xs mt-3">Type must be one of: <span className="text-ink">Tour Operator, Travel Agency, Homeworker Network, OTA / Online, Other</span>. If an Account Name already exists, the record will be <span className="text-ink">updated</span> rather than duplicated. Key Destinations can be semicolon-separated.</p>
           </div>
           <Button type="button" onClick={downloadTemplate} variant="outline" className="shrink-0 text-muted border-line hover:text-ink text-xs gap-2">
             <Download className="w-4 h-4" /> Template

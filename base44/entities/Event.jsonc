@@ -1,0 +1,191 @@
+{
+  "name": "Event",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Event or trip name e.g. SAii UK Sales Trip \u2014 September 2026"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "Sales Trip",
+        "Dinner",
+        "Evening Event",
+        "Training",
+        "Roadshow",
+        "Other"
+      ],
+      "default": "Sales Trip"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Planning",
+        "Confirmed",
+        "Completed",
+        "Cancelled"
+      ],
+      "default": "Planning"
+    },
+    "client_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "WDT clients this event is for"
+    },
+    "client_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized client names"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "description": {
+      "type": "string",
+      "description": "Overview shown on the client template"
+    },
+    "internal_notes": {
+      "type": "string",
+      "description": "Internal only \u2014 never on client-facing outputs"
+    },
+    "host_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "WDT/client hosts attending"
+    },
+    "items": {
+      "type": "array",
+      "description": "Itinerary items \u2014 meetings, dinners, evening events, travel, hotels",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "HH:MM"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "HH:MM"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "Meeting",
+              "Dinner",
+              "Evening Event",
+              "Travel",
+              "Hotel",
+              "Other"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "description": "e.g. Product meeting \u2014 Kuoni"
+          },
+          "company_id": {
+            "type": "string",
+            "description": "TradeAccount if this is a meeting at an account"
+          },
+          "company_name": {
+            "type": "string"
+          },
+          "venue_name": {
+            "type": "string",
+            "description": "Venue/restaurant name for dinners and events"
+          },
+          "address": {
+            "type": "string",
+            "description": "Full address \u2014 auto-filled from the TradeAccount where linked"
+          },
+          "city": {
+            "type": "string"
+          },
+          "postcode": {
+            "type": "string"
+          },
+          "contact_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Attendee contacts"
+          },
+          "contact_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cost": {
+            "type": "number",
+            "description": "Cost in GBP"
+          },
+          "cost_notes": {
+            "type": "string",
+            "description": "e.g. deposit paid, per head"
+          },
+          "notes": {
+            "type": "string",
+            "description": "Shown on the client template"
+          },
+          "internal_notes": {
+            "type": "string",
+            "description": "Internal only"
+          }
+        }
+      }
+    },
+    "invite": {
+      "type": "object",
+      "description": "Invite card content for dinners/evening events",
+      "properties": {
+        "headline": {
+          "type": "string",
+          "description": "e.g. You're invited to dinner with SAii Lagoon Maldives"
+        },
+        "intro": {
+          "type": "string",
+          "description": "Short invitation text"
+        },
+        "venue_line": {
+          "type": "string",
+          "description": "Venue name and address as shown on the invite"
+        },
+        "date_line": {
+          "type": "string",
+          "description": "e.g. Thursday 17 September 2026, 7pm"
+        },
+        "dress_code": {
+          "type": "string"
+        },
+        "rsvp_line": {
+          "type": "string",
+          "description": "e.g. RSVP to dee@wedefine.travel by 5 September"
+        }
+      }
+    }
+  },
+  "required": [
+    "title",
+    "event_type"
+  ]
+}

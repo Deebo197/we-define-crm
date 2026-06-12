@@ -1,0 +1,59 @@
+{
+  "name": "RoleSeat",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "The Company (TradeAccount) this seat belongs to \u2014 the seat never moves"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Denormalized company name"
+    },
+    "title": {
+      "type": "string",
+      "description": "The position title e.g. Senior Product Manager \u2014 belongs to the seat, inherited by successors"
+    },
+    "person_id": {
+      "type": "string",
+      "description": "Current occupant (Contact id) \u2014 empty when vacant"
+    },
+    "person_name": {
+      "type": "string",
+      "description": "Denormalized occupant name"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Occupied",
+        "Vacant",
+        "Temp-covered"
+      ],
+      "default": "Occupied"
+    },
+    "covering_person_id": {
+      "type": "string",
+      "description": "Colleague temporarily covering this seat (when Temp-covered)"
+    },
+    "covering_person_name": {
+      "type": "string"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the current occupant took the seat"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the seat was vacated (while vacant)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Continuity notes for a successor"
+    }
+  },
+  "required": [
+    "company_id"
+  ]
+}

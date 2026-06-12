@@ -1,0 +1,72 @@
+{
+  "name": "WorkLog",
+  "type": "object",
+  "properties": {
+    "team_member_email": {
+      "type": "string",
+      "description": "Email of the team member this entry belongs to"
+    },
+    "team_member_name": {
+      "type": "string",
+      "description": "Denormalized team member name"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "The working day"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start time HH:MM (24h)"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "End time HH:MM (24h)"
+    },
+    "break_minutes": {
+      "type": "number",
+      "default": 0,
+      "description": "Unpaid break in minutes"
+    },
+    "hours": {
+      "type": "number",
+      "description": "Computed working hours for the day (end - start - break)"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "team_member_email",
+    "date",
+    "hours"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.team_member_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.team_member_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

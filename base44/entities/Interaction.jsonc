@@ -39,13 +39,21 @@
       "type": "array",
       "items": {
         "type": "string"
-      }
+      },
+      "description": "IMMUTABLE \u2014 the people who were actually involved; never retro-edited when people move companies"
     },
     "contact_names": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "seat_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The RoleSeats involved \u2014 carries continuity to successors"
     },
     "internal_team": {
       "type": "array",

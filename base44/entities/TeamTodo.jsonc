@@ -1,0 +1,94 @@
+{
+  "name": "TeamTodo",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "The to-do text"
+    },
+    "done": {
+      "type": "boolean",
+      "default": false
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Team member this to-do belongs to"
+    },
+    "owner_name": {
+      "type": "string",
+      "description": "Denormalized owner name"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Optional due date"
+    },
+    "client_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tagged CRM Client IDs"
+    },
+    "client_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized client names"
+    },
+    "contact_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tagged Contact IDs"
+    },
+    "contact_names": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Denormalized contact names"
+    },
+    "sort_order": {
+      "type": "number",
+      "description": "Manual ordering within the owner's list"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "owner_email"
+  ],
+  "rls": {
+    "create": {},
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "data.owner_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

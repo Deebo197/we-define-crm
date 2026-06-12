@@ -1,0 +1,42 @@
+{
+  "name": "GroupLink",
+  "type": "object",
+  "properties": {
+    "parent_company_id": {
+      "type": "string",
+      "description": "The owning/anchoring Company (TradeAccount)"
+    },
+    "parent_company_name": {
+      "type": "string",
+      "description": "Denormalized parent name"
+    },
+    "child_company_id": {
+      "type": "string",
+      "description": "The owned/associated Company (TradeAccount)"
+    },
+    "child_company_name": {
+      "type": "string",
+      "description": "Denormalized child name"
+    },
+    "link_kind": {
+      "type": "string",
+      "enum": [
+        "Ownership",
+        "Association"
+      ],
+      "description": "Ownership = strong, actionable (HQ\u2192store network); Association = lightweight visibility-only"
+    },
+    "label": {
+      "type": "string",
+      "description": "Free text e.g. retail store, homeworking division, consortium, member agency"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "parent_company_id",
+    "child_company_id",
+    "link_kind"
+  ]
+}

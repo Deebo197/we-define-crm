@@ -4,18 +4,11 @@
   "properties": {
     "name": {
       "type": "string",
-      "description": "Account Name (must be unique)"
+      "description": "Company name (must be unique)"
     },
     "type": {
       "type": "string",
-      "enum": [
-        "Tour Operator",
-        "Travel Agent",
-        "Parent Company",
-        "Homeworker Network",
-        "OTA / Online"
-      ],
-      "description": "Account type"
+      "description": "Company sub-type \u2014 validated against the editable company_subtype reference list (Tour Operator, Travel Agency, Homeworker Network, OTA / Online, Other)"
     },
     "tier": {
       "type": "string",
@@ -26,13 +19,45 @@
       ],
       "description": "Global tier \u2014 account-level size/importance, independent of any one client"
     },
+    "sector": {
+      "type": "string",
+      "description": "Single sector from the editable sector reference list e.g. Luxury, Mainstream, Specialist Touring"
+    },
+    "specialisms": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Regional specialisms from the editable specialism list \u2014 known AS a specialist, stronger than selling a destination"
+    },
+    "destinations": {
+      "type": "array",
+      "description": "Destinations this company sells, with strength \u2014 people inherit these unless overridden",
+      "items": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "type": "string",
+            "description": "From the editable destination reference list"
+          },
+          "strength": {
+            "type": "string",
+            "enum": [
+              "Core",
+              "Occasional"
+            ],
+            "default": "Occasional"
+          }
+        }
+      }
+    },
     "parent_company_id": {
       "type": "string",
-      "description": "ID of parent Trade Account"
+      "description": "LEGACY \u2014 replaced by GroupLink; null on all records"
     },
     "parent_company_name": {
       "type": "string",
-      "description": "Denormalized parent company name"
+      "description": "LEGACY \u2014 replaced by GroupLink"
     },
     "website": {
       "type": "string",
@@ -67,7 +92,7 @@
       "items": {
         "type": "string"
       },
-      "description": "Key destinations e.g. Maldives, Mauritius"
+      "description": "LEGACY \u2014 replaced by destinations[]; empty on all records"
     },
     "notes": {
       "type": "string",
@@ -99,7 +124,7 @@
     },
     "archive_reason": {
       "type": "string",
-      "description": "Why this record was archived (e.g. duplicate merged into another account)"
+      "description": "Why this record was archived"
     }
   },
   "required": [
