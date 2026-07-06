@@ -159,7 +159,7 @@ Deno.serve(async (req) => {
         prompt: `You are an expert receipt and invoice analyser. Extract the following fields from the attached receipt or invoice document.
 
 Fields to extract:
-- date: The receipt/invoice date in YYYY-MM-DD format. Use today if not found.
+- date: The receipt/invoice date in YYYY-MM-DD format. If not found, leave it as an empty string — do NOT guess or make up a date.
 - supplier: The merchant or supplier name (who issued the document).
 - description: A concise description of what was purchased (1-2 sentences).
 - amount: The total amount paid (numeric, no currency symbol). Grand total including VAT.
@@ -186,7 +186,14 @@ Return only valid JSON with those exact keys.`,
       ocrError = err.message;
     }
 
-    const extractedDate = extracted.date || new Date().toISOString().split('T')[0];
+    // Only accept OCR date if it's a valid YYYY-MM-DD string; otherwise use today.
+    const todayStr = new Date().toISOString().split('T')[0];
+    const isValidDate = (d) => {
+      if (!d || typeof d !== 'string') return false;
+      const parsed = new Date(d);
+      return !isNaN(parsed.getTime()) && /^\d{4}-\d{2}-\d{2}$/.test(d);
+    };
+    const extractedDate = isValidDate(extracted.date) ? extracted.date : todayStr;
     const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     const d = new Date(extractedDate);
     const monthStr = `${monthNames[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;

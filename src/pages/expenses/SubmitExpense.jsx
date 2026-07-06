@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import AnimatedPage from "@/components/expenses/AnimatedPage";
 import { base44 } from "@/api/base44Client";
@@ -20,6 +20,7 @@ import CurrencySelector from "@/components/expenses/CurrencySelector";
 import { generateReceiptCode } from "@/lib/receiptCodeGenerator";
 
 export default function SubmitExpense() {
+  const queryClient = useQueryClient();
   const urlParams = new URLSearchParams(window.location.search);
   const draftId = urlParams.get('draft_id') || null;
 
@@ -97,9 +98,17 @@ export default function SubmitExpense() {
   };
 
   const handleOCR = (data) => {
+    // Only accept OCR date if it's a valid YYYY-MM-DD string; otherwise keep
+    // today's date (the form default) instead of a garbage/random extracted value.
+    const isValidDate = (d) => {
+      if (!d || typeof d !== "string") return false;
+      const parsed = new Date(d);
+      return !isNaN(parsed.getTime()) && /^\d{4}-\d{2}-\d{2}$/.test(d);
+    };
+
     setForm(f => ({
       ...f,
-      date: data.date || f.date,
+      date: isValidDate(data.date) ? data.date : f.date,
       description: data.description || f.description,
       paid_amount: data.amount || f.paid_amount,
       actual_cost: data.amount || f.actual_cost,
@@ -133,11 +142,12 @@ export default function SubmitExpense() {
   const primaryClient = form.client_allocations[0]?.client_code;
   const categories = primaryClient ? getCategoriesForClient(primaryClient) : [];
 
-  const totalPct = form.client_allocations.reduce((s, a) => s + (a.percentage || 0), 0);
+  const totalAllocated = form.client_allocations.reduce((s, a) => s + (a.amount || 0), 0);
+  const paidAmt = parseFloat(form.paid_amount) || 0;
   const canSubmit = form.date && form.description && form.paid_amount && form.paid_by
     && form.client_allocations.length > 0
     && form.client_allocations.every(a => a.client_code)
-    && Math.abs(totalPct - 100) < 0.01;
+    && Math.abs(totalAllocated - paidAmt) < 0.01;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -184,6 +194,8 @@ export default function SubmitExpense() {
       } else {
         await base44.entities.Expense.create(expense);
       }
+      queryClient.invalidateQueries({ queryKey: ["myExpenses"] });
+      queryClient.invalidateQueries({ queryKey: ["allExpenses"] });
       setSuccess(receiptCode);
     } catch (err) {
       toast.error(err.message || "Failed to submit expense. Please try again.");

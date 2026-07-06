@@ -121,7 +121,7 @@ export default function InboxFileViewer({ item, onFilesChanged, onOCRComplete })
       setOCRRunning(true);
       try {
         const result = await base44.integrations.Core.InvokeLLM({
-          prompt: `Extract from this receipt: date (YYYY-MM-DD), merchant/vendor description, and total amount. Return JSON.`,
+          prompt: `Extract from this receipt: date (in YYYY-MM-DD format), merchant/vendor description, and total amount. If you can't find a field, leave it as an empty string — do NOT guess or make up a date. Return JSON.`,
           file_urls: [ocrUrl],
           response_json_schema: {
             type: "object",
