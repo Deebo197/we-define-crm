@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import StatusBadge from "@/components/ui/StatusBadge";
 import ShimmerCard from "@/components/ui/ShimmerCard";
+import DotField from "@/components/ui/DotField";
 import { format, isBefore, addDays } from "date-fns";
 import { toneFor } from "@/lib/statusColors";
 
@@ -75,10 +76,15 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="animate-fade-in-up">
-        <h1 className="text-2xl font-semibold text-ink tracking-tight">Dashboard</h1>
-        <p className="text-muted text-sm mt-1">Welcome back to We Define Travel</p>
+      {/* Header — dot-field band (interactive dots are desktop-only) */}
+      <div className="relative overflow-hidden rounded-2xl border border-line bg-surface animate-fade-in-up">
+        <div className="absolute inset-0 hidden lg:block" aria-hidden="true">
+          <DotField />
+        </div>
+        <div className="relative px-6 py-8 pointer-events-none">
+          <h1 className="text-2xl font-semibold text-ink tracking-tight">Dashboard</h1>
+          <p className="text-muted text-sm mt-1">Welcome back to We Define Travel</p>
+        </div>
       </div>
 
       {/* Stats */}
