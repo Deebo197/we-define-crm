@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X, ChevronDown, Search, Handshake, Receipt, Gauge, Plus } from "lucide-react";
+import { motion, useReducedMotion } from "framer-motion";
 import { useAuth } from "@/lib/AuthContext";
 import { openGlobalSearch } from "@/components/crm/GlobalSearch";
 import { navGroups, isItemActive, getActiveGroup, useCollapsedGroups } from "./navGroups";
@@ -11,6 +12,38 @@ const TABS = [
   { label: "Comp Analysis", icon: Gauge, path: "/competitor-analysis", group: "Competitor Analysis" },
 ];
 
+const TAP_SPRING = { type: "spring", stiffness: 400, damping: 15 };
+
+/** Tab content that pops with a small spring when pressed. */
+function TapBounce({ children, className = "", disabled }) {
+  return (
+    <motion.span
+      whileTap={disabled ? undefined : { scale: 0.82 }}
+      transition={TAP_SPRING}
+      className={className}
+    >
+      {children}
+    </motion.span>
+  );
+}
+
+function TabLink({ tab, isActive, onNavigate, reducedMotion }) {
+  return (
+    <Link
+      to={tab.path}
+      onClick={onNavigate}
+      className={`flex flex-col items-center justify-center h-full ${
+        isActive ? "text-primary" : "text-faint"
+      }`}
+    >
+      <TapBounce disabled={reducedMotion} className="flex flex-col items-center gap-0.5">
+        <tab.icon className="w-5 h-5" />
+        <span className="text-[10px] font-medium">{tab.label}</span>
+      </TapBounce>
+    </Link>
+  );
+}
+
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
   const location = useLocation();
@@ -18,6 +51,7 @@ export default function MobileNav() {
   const isAdmin = user?.role === "admin";
   const { collapsedGroups, toggleGroup } = useCollapsedGroups(location.pathname);
   const activeGroup = getActiveGroup(location.pathname);
+  const reducedMotion = useReducedMotion();
 
   return (
     <>
@@ -110,22 +144,15 @@ export default function MobileNav() {
         style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
       >
         <div className="grid grid-cols-5 h-16">
-          {TABS.slice(0, 2).map((tab) => {
-            const isActive = !open && activeGroup.label === tab.group;
-            return (
-              <Link
-                key={tab.group}
-                to={tab.path}
-                onClick={() => setOpen(false)}
-                className={`flex flex-col items-center justify-center gap-0.5 h-full ${
-                  isActive ? "text-primary" : "text-faint"
-                }`}
-              >
-                <tab.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
-              </Link>
-            );
-          })}
+          {TABS.slice(0, 2).map((tab) => (
+            <TabLink
+              key={tab.group}
+              tab={tab}
+              isActive={!open && activeGroup.label === tab.group}
+              onNavigate={() => setOpen(false)}
+              reducedMotion={reducedMotion}
+            />
+          ))}
 
           {/* Centre quick action: submit an expense */}
           <Link
@@ -134,37 +161,32 @@ export default function MobileNav() {
             className="flex items-center justify-center h-full"
             title="Submit expense"
           >
-            <span className="w-12 h-12 -mt-4 rounded-full bg-primary text-white shadow-lg flex items-center justify-center">
+            <TapBounce disabled={reducedMotion} className="w-12 h-12 -mt-4 rounded-full bg-primary text-white shadow-lg flex items-center justify-center">
               <Plus className="w-6 h-6" />
-            </span>
+            </TapBounce>
           </Link>
 
-          {TABS.slice(2).map((tab) => {
-            const isActive = !open && activeGroup.label === tab.group;
-            return (
-              <Link
-                key={tab.group}
-                to={tab.path}
-                onClick={() => setOpen(false)}
-                className={`flex flex-col items-center justify-center gap-0.5 h-full ${
-                  isActive ? "text-primary" : "text-faint"
-                }`}
-              >
-                <tab.icon className="w-5 h-5" />
-                <span className="text-[10px] font-medium">{tab.label}</span>
-              </Link>
-            );
-          })}
+          {TABS.slice(2).map((tab) => (
+            <TabLink
+              key={tab.group}
+              tab={tab}
+              isActive={!open && activeGroup.label === tab.group}
+              onNavigate={() => setOpen(false)}
+              reducedMotion={reducedMotion}
+            />
+          ))}
 
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className={`flex flex-col items-center justify-center gap-0.5 h-full ${
+            className={`flex flex-col items-center justify-center h-full ${
               open ? "text-primary" : "text-faint"
             }`}
           >
-            <Menu className="w-5 h-5" />
-            <span className="text-[10px] font-medium">More</span>
+            <TapBounce disabled={reducedMotion} className="flex flex-col items-center gap-0.5">
+              <Menu className="w-5 h-5" />
+              <span className="text-[10px] font-medium">More</span>
+            </TapBounce>
           </button>
         </div>
       </div>

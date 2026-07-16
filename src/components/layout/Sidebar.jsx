@@ -1,11 +1,58 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LogOut } from "lucide-react";
+import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from "framer-motion";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import ProfileCodePicker from "@/components/expenses/ProfileCodePicker";
 import { GlobalSearchTrigger } from "@/components/crm/GlobalSearch";
 import { navGroups, isItemActive, getActiveGroup } from "./navGroups";
+
+const RAIL_ITEM_SIZE = 44;
+const RAIL_ITEM_MAGNIFIED = 58;
+const RAIL_SPRING = { mass: 0.1, stiffness: 180, damping: 14 };
+
+/**
+ * Module icon with a macOS-dock magnify: swells as the pointer nears,
+ * driven by the rail's shared mouse-Y motion value.
+ */
+function RailItem({ group, isActive, mouseY, staticSize }) {
+  const ref = useRef(null);
+
+  const distance = useTransform(mouseY, (val) => {
+    const rect = ref.current?.getBoundingClientRect() ?? { y: 0, height: RAIL_ITEM_SIZE };
+    return val - rect.y - rect.height / 2;
+  });
+  const targetSize = useTransform(
+    distance,
+    [-110, 0, 110],
+    [RAIL_ITEM_SIZE, RAIL_ITEM_MAGNIFIED, RAIL_ITEM_SIZE]
+  );
+  const size = useSpring(targetSize, RAIL_SPRING);
+  const iconScale = useTransform(size, (s) => s / RAIL_ITEM_SIZE);
+
+  return (
+    <motion.div
+      ref={ref}
+      style={staticSize ? { width: RAIL_ITEM_SIZE, height: RAIL_ITEM_SIZE } : { width: size, height: size }}
+      className="flex-shrink-0"
+    >
+      <Link
+        to={group.home}
+        title={group.label}
+        className={`w-full h-full rounded-xl flex items-center justify-center transition-colors duration-200 ${
+          isActive
+            ? "bg-primary-soft text-primary"
+            : "text-faint hover:text-ink hover:bg-black/[0.04]"
+        }`}
+      >
+        <motion.span style={staticSize ? {} : { scale: iconScale }} className="flex">
+          <group.icon className="w-5 h-5" />
+        </motion.span>
+      </Link>
+    </motion.div>
+  );
+}
 
 function SoonPill() {
   return (
@@ -25,31 +72,29 @@ export default function Sidebar() {
   const { user, isLoadingAuth } = useAuth();
   const isAdmin = user?.role === "admin";
   const activeGroup = getActiveGroup(location.pathname);
+  const mouseY = useMotionValue(Infinity);
+  const reducedMotion = useReducedMotion();
 
   return (
     <aside className="fixed left-0 top-0 h-screen w-[240px] bg-surface border-r border-line flex z-50">
       {/* Module rail */}
-      <div className="w-[64px] h-full border-r border-line flex flex-col items-center py-3 gap-1 flex-shrink-0">
+      <div
+        className="w-[64px] h-full border-r border-line flex flex-col items-center py-3 gap-1 flex-shrink-0"
+        onMouseMove={(e) => mouseY.set(e.clientY)}
+        onMouseLeave={() => mouseY.set(Infinity)}
+      >
         <Link to="/" className="mb-2" title="Repevo">
           <img src="/brand/repevo-favicon.svg" alt="Repevo" className="w-9 rounded-xl" />
         </Link>
-        {navGroups.map((group) => {
-          const isActive = group.label === activeGroup.label;
-          return (
-            <Link
-              key={group.label}
-              to={group.home}
-              title={group.label}
-              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
-                isActive
-                  ? "bg-primary-soft text-primary"
-                  : "text-faint hover:text-ink hover:bg-black/[0.04]"
-              }`}
-            >
-              <group.icon className="w-5 h-5" />
-            </Link>
-          );
-        })}
+        {navGroups.map((group) => (
+          <RailItem
+            key={group.label}
+            group={group}
+            isActive={group.label === activeGroup.label}
+            mouseY={mouseY}
+            staticSize={reducedMotion}
+          />
+        ))}
       </div>
 
       {/* Module panel */}
