@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ChevronLeft, ChevronRight, ChevronDown, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import ProfileCodePicker from "@/components/expenses/ProfileCodePicker";
 import { GlobalSearchTrigger } from "@/components/crm/GlobalSearch";
-import { navGroups, isItemActive, useCollapsedGroups } from "./navGroups";
+import { navGroups, isItemActive, getActiveGroup } from "./navGroups";
 
 function SoonPill() {
   return (
@@ -15,137 +15,108 @@ function SoonPill() {
   );
 }
 
+/**
+ * Desktop navigation: a slim module rail (one icon per module) next to a
+ * panel listing only the active module's pages. Clicking a module icon
+ * jumps to that module's home page.
+ */
 export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { user, isLoadingAuth } = useAuth();
   const isAdmin = user?.role === "admin";
-  const { collapsedGroups, toggleGroup } = useCollapsedGroups(location.pathname);
+  const activeGroup = getActiveGroup(location.pathname);
 
   return (
-    <aside
-      className={`fixed left-0 top-0 h-screen bg-surface border-r border-line flex flex-col z-50 transition-all duration-300 ${
-        collapsed ? "w-[72px]" : "w-[240px]"
-      }`}
-    >
-      {/* Logo */}
-      <div className="h-16 flex items-center px-5 border-b border-line">
-        {!collapsed ? (
-          <img src="/brand/repevo-wordmark.svg" alt="Repevo" className="h-6" />
-        ) : (
-          <img src="/brand/repevo-favicon.svg" alt="Repevo" className="w-8 rounded mx-auto" />
-        )}
-      </div>
-
-      {/* Global search */}
-      <div className="px-3 pt-3">
-        <GlobalSearchTrigger collapsed={collapsed} />
-      </div>
-
-      {/* Navigation */}
-      <nav className="flex-1 py-4 px-3 overflow-y-auto">
+    <aside className="fixed left-0 top-0 h-screen w-[240px] bg-surface border-r border-line flex z-50">
+      {/* Module rail */}
+      <div className="w-[64px] h-full border-r border-line flex flex-col items-center py-3 gap-1 flex-shrink-0">
+        <Link to="/" className="mb-2" title="Repevo">
+          <img src="/brand/repevo-favicon.svg" alt="Repevo" className="w-9 rounded-xl" />
+        </Link>
         {navGroups.map((group) => {
-          // In icon-only mode group toggling is hidden and items always show.
-          const isGroupCollapsed = !collapsed && !!collapsedGroups[group.label];
+          const isActive = group.label === activeGroup.label;
           return (
-            <div key={group.label} className="mb-4">
-              {!collapsed && (
-                <button
-                  type="button"
-                  onClick={() => toggleGroup(group.label)}
-                  aria-expanded={!isGroupCollapsed}
-                  className="w-full flex items-center justify-between px-3 mb-1 text-[11px] font-semibold uppercase tracking-wider text-faint hover:text-muted transition-colors duration-200"
-                >
-                  <span>{group.label}</span>
-                  <ChevronDown
-                    className={`w-3.5 h-3.5 flex-shrink-0 transition-transform duration-300 ${
-                      isGroupCollapsed ? "-rotate-90" : ""
-                    }`}
-                  />
-                </button>
-              )}
-              <div
-                className={`grid transition-[grid-template-rows] duration-300 ${
-                  isGroupCollapsed ? "grid-rows-[0fr]" : "grid-rows-[1fr]"
-                }`}
-              >
-                <div className="overflow-hidden">
-                  <div className="space-y-0.5">
-                    {group.items
-                      .filter((item) => !item.adminOnly || isAdmin || isLoadingAuth)
-                      .map((item) => {
-                        if (item.soon) {
-                          return (
-                            <div
-                              key={item.label}
-                              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-faint cursor-default select-none"
-                              title={`${item.label} — coming soon`}
-                            >
-                              <item.icon className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
-                              {!collapsed && (
-                                <>
-                                  <span>{item.label}</span>
-                                  <SoonPill />
-                                </>
-                              )}
-                            </div>
-                          );
-                        }
-                        const isActive = isItemActive(item, location.pathname);
-                        return (
-                          <Link
-                            key={item.path}
-                            to={item.path}
-                            className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
-                              isActive
-                                ? "bg-primary-soft text-primary"
-                                : "text-muted hover:text-ink hover:bg-black/[0.03]"
-                            }`}
-                          >
-                            <item.icon
-                              className={`w-[18px] h-[18px] flex-shrink-0 ${
-                                isActive ? "text-primary" : "text-faint group-hover:text-muted"
-                              }`}
-                            />
-                            {!collapsed && <span>{item.label}</span>}
-                          </Link>
-                        );
-                      })}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Link
+              key={group.label}
+              to={group.home}
+              title={group.label}
+              className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200 ${
+                isActive
+                  ? "bg-primary-soft text-primary"
+                  : "text-faint hover:text-ink hover:bg-black/[0.04]"
+              }`}
+            >
+              <group.icon className="w-5 h-5" />
+            </Link>
           );
         })}
-      </nav>
+      </div>
 
-      {/* Footer */}
-      <div className="px-3 py-4 border-t border-line space-y-1">
-        <ProfileCodePicker
-          currentCode={user?.paid_by_code}
-          currentPersonalCode={user?.paid_by_code_personal}
-          collapsed={collapsed}
-        />
-        <button
-          onClick={() => base44.auth.logout()}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted hover:text-ink hover:bg-black/[0.03] transition-all w-full"
-        >
-          <LogOut className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
-          {!collapsed && <span>Sign Out</span>}
-        </button>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-faint hover:text-muted transition-all w-full"
-        >
-          {collapsed ? (
-            <ChevronRight className="w-[18px] h-[18px] mx-auto" />
-          ) : (
-            <>
-              <ChevronLeft className="w-[18px] h-[18px]" />
-              <span>Collapse</span>
-            </>
-          )}
-        </button>
+      {/* Module panel */}
+      <div className="flex-1 min-w-0 flex flex-col">
+        <div className="h-16 flex items-center px-4 border-b border-line">
+          <span className="text-sm font-semibold text-ink truncate">{activeGroup.label}</span>
+        </div>
+
+        <div className="px-3 pt-3">
+          <GlobalSearchTrigger />
+        </div>
+
+        <nav className="flex-1 py-4 px-3 overflow-y-auto">
+          <div className="space-y-0.5">
+            {activeGroup.items
+              .filter((item) => !item.adminOnly || isAdmin || isLoadingAuth)
+              .map((item) => {
+                if (item.soon) {
+                  return (
+                    <div
+                      key={item.label}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-faint cursor-default select-none"
+                      title={`${item.label} — coming soon`}
+                    >
+                      <item.icon className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
+                      <span>{item.label}</span>
+                      <SoonPill />
+                    </div>
+                  );
+                }
+                const isActive = isItemActive(item, location.pathname);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 group ${
+                      isActive
+                        ? "bg-primary-soft text-primary"
+                        : "text-muted hover:text-ink hover:bg-black/[0.03]"
+                    }`}
+                  >
+                    <item.icon
+                      className={`w-[18px] h-[18px] flex-shrink-0 ${
+                        isActive ? "text-primary" : "text-faint group-hover:text-muted"
+                      }`}
+                    />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+          </div>
+        </nav>
+
+        {/* Footer */}
+        <div className="px-3 py-4 border-t border-line space-y-1">
+          <ProfileCodePicker
+            currentCode={user?.paid_by_code}
+            currentPersonalCode={user?.paid_by_code_personal}
+          />
+          <button
+            onClick={() => base44.auth.logout()}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted hover:text-ink hover:bg-black/[0.03] transition-all w-full"
+          >
+            <LogOut className="w-[18px] h-[18px] flex-shrink-0 text-faint" />
+            <span>Sign Out</span>
+          </button>
+        </div>
       </div>
     </aside>
   );

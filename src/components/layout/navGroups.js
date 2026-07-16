@@ -32,6 +32,8 @@ import {
 export const navGroups = [
   {
     label: "CRM",
+    icon: Handshake,
+    home: "/",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/" },
       { label: "Clients", icon: Building2, path: "/clients" },
@@ -50,10 +52,14 @@ export const navGroups = [
   },
   {
     label: "Reporting",
+    icon: FileText,
+    home: "/reports",
     items: [{ label: "Reports", icon: FileText, path: "/reports" }],
   },
   {
     label: "Competitor Analysis",
+    icon: Gauge,
+    home: "/competitor-analysis",
     items: [
       { label: "Overview", icon: Gauge, path: "/competitor-analysis" },
       { label: "New Scenario", icon: PlusCircle, path: "/competitor-analysis/new-scenario" },
@@ -64,6 +70,8 @@ export const navGroups = [
   },
   {
     label: "Expenses",
+    icon: Receipt,
+    home: "/expenses",
     items: [
       { label: "Overview", icon: PieChart, path: "/expenses" },
       { label: "Submit Expense", icon: PlusCircle, path: "/expenses/submit" },
@@ -79,6 +87,8 @@ export const navGroups = [
   },
   {
     label: "Documents",
+    icon: FolderOpen,
+    home: "/documents",
     items: [{ label: "Client Library", icon: FolderOpen, path: "/documents" }],
   },
 ];
@@ -90,6 +100,14 @@ export function isItemActive(item, pathname) {
       item.path !== "/expenses" &&
       item.path !== "/competitor-analysis" &&
       pathname.startsWith(item.path))
+  );
+}
+
+/** The nav group (module) the current route belongs to. Defaults to CRM. */
+export function getActiveGroup(pathname) {
+  return (
+    navGroups.find((g) => g.items.some((item) => isItemActive(item, pathname))) ||
+    navGroups[0]
   );
 }
 

@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown, Search } from "lucide-react";
+import { Menu, X, ChevronDown, Search, Handshake, Receipt, Gauge, Plus } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { openGlobalSearch } from "@/components/crm/GlobalSearch";
-import { navGroups, isItemActive, useCollapsedGroups } from "./navGroups";
+import { navGroups, isItemActive, getActiveGroup, useCollapsedGroups } from "./navGroups";
+
+const TABS = [
+  { label: "CRM", icon: Handshake, path: "/", group: "CRM" },
+  { label: "Expenses", icon: Receipt, path: "/expenses", group: "Expenses" },
+  { label: "Comp Analysis", icon: Gauge, path: "/competitor-analysis", group: "Competitor Analysis" },
+];
 
 export default function MobileNav() {
   const [open, setOpen] = useState(false);
@@ -11,6 +17,7 @@ export default function MobileNav() {
   const { user, isLoadingAuth } = useAuth();
   const isAdmin = user?.role === "admin";
   const { collapsedGroups, toggleGroup } = useCollapsedGroups(location.pathname);
+  const activeGroup = getActiveGroup(location.pathname);
 
   return (
     <>
@@ -27,7 +34,7 @@ export default function MobileNav() {
       </div>
 
       {open && (
-        <div className="fixed inset-0 top-14 bg-surface z-40 overflow-y-auto">
+        <div className="fixed inset-0 top-14 bg-surface z-40 overflow-y-auto pb-24">
           <nav className="p-4">
             {navGroups.map((group) => {
               const isGroupCollapsed = !!collapsedGroups[group.label];
@@ -97,7 +104,72 @@ export default function MobileNav() {
         </div>
       )}
 
-      {/* Spacer */}
+      {/* Bottom tab bar */}
+      <div
+        className="fixed bottom-0 left-0 right-0 bg-surface border-t border-line z-50"
+        style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      >
+        <div className="grid grid-cols-5 h-16">
+          {TABS.slice(0, 2).map((tab) => {
+            const isActive = !open && activeGroup.label === tab.group;
+            return (
+              <Link
+                key={tab.group}
+                to={tab.path}
+                onClick={() => setOpen(false)}
+                className={`flex flex-col items-center justify-center gap-0.5 h-full ${
+                  isActive ? "text-primary" : "text-faint"
+                }`}
+              >
+                <tab.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{tab.label}</span>
+              </Link>
+            );
+          })}
+
+          {/* Centre quick action: submit an expense */}
+          <Link
+            to="/expenses/submit"
+            onClick={() => setOpen(false)}
+            className="flex items-center justify-center h-full"
+            title="Submit expense"
+          >
+            <span className="w-12 h-12 -mt-4 rounded-full bg-primary text-white shadow-lg flex items-center justify-center">
+              <Plus className="w-6 h-6" />
+            </span>
+          </Link>
+
+          {TABS.slice(2).map((tab) => {
+            const isActive = !open && activeGroup.label === tab.group;
+            return (
+              <Link
+                key={tab.group}
+                to={tab.path}
+                onClick={() => setOpen(false)}
+                className={`flex flex-col items-center justify-center gap-0.5 h-full ${
+                  isActive ? "text-primary" : "text-faint"
+                }`}
+              >
+                <tab.icon className="w-5 h-5" />
+                <span className="text-[10px] font-medium">{tab.label}</span>
+              </Link>
+            );
+          })}
+
+          <button
+            type="button"
+            onClick={() => setOpen(!open)}
+            className={`flex flex-col items-center justify-center gap-0.5 h-full ${
+              open ? "text-primary" : "text-faint"
+            }`}
+          >
+            <Menu className="w-5 h-5" />
+            <span className="text-[10px] font-medium">More</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Spacer for the fixed top bar */}
       <div className="h-14" />
     </>
   );

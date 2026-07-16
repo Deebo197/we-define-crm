@@ -20,7 +20,7 @@ export default function AppLayout() {
       </div>
 
       {/* Main content */}
-      <main id="main-content" className="lg:ml-[240px] min-h-screen">
+      <main id="main-content" className="lg:ml-[240px] min-h-screen pb-24 lg:pb-0">
         <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto">
           <Outlet />
         </div>

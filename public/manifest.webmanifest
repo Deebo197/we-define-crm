@@ -1,0 +1,39 @@
+{
+  "name": "Repevo",
+  "short_name": "Repevo",
+  "description": "Repevo — the unified platform for We Define Travel",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F6F7FB",
+  "theme_color": "#5A3DE6",
+  "icons": [
+    {
+      "src": "/brand/repevo-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/brand/repevo-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Submit Expense",
+      "url": "/expenses/submit",
+      "icons": [{ "src": "/brand/repevo-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Receipt Inbox",
+      "url": "/expenses/inbox",
+      "icons": [{ "src": "/brand/repevo-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Log Interaction",
+      "url": "/interactions",
+      "icons": [{ "src": "/brand/repevo-icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
