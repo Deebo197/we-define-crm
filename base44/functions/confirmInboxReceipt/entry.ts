@@ -19,6 +19,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
 
+const PAID_BY_USER_FOLDER = {
+  WDA: 'Dee', DJ: 'Dee',
+  WCA: 'Celine', CB: 'Celine',
+  WSA: 'Sophie', ST: 'Sophie',
+  WD: 'We Define Travel', WD1: 'We Define Travel',
+};
+
+function getUserFolderName(paidBy) {
+  return PAID_BY_USER_FOLDER[paidBy] || 'We Define Travel';
+}
+
 const MONTH_NAMES_FULL = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
 function getMonthNames() {
@@ -268,28 +279,30 @@ Deno.serve(async (req) => {
     const paidBy = paid_by || item.paid_by || 'CB';
     const desc = description || item.extracted_description || item.extracted_supplier || '';
 
-    // --- STEP 5: Move staged Drive files into the final year/month folder ---
+    // --- STEP 5: Move staged Drive files into the final year/month/user folder ---
     // processInboxReceipt uploaded the files to the staging folder
     // "We Define Travel Expenses/Receipt Inbox". On confirmation we MOVE them
     // (Drive files.update addParents/removeParents) into
-    // "We Define Travel Expenses/<YEAR>/<MM - MonthName>" derived from the
-    // confirmed expense date — the file id and public links stay stable.
-    // Any file without a Drive id (e.g. the staging upload failed) keeps its
-    // base44 URL so the syncReceiptToDrive automation uploads it instead.
+    // "We Define Travel Expenses/<YEAR>/<MM - MonthName>/<USER>" derived from
+    // the confirmed expense date and paid-by code — the file id and public
+    // links stay stable. Any file without a Drive id (e.g. the staging upload
+    // failed) keeps its base44 URL so the syncReceiptToDrive automation
+    // uploads it instead.
     const confirmedDate = date || item.extracted_date || new Date().toISOString().split('T')[0];
 
     let authHeader = null;
-    let monthFolderId = null;
+    let targetFolderId = null;
     try {
       const { accessToken } = await base44.asServiceRole.connectors.getConnection('googledrive');
       authHeader = { Authorization: `Bearer ${accessToken}` };
       const { year: folderYear, monthFolder } = getMonthFolderName(confirmedDate);
       const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
       const yearId = await getOrCreateCachedFolder(base44, authHeader, folderYear, rootId);
-      monthFolderId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
+      const monthFolderId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
+      targetFolderId = await getOrCreateCachedFolder(base44, authHeader, getUserFolderName(paidBy), monthFolderId);
     } catch (driveErr) {
       console.error('Drive folder resolution failed (falling back to re-upload via sync):', driveErr.message);
-      monthFolderId = null;
+      targetFolderId = null;
     }
 
     const sourceFileUrl = item.primary_receipt_file_url || item.file_url; // base44 URL
@@ -300,9 +313,9 @@ Deno.serve(async (req) => {
       receiptFilesForExpense = [];
       for (const f of item.receipt_files) {
         let movedOk = false;
-        if (monthFolderId && f.drive_file_id) {
+        if (targetFolderId && f.drive_file_id) {
           try {
-            await moveDriveFile(authHeader, f.drive_file_id, monthFolderId);
+            await moveDriveFile(authHeader, f.drive_file_id, targetFolderId);
             movedOk = true;
           } catch (moveErr) {
             console.error(`Drive move failed for file ${f.drive_file_id}:`, moveErr.message);
@@ -319,9 +332,9 @@ Deno.serve(async (req) => {
           receiptFilesForExpense.push({ ...f, drive_file_id: undefined, public_receipt_url: f.file_url });
         }
       }
-    } else if (monthFolderId && item.drive_file_id) {
+    } else if (targetFolderId && item.drive_file_id) {
       try {
-        await moveDriveFile(authHeader, item.drive_file_id, monthFolderId);
+        await moveDriveFile(authHeader, item.drive_file_id, targetFolderId);
         primaryFileUrl = item.public_receipt_url?.includes('drive.google.com')
           ? item.public_receipt_url
           : `https://drive.google.com/file/d/${item.drive_file_id}/view`;

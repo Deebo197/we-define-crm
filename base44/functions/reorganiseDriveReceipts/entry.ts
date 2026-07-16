@@ -2,9 +2,11 @@
  * reorganiseDriveReceipts — one-off, admin-only migration that MOVES every
  * existing receipt file in Google Drive into the canonical structure:
  *
- *   We Define Travel Expenses / <YEAR> / <MM - MonthName>
+ *   We Define Travel Expenses / <YEAR> / <MM - MonthName> / <USER>
  *
- * (month derived from each record's expense/journey date).
+ * (month derived from each record's expense/journey date; user folder from
+ * the paid-by code — Dee, Celine, Sophie or We Define Travel. Mileage
+ * receipts and route images go to a Mileage folder alongside the users).
  *
  * It iterates ALL Expense and MileageJourney records, collects every Drive
  * file id it can find (receipt_files[].drive_file_id, plus ids parsed out of
@@ -23,6 +25,17 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+const PAID_BY_USER_FOLDER = {
+  WDA: 'Dee', DJ: 'Dee',
+  WCA: 'Celine', CB: 'Celine',
+  WSA: 'Sophie', ST: 'Sophie',
+  WD: 'We Define Travel', WD1: 'We Define Travel',
+};
+
+function getUserFolderName(paidBy) {
+  return PAID_BY_USER_FOLDER[paidBy] || 'We Define Travel';
+}
 
 function getMonthFolderName(dateStr) {
   const d = new Date(dateStr || new Date());
@@ -136,33 +149,34 @@ Deno.serve(async (req) => {
     const expenses = await fetchAll(base44.asServiceRole.entities.Expense);
     const mileage = await fetchAll(base44.asServiceRole.entities.MileageJourney);
 
-    // ── Collect file ids per record, with target date ───────────────────────
-    /** @type {{ fileId: string, date: string }[]} */
+    // ── Collect file ids per record, with target date + subfolder ──────────
+    /** @type {{ fileId: string, date: string, subfolder: string }[]} */
     const moves = [];
     const seenFileIds = new Set();
 
-    function addFileId(fileId, date) {
+    function addFileId(fileId, date, subfolder) {
       if (!fileId || seenFileIds.has(fileId)) return;
       seenFileIds.add(fileId);
-      moves.push({ fileId, date });
+      moves.push({ fileId, date, subfolder });
     }
 
     for (const e of expenses) {
       const date = e.date;
+      const subfolder = getUserFolderName(e.paid_by);
       if (Array.isArray(e.receipt_files)) {
         for (const rf of e.receipt_files) {
-          addFileId(rf?.drive_file_id, date);
-          addFileId(extractDriveFileId(rf?.public_receipt_url), date);
+          addFileId(rf?.drive_file_id, date, subfolder);
+          addFileId(extractDriveFileId(rf?.public_receipt_url), date, subfolder);
         }
       }
-      addFileId(extractDriveFileId(e.receipt_url), date);
-      addFileId(extractDriveFileId(e.primary_receipt_file_url), date);
+      addFileId(extractDriveFileId(e.receipt_url), date, subfolder);
+      addFileId(extractDriveFileId(e.primary_receipt_file_url), date, subfolder);
     }
 
     for (const m of mileage) {
       const date = m.date;
-      addFileId(extractDriveFileId(m.receipt_url), date);
-      addFileId(extractDriveFileId(m.route_image_url), date);
+      addFileId(extractDriveFileId(m.receipt_url), date, 'Mileage');
+      addFileId(extractDriveFileId(m.route_image_url), date, 'Mileage');
     }
 
     // ── Resolve target folders and move ─────────────────────────────────────
@@ -173,12 +187,13 @@ Deno.serve(async (req) => {
     let skipped = 0;
     const failed = [];
 
-    for (const { fileId, date } of moves) {
+    for (const { fileId, date, subfolder } of moves) {
       try {
         const { year, monthFolder } = getMonthFolderName(date);
         const yearId = await getOrCreateFolder(year, rootId);
         const monthId = await getOrCreateFolder(monthFolder, yearId);
-        const result = await moveFile(fileId, monthId);
+        const subId = await getOrCreateFolder(subfolder, monthId);
+        const result = await moveFile(fileId, subId);
         if (result === 'moved') moved++;
         else skipped++;
       } catch (err) {

@@ -3,15 +3,28 @@
  *
  * Supports both single-file and multi-file (receipt_files[]) expenses.
  *
- * Folder structure (expense and mileage receipts alike — no group subfolders):
- *   We Define Travel Expenses / YEAR / MM - MonthName
- * e.g. We Define Travel Expenses/2026/06 - June
+ * Folder structure:
+ *   We Define Travel Expenses / YEAR / MM - MonthName / USER
+ * e.g. We Define Travel Expenses/2026/06 - June/Dee
  *
- * The month is derived from the expense date (data.date).
+ * The month is derived from the expense date (data.date); the user folder
+ * from the paid-by code. Mileage receipts go to a Mileage folder alongside
+ * the user folders.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
 
 const RECEIPTS_ROOT_FOLDER = 'We Define Travel Expenses';
+
+const PAID_BY_USER_FOLDER = {
+  WDA: 'Dee', DJ: 'Dee',
+  WCA: 'Celine', CB: 'Celine',
+  WSA: 'Sophie', ST: 'Sophie',
+  WD: 'We Define Travel', WD1: 'We Define Travel',
+};
+
+function getUserFolderName(paidBy) {
+  return PAID_BY_USER_FOLDER[paidBy] || 'We Define Travel';
+}
 
 const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 
@@ -179,13 +192,14 @@ Deno.serve(async (req) => {
       const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
       const yearId = await getOrCreateCachedFolder(base44, authHeader, year, rootId);
       const monthId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
+      const mileageId = await getOrCreateCachedFolder(base44, authHeader, 'Mileage', monthId);
 
       const urlPath = receiptFile.split('?')[0];
       const ext = urlPath.split('.').pop().toLowerCase();
       const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
       const fileName = `${receiptCode} - Mileage.${safeExt}`;
 
-      const uploadData = await uploadFileToDrive(authHeader, receiptFile, fileName, monthId);
+      const uploadData = await uploadFileToDrive(authHeader, receiptFile, fileName, mileageId);
       if (!uploadData.id) {
         await flagSyncFailed(base44, entityType, entityId);
         return Response.json({ error: 'Upload failed', details: uploadData }, { status: 500 });
@@ -226,6 +240,8 @@ Deno.serve(async (req) => {
     const rootId = await getOrCreateCachedFolder(base44, authHeader, RECEIPTS_ROOT_FOLDER, null);
     const yearId = await getOrCreateCachedFolder(base44, authHeader, year, rootId);
     const monthId = await getOrCreateCachedFolder(base44, authHeader, monthFolder, yearId);
+    const userFolder = getUserFolderName(paidBy);
+    const userFolderId = await getOrCreateCachedFolder(base44, authHeader, userFolder, monthId);
 
     const supplierOrDesc = (data.description || '').replace(/[^a-zA-Z0-9 \-]/g, '').trim().slice(0, 40);
     const amt = Number(data.paid_amount || 0).toFixed(2);
@@ -251,7 +267,7 @@ Deno.serve(async (req) => {
         const label = rf.role === 'primary' ? 'Primary' : `Supporting ${++supportingCount}`;
         const fileName = `${basePrefix} - ${label}.${safeExt}`;
 
-        const uploadData = await uploadFileToDrive(authHeader, rf.file_url, fileName, monthId);
+        const uploadData = await uploadFileToDrive(authHeader, rf.file_url, fileName, userFolderId);
         if (!uploadData.id) {
           console.error(`Upload failed for receipt_file index ${i}:`, uploadData);
           continue; // best-effort — don't abort the whole sync
@@ -277,7 +293,7 @@ Deno.serve(async (req) => {
       const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
       const fileName = `${basePrefix} - Primary.${safeExt}`;
 
-      const uploadData = await uploadFileToDrive(authHeader, singleReceiptFile, fileName, monthId);
+      const uploadData = await uploadFileToDrive(authHeader, singleReceiptFile, fileName, userFolderId);
       if (!uploadData.id) {
         await flagSyncFailed(base44, entityType, entityId);
         return Response.json({ error: 'Upload failed', details: uploadData }, { status: 500 });
@@ -294,7 +310,7 @@ Deno.serve(async (req) => {
     return Response.json({
       success: true,
       drive_link: primaryPublicUrl,
-      folder_path: `${RECEIPTS_ROOT_FOLDER}/${year}/${monthFolder}`,
+      folder_path: `${RECEIPTS_ROOT_FOLDER}/${year}/${monthFolder}/${userFolder}`,
     });
 
   } catch (error) {

@@ -5,10 +5,23 @@
  * This is useful when the Google Drive account was changed and the
  * "We Define Travel Expenses" folder needs to be fully repopulated.
  *
- * Folder structure (no group subfolders):
- *   We Define Travel Expenses / YEAR / MM - MonthName
+ * Folder structure:
+ *   We Define Travel Expenses / YEAR / MM - MonthName / USER
+ * (user folder from the paid-by code; mileage receipts go to a Mileage
+ * folder alongside the user folders).
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.31';
+
+const PAID_BY_USER_FOLDER = {
+  WDA: 'Dee', DJ: 'Dee',
+  WCA: 'Celine', CB: 'Celine',
+  WSA: 'Sophie', ST: 'Sophie',
+  WD: 'We Define Travel', WD1: 'We Define Travel',
+};
+
+function getUserFolderName(paidBy) {
+  return PAID_BY_USER_FOLDER[paidBy] || 'We Define Travel';
+}
 
 Deno.serve(async (req) => {
   try {
@@ -158,6 +171,7 @@ Deno.serve(async (req) => {
         const { year, monthFolder } = getMonthFolderName(dateStr);
         const yearId = await getOrCreateFolder(year, rootId);
         const monthId = await getOrCreateFolder(monthFolder, yearId);
+        const userFolderId = await getOrCreateFolder(getUserFolderName(e.paid_by), monthId);
 
         const supplierOrDesc = (e.description || '').replace(/[^a-zA-Z0-9 \-]/g, '').trim().slice(0, 40);
         const amt = Number(e.paid_amount || 0).toFixed(2);
@@ -175,7 +189,7 @@ Deno.serve(async (req) => {
             const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(origExt) ? origExt : 'jpg';
             const label = rf.role === 'primary' ? 'Primary' : `Supporting ${++supportingCount}`;
             const fileName = `${basePrefix} - ${label}.${safeExt}`;
-            const uploadData = await uploadFile(rf.file_url, fileName, monthId);
+            const uploadData = await uploadFile(rf.file_url, fileName, userFolderId);
             if (!uploadData.id) continue;
             await makePublic(uploadData.id);
             const fileLink = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
@@ -191,7 +205,7 @@ Deno.serve(async (req) => {
           const ext = urlPath.split('.').pop().toLowerCase();
           const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
           const fileName = `${basePrefix} - Primary.${safeExt}`;
-          const uploadData = await uploadFile(e.receipt_file, fileName, monthId);
+          const uploadData = await uploadFile(e.receipt_file, fileName, userFolderId);
           if (!uploadData.id) throw new Error('Upload returned no ID');
           await makePublic(uploadData.id);
           primaryPublicUrl = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
@@ -212,11 +226,12 @@ Deno.serve(async (req) => {
         const { year, monthFolder } = getMonthFolderName(dateStr);
         const yearId = await getOrCreateFolder(year, rootId);
         const monthId = await getOrCreateFolder(monthFolder, yearId);
+        const mileageId = await getOrCreateFolder('Mileage', monthId);
         const urlPath = m.receipt_file.split('?')[0];
         const ext = urlPath.split('.').pop().toLowerCase();
         const safeExt = ['jpg','jpeg','png','gif','pdf','webp','heic'].includes(ext) ? ext : 'jpg';
         const fileName = `${m.receipt_code} - Mileage.${safeExt}`;
-        const uploadData = await uploadFile(m.receipt_file, fileName, monthId);
+        const uploadData = await uploadFile(m.receipt_file, fileName, mileageId);
         if (!uploadData.id) throw new Error('Upload returned no ID');
         await makePublic(uploadData.id);
         const shareableLink = uploadData.webViewLink || `https://drive.google.com/file/d/${uploadData.id}/view`;
