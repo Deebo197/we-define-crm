@@ -16,6 +16,7 @@ import { useExpenseClients } from "@/hooks/useExpenseClients";
 import { TONES } from "@/lib/statusColors";
 import { toast } from "sonner";
 import AccountantExport from "@/components/expenses/AccountantExport";
+import CardPaymentsTable from "@/components/expenses/CardPaymentsTable";
 import DuplicateDetector from "@/components/expenses/DuplicateDetector";
 import PersonAvatar from '@/components/expenses/PersonAvatar';
 
@@ -171,9 +172,14 @@ ${csvText}`,
       }
       txns = validTxns;
 
+      let paymentCount = 0;
       for (const txn of txns) {
         // Apply saved alias if exists
         if (descAliases[txn.description]) txn.description = descAliases[txn.description];
+
+        // Detect credit card payments (e.g. "Payment Received Thank You") — not expenses
+        const isCardPayment = /payment received|card payment|payment thank you|direct debit payment/i.test(txn.description);
+
         const isWD = /we define|wedefine|wdt/i.test(txn.description);
         const isWD1 = /margin|wd1/i.test(txn.description);
         const autoProcessed = isWD || isWD1;
@@ -183,11 +189,16 @@ ${csvText}`,
           transaction_date: txn.date,
           description: txn.description,
           amount: Math.abs(txn.amount),
-          status: autoProcessed ? "allocated" : "pending",
-          auto_processed: autoProcessed,
+          status: isCardPayment ? "payment" : (autoProcessed ? "allocated" : "pending"),
+          auto_processed: autoProcessed || isCardPayment,
         };
 
         const created = await base44.entities.BankTransaction.create(record);
+
+        if (isCardPayment) {
+          paymentCount++;
+          continue;
+        }
 
         if (autoProcessed) {
           const clientCode = isWD1 ? "WD1" : "WD";
@@ -213,7 +224,8 @@ ${csvText}`,
 
       queryClient.invalidateQueries({ queryKey: ["bankTransactions"] });
       queryClient.invalidateQueries({ queryKey: ["allExpenses"] });
-      setImportMessage({ type: "success", text: `Successfully imported ${txns.length} transaction(s).` });
+      const paymentNote = paymentCount > 0 ? ` (${paymentCount} card payment(s) logged)` : "";
+      setImportMessage({ type: "success", text: `Successfully imported ${txns.length} transaction(s).${paymentNote}` });
     }
 
     setImporting(false);
@@ -226,9 +238,14 @@ ${csvText}`,
       const { paid_by, category } = getRowState(txn);
       const allocations = getRowAllocations(txn);
       const receipt = rowReceipts[txn.id];
+      // Use the in-flight edited description if the user just edited it,
+      // otherwise fall back to the query-cached description (or its saved alias)
+      const description = editingDesc[txn.id] !== undefined
+        ? editingDesc[txn.id]
+        : (descAliases[txn.description] || txn.description);
       await base44.entities.Expense.create({
         date: txn.transaction_date,
-        description: txn.description,
+        description,
         paid_amount: txn.amount,
         actual_cost: txn.amount,
         vat: getRowState(txn).vat || false,
@@ -246,16 +263,16 @@ ${csvText}`,
         submitted_by_name: "Bank Import",
         source: "csv_import",
       });
-      await base44.entities.BankTransaction.update(txn.id, { status: "expense_submitted" });
+      await base44.entities.BankTransaction.update(txn.id, { status: "expense_submitted", description });
       // Remember category for this description
       if (category) {
-        const updatedCats = { ...catAliases, [txn.description]: category };
+        const updatedCats = { ...catAliases, [description]: category };
         setCatAliases(updatedCats);
         localStorage.setItem("wdt_cat_aliases", JSON.stringify(updatedCats));
       }
       // Remember VAT for this description
       const vat = getRowState(txn).vat || false;
-      const updatedVats = { ...vatAliases, [txn.description]: vat };
+      const updatedVats = { ...vatAliases, [description]: vat };
       setVatAliases(updatedVats);
       localStorage.setItem("wdt_vat_aliases", JSON.stringify(updatedVats));
     },
@@ -278,6 +295,7 @@ ${csvText}`,
     allocated: transactions.filter(t => t.status === "allocated").length,
     expense_submitted: transactions.filter(t => t.status === "expense_submitted").length,
     ignored: transactions.filter(t => t.status === "ignored").length,
+    payment: transactions.filter(t => t.status === "payment").length,
   }), [transactions]);
 
   const pendingAmount = transactions.filter(t => t.status === "pending").reduce((s, t) => s + (t.amount || 0), 0);
@@ -348,10 +366,14 @@ ${csvText}`,
           <TabsTrigger value="allocated">Allocated ({counts.allocated})</TabsTrigger>
           <TabsTrigger value="expense_submitted">Submitted ({counts.expense_submitted})</TabsTrigger>
           <TabsTrigger value="ignored">Ignored ({counts.ignored})</TabsTrigger>
+          <TabsTrigger value="payment">Payments ({counts.payment})</TabsTrigger>
           <TabsTrigger value="all">All</TabsTrigger>
         </TabsList>
 
         <TabsContent value={tab} className="mt-4">
+          {tab === "payment" ? (
+            <CardPaymentsTable transactions={filteredTxns} />
+          ) : (
           <div className="bg-card rounded-xl border border-border overflow-x-auto">
             <table className="w-full min-w-[880px] text-xs">
               <thead>
@@ -523,6 +545,7 @@ ${csvText}`,
               <div className="py-12 text-center text-muted-foreground text-sm">No transactions</div>
             )}
           </div>
+          )}
         </TabsContent>
       </Tabs>
 
