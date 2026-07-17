@@ -5,7 +5,7 @@
  */
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,7 @@ import {
   usePipelineLinks,
   createLink,
   moveStage,
+  resolveOwnerName,
 } from "@/api/pipeline";
 
 const TIER_ORDER = { Platinum: 0, Gold: 1, Silver: 2, Bronze: 3 };
@@ -116,11 +117,17 @@ export default function PipelineMatrix() {
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ["client-trade-links"] });
 
+  const { data: teamMembers = [] } = useQuery({
+    queryKey: ["team-members"],
+    queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }),
+    staleTime: 10 * 60 * 1000,
+  });
+
   const cellMutation = useMutation({
     mutationFn: async ({ company, client, stage }) => {
       const existing = linkByPair[`${company.id}|${client.id}`];
       if (existing) return moveStage(existing, stage, { by: user?.email });
-      return createLink({ client, company, stage, by: user?.email });
+      return createLink({ client, company, stage, by: user?.email, owner: resolveOwnerName(teamMembers, user) });
     },
     onSuccess: invalidate,
     onError: (e) => toast.error(e.message || "Failed to update"),

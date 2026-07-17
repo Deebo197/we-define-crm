@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { fetchAllRecords, filterAllRecords } from "@/api/fetchAll";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,17 +28,17 @@ export default function AccountantExport() {
 
   const { data: allExpenses = [] } = useQuery({
     queryKey: ["allExpenses"],
-    queryFn: () => base44.entities.Expense.list("-date", 2000),
+    queryFn: () => fetchAllRecords(base44.entities.Expense, "-date"),
   });
 
   const { data: allMileage = [] } = useQuery({
     queryKey: ["allMileage"],
-    queryFn: () => base44.entities.MileageJourney.list("-date", 1000),
+    queryFn: () => fetchAllRecords(base44.entities.MileageJourney, "-date"),
   });
 
   const { data: allPayments = [] } = useQuery({
     queryKey: ["cardPayments"],
-    queryFn: () => base44.entities.BankTransaction.filter({ status: "payment" }),
+    queryFn: () => filterAllRecords(base44.entities.BankTransaction, { status: "payment" }, "-transaction_date"),
   });
 
   // Chronologically sorted, date-filtered expenses

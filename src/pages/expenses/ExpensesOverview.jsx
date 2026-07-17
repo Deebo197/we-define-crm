@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { fetchAllRecords } from "@/api/fetchAll";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TrendingUp, CreditCard, Receipt, FileX, RefreshCw, Tag, Clock, CheckCircle2, Inbox, Pencil, Eye, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -98,7 +99,7 @@ export default function ExpensesOverview() {
 
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ["allExpenses"],
-    queryFn: () => base44.entities.Expense.list("-date", 500),
+    queryFn: () => fetchAllRecords(base44.entities.Expense, "-date"),
   });
 
   const { data: inboxItems = [] } = useQuery({

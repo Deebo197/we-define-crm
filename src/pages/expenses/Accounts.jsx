@@ -6,6 +6,7 @@ import ClientSplitInput from "@/components/expenses/ClientSplitInput";
 import CategorySelectItem from "@/components/expenses/CategorySelectItem";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { fetchAllRecords } from "@/api/fetchAll";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -94,8 +95,10 @@ export default function Accounts() {
     return [{ ...getClientAllocationFields(code), percentage: 100, amount: txn.amount }];
   };
 
-  const updateRowState = (id, field, value) => {
-    setRowState(prev => ({ ...prev, [id]: { ...getRowState({ id }), [field]: value } }));
+  // Takes the full txn (not just the id) so the alias-derived category/VAT
+  // defaults survive the first edit instead of being reset.
+  const updateRowState = (txn, field, value) => {
+    setRowState(prev => ({ ...prev, [txn.id]: { ...(prev[txn.id] || getRowState(txn)), [field]: value } }));
   };
 
   const handleReceiptUpload = async (txnId, file) => {
@@ -106,12 +109,12 @@ export default function Accounts() {
 
   const { data: transactions = [], isLoading } = useQuery({
     queryKey: ["bankTransactions"],
-    queryFn: () => base44.entities.BankTransaction.list("-created_date", 1000),
+    queryFn: () => fetchAllRecords(base44.entities.BankTransaction, "-created_date"),
   });
 
   const { data: allExpensesForDupes = [] } = useQuery({
     queryKey: ["allExpensesForDupes"],
-    queryFn: () => base44.entities.Expense.list("-date", 2000),
+    queryFn: () => fetchAllRecords(base44.entities.Expense, "-date"),
   });
 
   const handleCSVImport = async (e) => {
@@ -237,6 +240,13 @@ ${csvText}`,
     mutationFn: async (txn) => {
       const { paid_by, category } = getRowState(txn);
       const allocations = getRowAllocations(txn);
+      const allocated = allocations.reduce((s, a) => s + (a.amount || 0), 0);
+      if (Math.abs(allocated - (txn.amount || 0)) >= 0.01) {
+        throw new Error(`Client split (${formatCurrency(allocated)}) doesn't match the transaction amount (${formatCurrency(txn.amount)}) — adjust the split first.`);
+      }
+      if (allocations.some(a => !a.client_code)) {
+        throw new Error("Every split line needs a client — remove empty lines or pick a client.");
+      }
       const receipt = rowReceipts[txn.id];
       // Use the in-flight edited description if the user just edited it,
       // otherwise fall back to the query-cached description (or its saved alias)
@@ -437,7 +447,7 @@ ${csvText}`,
                             </span>
                           ) : (
                             <Select value={getRowState(txn).client_code} onValueChange={v => {
-                              updateRowState(txn.id, "client_code", v);
+                              updateRowState(txn, "client_code", v);
                               setRowAllocations(prev => { const n = {...prev}; delete n[txn.id]; return n; });
                             }}>
                               <SelectTrigger className="w-20 h-6 text-xs"><SelectValue /></SelectTrigger>
@@ -461,7 +471,7 @@ ${csvText}`,
                     </td>
                     <td className="px-2 py-1.5 text-center">
                       {txn.status === "pending" && (
-                        <Select value={getRowState(txn).paid_by} onValueChange={v => updateRowState(txn.id, "paid_by", v)}>
+                        <Select value={getRowState(txn).paid_by} onValueChange={v => updateRowState(txn, "paid_by", v)}>
                           <SelectTrigger className="w-24 h-6 text-xs">
                             {getRowState(txn).paid_by ? (
                               <div className="flex items-center gap-1">
@@ -489,7 +499,7 @@ ${csvText}`,
                         const hasNonWDClient = allocations.some(a => a.client_code !== "WD" && a.client_code !== "WD1");
                         const cats = hasNonWDClient ? CLIENT_CATEGORIES : getCategoriesForClient(getRowState(txn).client_code);
                         return (
-                          <Select value={getRowState(txn).category} onValueChange={v => updateRowState(txn.id, "category", v)}>
+                          <Select value={getRowState(txn).category} onValueChange={v => updateRowState(txn, "category", v)}>
                             <SelectTrigger className="w-28 h-6 text-xs"><SelectValue placeholder="Category" /></SelectTrigger>
                             <SelectContent>
                               {cats.map(c => <CategorySelectItem key={c} category={c} />)}
@@ -502,7 +512,7 @@ ${csvText}`,
                        {txn.status === "pending" && (
                          <Checkbox
                            checked={getRowState(txn).vat || false}
-                           onCheckedChange={v => updateRowState(txn.id, "vat", !!v)}
+                           onCheckedChange={v => updateRowState(txn, "vat", !!v)}
                          />
                        )}
                      </td>
@@ -566,7 +576,7 @@ ${csvText}`,
               <Label className="text-sm font-medium mb-1.5 block">Category</Label>
               <Select
                 value={getRowState(splitDialogTxn).category}
-                onValueChange={v => updateRowState(splitDialogTxn.id, "category", v)}
+                onValueChange={v => updateRowState(splitDialogTxn, "category", v)}
               >
                 <SelectTrigger className="w-full"><SelectValue placeholder="Select category" /></SelectTrigger>
                 <SelectContent>

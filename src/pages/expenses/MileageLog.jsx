@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { fetchAllRecords } from "@/api/fetchAll";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,7 +31,7 @@ export default function MileageLog() {
 
   const { data: journeys = [], isLoading } = useQuery({
     queryKey: ["mileageJourneys"],
-    queryFn: () => base44.entities.MileageJourney.list("-date", 500),
+    queryFn: () => fetchAllRecords(base44.entities.MileageJourney, "-date"),
   });
 
   const userCodes = [user?.paid_by_code, user?.paid_by_code_personal].filter(Boolean);
@@ -95,51 +96,58 @@ export default function MileageLog() {
 
   const calculateDistance = async () => {
     setCalculating(true);
-    const postcodes = form.stops.map(s => s.postcode).filter(Boolean);
-    if (postcodes.length < 2) {
-      setCalculating(false);
-      return;
-    }
+    try {
+      const postcodes = form.stops.map(s => s.postcode).filter(Boolean);
+      if (postcodes.length < 2) return;
 
-    // Geocode each postcode via Nominatim
-    const coords = [];
-    for (const pc of postcodes) {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(pc + ', UK')}&format=json&limit=1`,
-        { headers: { 'Accept-Language': 'en' } }
+      // Geocode each postcode via Nominatim
+      const coords = [];
+      for (const pc of postcodes) {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(pc + ', UK')}&format=json&limit=1`,
+          { headers: { 'Accept-Language': 'en' } }
+        );
+        const data = await res.json();
+        if (data[0]) coords.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
+      }
+
+      if (coords.length < 2) {
+        toast.error("Couldn't find one or more postcodes — check them and try again, or enter the miles manually.");
+        return;
+      }
+
+      // Use OSRM (free routing API) to get actual driving distance
+      const coordStr = coords.map(c => `${c.lon},${c.lat}`).join(';');
+      const osrmRes = await fetch(
+        `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=false`
       );
-      const data = await res.json();
-      if (data[0]) coords.push({ lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) });
-    }
+      const osrmData = await osrmRes.json();
+      const distanceMetres = osrmData?.routes?.[0]?.distance || 0;
+      if (!distanceMetres) {
+        toast.error("Route lookup returned no distance — try again in a moment, or enter the miles manually.");
+        return;
+      }
+      let miles = Math.round((distanceMetres / 1609.34) * 10) / 10;
 
-    if (coords.length < 2) {
+      if (form.return_journey) miles = Math.round(miles * 2 * 10) / 10;
+      const rate = getMileageRate(form.vehicle_type, form.date);
+      const cost = Math.round(miles * rate * 100) / 100;
+
+      setForm(f => ({
+        ...f,
+        total_miles: miles,
+        total_cost: cost,
+        client_allocations: f.client_allocations.map(a => ({
+          ...a,
+          amount: Math.round((cost * (a.percentage || 0) / 100) * 100) / 100,
+        })),
+      }));
+    } catch (err) {
+      console.error("Distance calculation failed:", err);
+      toast.error("Distance lookup failed — check your connection and try again, or enter the miles manually.");
+    } finally {
       setCalculating(false);
-      return;
     }
-
-    // Use OSRM (free routing API) to get actual driving distance
-    const coordStr = coords.map(c => `${c.lon},${c.lat}`).join(';');
-    const osrmRes = await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=false`
-    );
-    const osrmData = await osrmRes.json();
-    const distanceMetres = osrmData?.routes?.[0]?.distance || 0;
-    let miles = Math.round((distanceMetres / 1609.34) * 10) / 10;
-
-    if (form.return_journey) miles = Math.round(miles * 2 * 10) / 10;
-    const rate = getMileageRate(form.vehicle_type, form.date);
-    const cost = Math.round(miles * rate * 100) / 100;
-
-    setForm(f => ({
-      ...f,
-      total_miles: miles,
-      total_cost: cost,
-      client_allocations: f.client_allocations.map(a => ({
-        ...a,
-        amount: Math.round((cost * (a.percentage || 0) / 100) * 100) / 100,
-      })),
-    }));
-    setCalculating(false);
   };
 
   const generateRouteUrl = (stops) => {

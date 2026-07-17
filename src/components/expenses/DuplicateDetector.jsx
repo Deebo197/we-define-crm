@@ -1,27 +1,33 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertTriangle, ChevronDown, ChevronUp } from "lucide-react";
 import { formatDateUK, formatCurrency } from "@/lib/constants";
 
 export default function DuplicateDetector({ expenses }) {
   const [expanded, setExpanded] = useState(false);
 
-  // Find pairs with exact description + exact amount + dates within 48 hours
-  const duplicatePairs = [];
-  const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
-
-  for (let i = 0; i < expenses.length; i++) {
-    for (let j = i + 1; j < expenses.length; j++) {
-      const a = expenses[i];
-      const b = expenses[j];
-      if (
-        a.description === b.description &&
-        a.paid_amount === b.paid_amount &&
-        Math.abs(new Date(a.date) - new Date(b.date)) <= FORTY_EIGHT_HOURS
-      ) {
-        duplicatePairs.push([a, b]);
+  // Find pairs with exact description + exact amount + dates within 48 hours.
+  // Grouped by description|amount first so we only date-compare within small
+  // groups, instead of comparing every expense against every other on render.
+  const duplicatePairs = useMemo(() => {
+    const FORTY_EIGHT_HOURS = 48 * 60 * 60 * 1000;
+    const groups = new Map();
+    for (const e of expenses) {
+      const key = `${e.description}|${e.paid_amount}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(e);
+    }
+    const pairs = [];
+    for (const group of groups.values()) {
+      for (let i = 0; i < group.length; i++) {
+        for (let j = i + 1; j < group.length; j++) {
+          if (Math.abs(new Date(group[i].date) - new Date(group[j].date)) <= FORTY_EIGHT_HOURS) {
+            pairs.push([group[i], group[j]]);
+          }
+        }
       }
     }
-  }
+    return pairs;
+  }, [expenses]);
 
   if (duplicatePairs.length === 0) return null;
 

@@ -13,6 +13,7 @@ import PersonAvatar from "@/components/expenses/PersonAvatar";
 import EditExpenseDialog from "@/components/expenses/EditExpenseDialog";
 import DuplicateToWD1Dialog from "@/components/expenses/DuplicateToWD1Dialog";
 import { PAID_BY_CODES, formatCurrency, formatForeignCurrency, formatDateUK, getClientName } from "@/lib/constants";
+import { fetchAllRecords } from "@/api/fetchAll";
 import { useExpenseClients } from "@/hooks/useExpenseClients";
 import AnimatedPage from "@/components/expenses/AnimatedPage";
 import { toast } from "sonner";
@@ -22,7 +23,7 @@ export default function AllExpenses() {
   const queryClient = useQueryClient();
   const { data: expenses = [], isLoading } = useQuery({
     queryKey: ["allExpenses"],
-    queryFn: () => base44.entities.Expense.list("-date", 500),
+    queryFn: () => fetchAllRecords(base44.entities.Expense, "-date"),
   });
 
   const [descAliases] = useState(() => {
@@ -102,7 +103,16 @@ export default function AllExpenses() {
     }
   };
 
-  const months = [...new Set(expenses.map(e => e.month || (e.date ? e.date.slice(0, 7) : null)))].filter(Boolean).sort().reverse();
+  // Month values are "Jul 26"-style labels (with a "YYYY-MM" fallback) — sort
+  // them chronologically, newest first, not alphabetically.
+  const monthSortKey = (m) => {
+    if (/^\d{4}-\d{2}$/.test(m)) return m;
+    const t = Date.parse(`1 ${m.replace(/(\d{2})$/, "20$1")}`);
+    return isNaN(t) ? m : new Date(t).toISOString().slice(0, 7);
+  };
+  const months = [...new Set(expenses.map(e => e.month || (e.date ? e.date.slice(0, 7) : null)))]
+    .filter(Boolean)
+    .sort((a, b) => monthSortKey(b).localeCompare(monthSortKey(a)));
 
   const filtered = expenses.filter(e => {
     if (filters.client !== "all" && !e.client_allocations?.some(a => a.client_code === filters.client)) return false;

@@ -3,6 +3,7 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { filterAllRecords } from "@/api/fetchAll";
 import { motion } from "framer-motion";
 import AnimatedPage from "@/components/expenses/AnimatedPage";
 import { StaggerList, StaggerItem } from "@/components/expenses/StaggerList";
@@ -107,13 +108,13 @@ export default function MyExpenses() {
       if (codes) {
         // Fetch by all paid_by codes for this person, deduplicate
         const results = await Promise.all(
-          codes.map(c => base44.entities.Expense.filter({ paid_by: c }, "-date", 500))
+          codes.map(c => filterAllRecords(base44.entities.Expense, { paid_by: c }, "-date"))
         );
         const seen = new Set();
         return results.flat().filter(e => seen.has(e.id) ? false : seen.add(e.id));
       }
       // Fallback: submitted_by email
-      return base44.entities.Expense.filter({ submitted_by: user.email }, "-date", 500);
+      return filterAllRecords(base44.entities.Expense, { submitted_by: user.email }, "-date");
     },
     enabled: !!user,
   });
@@ -127,7 +128,7 @@ export default function MyExpenses() {
 
       if (codes) {
         const results = await Promise.all(
-          codes.map(c => base44.entities.MileageJourney.filter({ staff_member: c }, "-date", 500))
+          codes.map(c => filterAllRecords(base44.entities.MileageJourney, { staff_member: c }, "-date"))
         );
         const seen = new Set();
         return results.flat().filter(j => seen.has(j.id) ? false : seen.add(j.id));

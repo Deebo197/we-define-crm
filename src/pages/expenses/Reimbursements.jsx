@@ -1,6 +1,7 @@
 import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
+import { fetchAllRecords } from "@/api/fetchAll";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
@@ -24,12 +25,12 @@ export default function Reimbursements() {
 
   const { data: expenses = [], isLoading: loadingExp } = useQuery({
     queryKey: ["allExpenses"],
-    queryFn: () => base44.entities.Expense.list("-date", 500),
+    queryFn: () => fetchAllRecords(base44.entities.Expense, "-date"),
   });
 
   const { data: mileage = [], isLoading: loadingMil } = useQuery({
     queryKey: ["allMileage"],
-    queryFn: () => base44.entities.MileageJourney.list("-date", 500),
+    queryFn: () => fetchAllRecords(base44.entities.MileageJourney, "-date"),
   });
 
   const togglePaid = useMutation({
