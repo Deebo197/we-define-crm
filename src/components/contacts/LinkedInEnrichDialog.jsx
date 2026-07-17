@@ -17,18 +17,32 @@ export default function LinkedInEnrichDialog({ contact, onClose }) {
 
   const searchMutation = useMutation({
     mutationFn: async () => {
-      const prompt = `Search the web for this person's LinkedIn profile and extract their basic details.
-Name: ${contact.name}
-Company: ${contact.company_name || "(unknown)" }
+      const prompt = `Search the web for this person's LinkedIn profile page. I need you to find as much information as possible, especially their profile photo.
+
+Person: ${contact.name}
+Company: ${contact.company_name || "(unknown)"}
 LinkedIn URL: ${contact.linkedin || "(not recorded)"}
 
-Return ONLY verified public information from their LinkedIn profile. Include the direct URL to their profile photo if you can find one (the og:image or profile picture URL from their LinkedIn page). If you cannot find a photo URL, leave photo_url empty. If you cannot confidently identify the person, leave fields empty.
+CRITICAL — Profile Photo:
+Search specifically for this person's LinkedIn profile photo. LinkedIn profile photos are hosted on media.licdn.com (e.g. https://media.licdn.com/dms/image/...). Look for:
+  • The og:image meta tag URL from their LinkedIn profile page
+  • Any media.licdn.com image URL associated with their profile
+  • The profile picture URL from their LinkedIn page content
+Do NOT leave photo_url empty if you can find any image URL on their LinkedIn profile. Try searching for "${contact.name} ${contact.company_name || ""} LinkedIn profile photo" if needed.
 
-Return a JSON object with: full_name, first_name, last_name, job_title (their current role/title), headline (their LinkedIn headline), photo_url (direct image URL), location (city/country), and confidence (high/medium/low) indicating how sure you are this is the right person.`;
+Also extract:
+  • full_name, first_name, last_name
+  • job_title — their current role/title at their company
+  • headline — their full LinkedIn headline text
+  • location — city/country from their profile
+  • confidence — how sure you are this is the right person (high/medium/low)
+
+Return verified public information only. If you truly cannot find a field, use an empty string.`;
 
       const res = await base44.integrations.Core.InvokeLLM({
         prompt,
         add_context_from_internet: true,
+        model: "gemini_3_1_pro",
         response_json_schema: {
           type: "object",
           properties: {
