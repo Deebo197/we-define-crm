@@ -13,9 +13,12 @@ import { useAuth } from "@/lib/AuthContext";
 import {
   STAGES,
   STAGE_TONES,
+  TIERS,
+  TIER_TONES,
   isPipelineEligible,
   usePipelineLinks,
   applyInteractionToPair,
+  updateCompanyTier,
 } from "@/api/pipeline";
 
 const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
@@ -283,6 +286,8 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     for (const u of interaction?.pipeline_updates || []) m[u.client_id] = u.stage;
     return m;
   });
+  // Optional partner-tier change chosen while logging ("" = no change)
+  const [pipelineTier, setPipelineTier] = useState("");
 
   const [form, setForm] = useState({
     title: interaction?.title || "",
@@ -331,7 +336,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     onSuccess: async (saved, submitted) => {
       queryClient.invalidateQueries({ queryKey: ["interactions"] });
 
-      // Apply pipeline stage changes / activity stamps driven by this interaction
+      // Apply pipeline stage/tier changes driven by this interaction
       const updates = submitted.pipeline_updates || [];
       const company = tradeAccounts.find((a) => a.id === submitted.company_id);
       if (company && updates.length > 0) {
@@ -352,6 +357,14 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
           }
         }
         queryClient.invalidateQueries({ queryKey: ["client-trade-links"] });
+      }
+      if (company && pipelineTier && pipelineTier !== company.tier) {
+        try {
+          await updateCompanyTier(company.id, pipelineTier);
+          queryClient.invalidateQueries({ queryKey: ["trade-accounts"] });
+        } catch (err) {
+          toast.error(`Failed to set ${company.name}'s tier: ${err.message}`);
+        }
       }
 
       toast.success(interaction ? "Interaction updated" : "Interaction logged");
@@ -607,18 +620,37 @@ Return a JSON array of note objects. Each object must have:
         </div>
       </Section>
 
-      {/* ③b Pipeline — stage updates driven by this conversation */}
+      {/* ③b Pipeline — stage/tier updates driven by this conversation */}
       {(() => {
         const pipelineCompany = form.company_type === "TradeAccount"
           ? tradeAccounts.find(a => a.id === form.company_id)
           : null;
-        if (!pipelineCompany || !isPipelineEligible(pipelineCompany) || form.linked_clients.length === 0) return null;
+        if (!pipelineCompany || !isPipelineEligible(pipelineCompany)) return null;
         return (
           <Section title="Pipeline">
             <p className="text-xs text-faint -mt-1 mb-2 flex items-center gap-1.5">
               <KanbanSquare className="w-3.5 h-3.5" />
               Did this conversation move {pipelineCompany.name} for any client? Leave as “No change” otherwise.
             </p>
+            <div className="flex items-center gap-3 mb-3">
+              <span className="text-sm text-ink w-40">Partner tier</span>
+              {pipelineCompany.tier && (
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${TIER_TONES[pipelineCompany.tier] || ""}`}>
+                  {pipelineCompany.tier}
+                </span>
+              )}
+              <select
+                value={pipelineTier}
+                onChange={(e) => setPipelineTier(e.target.value)}
+                className="ml-auto h-8 text-xs rounded-lg border border-line bg-surface px-2 text-ink"
+              >
+                <option value="">No change</option>
+                {TIERS.map(t => <option key={t} value={t}>→ {t}</option>)}
+              </select>
+            </div>
+            {form.linked_clients.length === 0 && (
+              <p className="text-xs text-faint">Link a WDT client above to tag the pipeline stage for this conversation.</p>
+            )}
             <div className="space-y-2">
               {form.linked_clients.map(clientId => {
                 const client = clients.find(c => c.id === clientId);

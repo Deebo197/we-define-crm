@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useNavigate, Link } from "react-router-dom";
 import { format, startOfMonth, endOfMonth, subMonths, isWithinInterval } from "date-fns";
+import { STAGE_TONES } from "@/api/pipeline";
 
 const typeIcons = {
   "Meeting (In-Person)": "🤝",
@@ -218,6 +219,19 @@ export default function Interactions() {
                     <div className="flex flex-wrap gap-1 mt-2">
                       {interaction.contact_names.map(name => (
                         <span key={name} className="px-2 py-0.5 rounded-full text-[10px] bg-canvas text-muted border border-line">{name}</span>
+                      ))}
+                    </div>
+                  )}
+                  {interaction.pipeline_updates?.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2">
+                      {interaction.pipeline_updates.map(u => (
+                        <span
+                          key={u.client_id}
+                          title={`Pipeline: ${u.client_name} moved to ${u.stage}`}
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-medium border ${STAGE_TONES[u.stage] || "bg-canvas text-muted border-line"}`}
+                        >
+                          {u.client_name?.split(" ")[0]} → {u.stage}
+                        </span>
                       ))}
                     </div>
                   )}

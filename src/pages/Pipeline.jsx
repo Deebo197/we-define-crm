@@ -18,7 +18,9 @@ import {
   CONTACT_ROLES,
   STAGE_TONES,
   CLOSED_TONE,
+  TIERS,
   TIER_TONES,
+  updateCompanyTier,
   isPipelineEligible,
   useClients,
   usePipelineLinks,
@@ -208,6 +210,11 @@ function LinkDetailDialog({ link, company, people, onClose }) {
     onSuccess: invalidate,
     onError: (e) => toast.error(e.message || "Failed to set owner"),
   });
+  const tierMutation = useMutation({
+    mutationFn: (tier) => updateCompanyTier(link.trade_account_id, tier),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }),
+    onError: (e) => toast.error(e.message || "Failed to set tier"),
+  });
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -273,6 +280,30 @@ function LinkDetailDialog({ link, company, people, onClose }) {
             </div>
           </div>
         )}
+
+        <div>
+          <Label className="text-xs uppercase tracking-wider text-faint">
+            Partner Tier
+            <span className="normal-case tracking-normal"> — applies to {link.trade_account_name} across all clients</span>
+          </Label>
+          <div className="flex gap-1.5 mt-1.5">
+            {TIERS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                disabled={tierMutation.isPending}
+                onClick={() => tierMutation.mutate(company?.tier === t ? "" : t)}
+                className={`text-xs font-medium px-2.5 py-1 rounded-full border transition-all ${
+                  company?.tier === t
+                    ? `${TIER_TONES[t]} ring-1 ring-primary/40`
+                    : "text-faint border-line hover:border-line-strong"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+        </div>
 
         <ContactsEditor
           link={link}

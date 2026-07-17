@@ -111,6 +111,11 @@ export async function updateLinkOwner(link, owner) {
   return base44.entities.ClientTradeLink.update(link.id, { owner: owner || "" });
 }
 
+/** Partner tier lives on the company — one tier across all clients. */
+export async function updateCompanyTier(companyId, tier) {
+  return base44.entities.TradeAccount.update(companyId, { tier: tier || null });
+}
+
 /** Move an open pair to a new stage (also reopens a closed pair). */
 export async function moveStage(link, stage, opts = {}) {
   return base44.entities.ClientTradeLink.update(link.id, {
