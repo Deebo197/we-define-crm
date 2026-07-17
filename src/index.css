@@ -116,3 +116,50 @@
 .tabular-nums {
   font-variant-numeric: tabular-nums;
 }
+
+/* ── GlowCard: cursor-tracked border glow + click ripple (MagicBento-derived) ── */
+.glow-card {
+  position: relative;
+  --glow-x: 50%;
+  --glow-y: 50%;
+  --glow-intensity: 0;
+  --glow-radius: 180px;
+}
+
+.glow-card::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  background: radial-gradient(
+    var(--glow-radius) circle at var(--glow-x) var(--glow-y),
+    rgba(90, 61, 230, calc(var(--glow-intensity) * 0.65)) 0%,
+    rgba(90, 61, 230, calc(var(--glow-intensity) * 0.3)) 35%,
+    transparent 65%
+  );
+  border-radius: inherit;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.glow-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(90, 61, 230, 0.25) 0%, rgba(90, 61, 230, 0.12) 30%, transparent 70%);
+  pointer-events: none;
+  z-index: 2;
+  animation: glow-ripple-expand 0.7s ease-out forwards;
+}
+
+@keyframes glow-ripple-expand {
+  from { transform: scale(0); opacity: 1; }
+  to { transform: scale(1); opacity: 0; }
+}

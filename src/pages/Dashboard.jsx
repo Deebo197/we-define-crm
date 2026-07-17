@@ -10,12 +10,13 @@ import {
 import StatusBadge from "@/components/ui/StatusBadge";
 import ShimmerCard from "@/components/ui/ShimmerCard";
 import DotField from "@/components/ui/DotField";
+import GlowCard from "@/components/ui/GlowCard";
 import { format, isBefore, addDays } from "date-fns";
 import { toneFor } from "@/lib/statusColors";
 
 function StatCard({ icon: Icon, label, value, gradient }) {
   return (
-    <div className="bg-surface rounded-2xl border border-line shadow-card p-5 hover:border-line-strong transition-all duration-300 hover:scale-[1.02]">
+    <GlowCard className="bg-surface rounded-2xl border border-line shadow-card p-5 hover:border-line-strong transition-all duration-300 hover:scale-[1.02]">
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${gradient}`}>
           <Icon className="w-4 h-4 text-white" />
@@ -23,20 +24,21 @@ function StatCard({ icon: Icon, label, value, gradient }) {
         <span className="text-faint text-sm">{label}</span>
       </div>
       <p className="text-2xl font-semibold text-ink">{value}</p>
-    </div>
+    </GlowCard>
   );
 }
 
 function QuickAction({ icon: Icon, label, to }) {
   return (
-    <Link
+    <GlowCard
+      as={Link}
       to={to}
       className="flex items-center gap-3 px-4 py-3 rounded-xl bg-canvas border border-line hover:bg-black/[0.03] hover:border-line-strong transition-all duration-200 group"
     >
       <Icon className="w-4 h-4 text-primary" />
       <span className="text-sm text-muted group-hover:text-ink transition-colors">{label}</span>
       <ArrowRight className="w-3.5 h-3.5 text-faint ml-auto group-hover:translate-x-0.5 transition-transform" />
-    </Link>
+    </GlowCard>
   );
 }
 
