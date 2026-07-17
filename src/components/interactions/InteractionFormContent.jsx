@@ -310,6 +310,15 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     notes: interaction?.notes || [],
   });
 
+  // Resolve the interaction's company to a trade account for pipeline logging.
+  // Falls back to a name match so older records (no stored company_id) and
+  // free-typed names still surface the Pipeline section.
+  const resolvePipelineCompany = (companyId, companyName) =>
+    tradeAccounts.find(a => a.id === companyId) ||
+    (companyName
+      ? tradeAccounts.find(a => a.name?.trim().toLowerCase() === companyName.trim().toLowerCase())
+      : null);
+
   const companySuggestions = (() => {
     const q = form.company_name.toLowerCase().trim();
     if (!q) return [];
@@ -339,7 +348,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
 
       // Apply pipeline stage/tier changes driven by this interaction
       const updates = submitted.pipeline_updates || [];
-      const company = tradeAccounts.find((a) => a.id === submitted.company_id);
+      const company = resolvePipelineCompany(submitted.company_id, submitted.company_name);
       if (company && updates.length > 0) {
         const interactionId = saved?.id || interaction?.id || "";
         for (const u of updates) {
@@ -623,10 +632,20 @@ Return a JSON array of note objects. Each object must have:
 
       {/* ③b Pipeline — stage/tier updates driven by this conversation */}
       {(() => {
-        const pipelineCompany = form.company_type === "TradeAccount"
-          ? tradeAccounts.find(a => a.id === form.company_id)
-          : null;
-        if (!pipelineCompany || !isPipelineEligible(pipelineCompany)) return null;
+        const pipelineCompany = form.company_type === "OtherPartner"
+          ? null
+          : resolvePipelineCompany(form.company_id, form.company_name);
+        if (!pipelineCompany) return null;
+        if (!isPipelineEligible(pipelineCompany)) {
+          return (
+            <Section title="Pipeline">
+              <p className="text-xs text-faint -mt-1 flex items-center gap-1.5">
+                <KanbanSquare className="w-3.5 h-3.5" />
+                {pipelineCompany.name} isn’t pipeline-eligible — only tour operators and bonded agencies are tracked. Tick “Bonded Agency” on its company page if it operates as one.
+              </p>
+            </Section>
+          );
+        }
         return (
           <Section title="Pipeline">
             <p className="text-xs text-faint -mt-1 mb-2 flex items-center gap-1.5">

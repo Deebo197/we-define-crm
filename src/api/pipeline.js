@@ -72,7 +72,7 @@ export const TIER_TONES = {
 
 /** Tour operators, plus bonded agencies operating as tour operators. */
 export function isPipelineEligible(company) {
-  return company.type === "Tour Operator" || !!company.bonded_agency;
+  return (company.type || "").trim().toLowerCase() === "tour operator" || !!company.bonded_agency;
 }
 
 export function useClients() {
