@@ -178,7 +178,6 @@ export default function SubmitExpense() {
         client_allocations: form.client_allocations,
         receipt_code: receiptCode,
         reimbursement_required: isReimbursementRequired(form.paid_by),
-        reimbursement_paid: false,
         month,
         year,
         submitted_by: user?.email,

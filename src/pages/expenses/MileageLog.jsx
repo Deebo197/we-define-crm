@@ -172,7 +172,6 @@ export default function MileageLog() {
         client_allocations: form.client_allocations,
         category: form.category || "",
         reimbursement_required: isReimbursementRequired(form.paid_by),
-        reimbursement_paid: false,
         receipt_code: receiptCode,
         route_image_url: '',
         route_image_code: `ROUTE-${receiptCode}`,

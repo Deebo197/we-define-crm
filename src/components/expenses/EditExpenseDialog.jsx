@@ -33,7 +33,6 @@ function EditExpenseDialogInner({ expense, open, onClose, queryKeys = [] }) {
     original_amount: expense?.original_amount || "",
     exchange_rate: expense?.exchange_rate || "",
     reimbursement_required: expense?.reimbursement_required || false,
-    reimbursement_paid: expense?.reimbursement_paid || false,
     receipt_code: expense?.receipt_code || "",
     receipt_url: expense?.receipt_url || "",
     receipt_files: expense?.receipt_files || [],
@@ -160,8 +159,8 @@ function EditExpenseDialogInner({ expense, open, onClose, queryKeys = [] }) {
             </div>
           </div>
 
-          {/* VAT + Reimbursement */}
-          <div className="grid grid-cols-3 gap-3">
+          {/* VAT + Reimbursement requirement */}
+          <div className="grid grid-cols-2 gap-3">
             <div>
               <Label className="text-sm mb-2 block">VAT Applicable</Label>
               <div className="flex gap-2 mt-1">
@@ -174,13 +173,6 @@ function EditExpenseDialogInner({ expense, open, onClose, queryKeys = [] }) {
               <div className="flex gap-2 mt-1">
                 <button type="button" onClick={() => setForm(f => ({ ...f, reimbursement_required: true }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${form.reimbursement_required ? "bg-primary text-white border-primary" : "border-border text-muted-foreground"}`}>Yes</button>
                 <button type="button" onClick={() => setForm(f => ({ ...f, reimbursement_required: false }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${!form.reimbursement_required ? "bg-muted text-foreground border-border" : "border-border text-muted-foreground"}`}>No</button>
-              </div>
-            </div>
-            <div>
-              <Label className="text-sm mb-2 block">Reimb. Paid</Label>
-              <div className="flex gap-2 mt-1">
-                <button type="button" onClick={() => setForm(f => ({ ...f, reimbursement_paid: true }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${form.reimbursement_paid ? "bg-green-600 text-white border-green-600" : "border-border text-muted-foreground"}`}>Yes</button>
-                <button type="button" onClick={() => setForm(f => ({ ...f, reimbursement_paid: false }))} className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${!form.reimbursement_paid ? "bg-muted text-foreground border-border" : "border-border text-muted-foreground"}`}>No</button>
               </div>
             </div>
           </div>

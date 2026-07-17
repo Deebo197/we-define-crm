@@ -97,7 +97,14 @@
     "reimbursement_paid": {
       "type": "boolean",
       "title": "Reimbursement Paid",
-      "default": false
+      "default": false,
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "month": {
       "type": "string",
