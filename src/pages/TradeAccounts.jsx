@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { listActivePeople } from "@/api/people";
 import { listActiveTradeAccounts } from "@/api/tradeAccounts";
 import { useReferenceList } from "@/api/crm";
-import { Handshake, Search, Upload, Download, Trash2, MapPin, Navigation, Map, List, SlidersHorizontal, X, Loader2, Building2 } from "lucide-react";
+import { Handshake, Search, Upload, Download, Trash2, MapPin, Navigation, Map, List, LayoutGrid, SlidersHorizontal, X, Loader2, Building2 } from "lucide-react";
 import PageHeader from "@/components/ui/PageHeader";
 import StatusBadge from "@/components/ui/StatusBadge";
 import EmptyState from "@/components/ui/EmptyState";
@@ -383,6 +383,7 @@ export default function TradeAccounts() {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [confirmDelete, setConfirmDelete] = useState(null);
+  const [browseView, setBrowseView] = useState("grid"); // "grid" | "list"
   const [bulkGeocoding, setBulkGeocoding] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ done: 0, total: 0, errors: 0 });
   const queryClient = useQueryClient();
@@ -630,8 +631,91 @@ export default function TradeAccounts() {
             <p className="text-faint text-xs mb-4">{filtered.length} result{filtered.length !== 1 ? "s" : ""} for "{search}"</p>
           )}
 
+          <div className="flex justify-end mb-3">
+            <div className="flex gap-1 bg-surface border border-line rounded-xl p-1">
+              <button
+                onClick={() => setBrowseView("grid")}
+                className={`p-1.5 rounded-lg transition-all ${browseView === "grid" ? "bg-black/[0.04] text-ink" : "text-faint hover:text-ink"}`}
+                title="Card view"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setBrowseView("list")}
+                className={`p-1.5 rounded-lg transition-all ${browseView === "list" ? "bg-black/[0.04] text-ink" : "text-faint hover:text-ink"}`}
+                title="List view"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
           {isLoading ? <ShimmerCard count={4} /> : filtered.length === 0 ? (
             <EmptyState icon={Handshake} title="No companies" description={search ? "No companies match your search" : "Add your first tour operator or agency"} action={() => setShowForm(true)} actionLabel="Add Company" />
+          ) : browseView === "list" ? (
+            <div className="bg-surface rounded-2xl shadow-card border border-line overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-line bg-canvas">
+                      <th className="text-left text-faint font-medium text-xs uppercase tracking-wider px-4 py-3">Company</th>
+                      <th className="text-left text-faint font-medium text-xs uppercase tracking-wider px-4 py-3">Type</th>
+                      <th className="text-left text-faint font-medium text-xs uppercase tracking-wider px-4 py-3">Location</th>
+                      <th className="text-left text-faint font-medium text-xs uppercase tracking-wider px-4 py-3">Relationship</th>
+                      <th className="text-left text-faint font-medium text-xs uppercase tracking-wider px-4 py-3">Last Contact</th>
+                      <th className="px-4 py-3"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((account, i) => (
+                      <tr
+                        key={account.id}
+                        className="border-b border-line last:border-0 hover:bg-canvas cursor-pointer transition-colors animate-fade-in-up group"
+                        style={{ animationDelay: `${0.03 + i * 0.02}s` }}
+                        onClick={() => setViewing(account)}
+                      >
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            {account.lat && <MapPin className="w-3 h-3 text-success shrink-0" />}
+                            <div className="min-w-0">
+                              <p className="text-ink font-medium group-hover:text-primary transition-colors truncate">{account.name}</p>
+                              {account.parent_company_name && (
+                                <p className="text-faint text-[10px] truncate">↳ {account.parent_company_name}</p>
+                              )}
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3">
+                          {account.type && (
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium border ${typeStyles[account.type] || "bg-canvas text-muted border-line"}`}>
+                              {account.type}
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3 text-muted text-xs">
+                          {[account.city, account.county, account.address_postcode].filter(Boolean).join(", ") || account.region || "—"}
+                        </td>
+                        <td className="px-4 py-3">
+                          <StatusBadge status={account.relationship_strength} />
+                        </td>
+                        <td className="px-4 py-3 text-faint text-xs">
+                          {account.last_interaction_date ? format(new Date(account.last_interaction_date), "MMM d, yyyy") : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(account); }}
+                            className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-faint hover:text-danger hover:bg-danger/10 transition-all"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {filtered.map((account, i) => (
