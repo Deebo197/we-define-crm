@@ -19,6 +19,7 @@ import {
   usePipelineLinks,
   applyInteractionToPair,
   updateCompanyTier,
+  resolveOwnerName,
 } from "@/api/pipeline";
 
 const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
@@ -349,7 +350,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
               company,
               stage: u.stage,
               by: user?.email,
-              ownerName: user?.full_name,
+              ownerName: resolveOwnerName(teamMembers, user),
               interactionId,
             });
           } catch (err) {

@@ -29,6 +29,7 @@ import {
   closeLink,
   updateLinkContacts,
   updateLinkOwner,
+  resolveOwnerName,
   daysSince,
 } from "@/api/pipeline";
 
@@ -373,6 +374,7 @@ function LinkDetailDialog({ link, company, people, onClose }) {
 function AddOperatorDialog({ client, companies, existingIds, onClose }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
+  const { data: teamMembers = [] } = useTeamMembers();
   const [search, setSearch] = useState("");
   const [stage, setStage] = useState("Targeted");
 
@@ -387,7 +389,7 @@ function AddOperatorDialog({ client, companies, existingIds, onClose }) {
 
   const addMutation = useMutation({
     mutationFn: (company) =>
-      createLink({ client, company, stage, by: user?.email, owner: user?.full_name }),
+      createLink({ client, company, stage, by: user?.email, owner: resolveOwnerName(teamMembers, user) }),
     onSuccess: (_, company) => {
       queryClient.invalidateQueries({ queryKey: ["client-trade-links"] });
       toast.success(`${company.name} added to ${client.name}'s pipeline`);

@@ -5,6 +5,17 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "./base44Client";
+import { emailsMatch } from "@/components/team/teamUtils";
+
+/**
+ * Canonical owner name for a logged-in user: their TeamMember record's
+ * full_name (matched by email), so auto-stamped owners always use the same
+ * spelling as the Team page rather than the login account's display name.
+ */
+export function resolveOwnerName(teamMembers, user) {
+  const match = (teamMembers || []).find((m) => emailsMatch(m.email, user?.email));
+  return match?.full_name || user?.full_name || "";
+}
 
 export const STAGES = [
   "Targeted",
