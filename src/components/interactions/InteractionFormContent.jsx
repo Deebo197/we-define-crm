@@ -7,8 +7,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap, Search, Plus, User } from "lucide-react";
+import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap, Search, Plus, User, KanbanSquare } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/AuthContext";
+import {
+  STAGES,
+  STAGE_TONES,
+  isPipelineEligible,
+  usePipelineLinks,
+  applyInteractionToPair,
+} from "@/api/pipeline";
 
 const inputClass = "bg-surface-secondary border-line text-ink placeholder:text-faint rounded-lg focus:border-primary focus:ring-primary/20";
 const types = ["Meeting (In-Person)", "Meeting (Virtual)", "Call", "Email", "Event", "FAM Feedback", "Marketing Discussion"];
@@ -266,6 +274,15 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
 
   const [companyOpen, setCompanyOpen] = useState(false);
   const companyRef = useRef(null);
+  const { user } = useAuth();
+  const { data: pipelineLinks = [] } = usePipelineLinks();
+
+  // Pipeline stage changes chosen while logging: { [clientId]: stage }
+  const [pipelineUpdates, setPipelineUpdates] = useState(() => {
+    const m = {};
+    for (const u of interaction?.pipeline_updates || []) m[u.client_id] = u.stage;
+    return m;
+  });
 
   const [form, setForm] = useState({
     title: interaction?.title || "",
@@ -311,8 +328,31 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     mutationFn: (data) => interaction
       ? base44.entities.Interaction.update(interaction.id, data)
       : base44.entities.Interaction.create(data),
-    onSuccess: () => {
+    onSuccess: async (saved, submitted) => {
       queryClient.invalidateQueries({ queryKey: ["interactions"] });
+
+      // Apply pipeline stage changes / activity stamps driven by this interaction
+      const updates = submitted.pipeline_updates || [];
+      const company = tradeAccounts.find((a) => a.id === submitted.company_id);
+      if (company && updates.length > 0) {
+        const interactionId = saved?.id || interaction?.id || "";
+        for (const u of updates) {
+          try {
+            await applyInteractionToPair({
+              links: pipelineLinks,
+              client: { id: u.client_id, name: u.client_name },
+              company,
+              stage: u.stage,
+              by: user?.email,
+              interactionId,
+            });
+          } catch (err) {
+            toast.error(`Pipeline update failed for ${u.client_name}: ${err.message}`);
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ["client-trade-links"] });
+      }
+
       toast.success(interaction ? "Interaction updated" : "Interaction logged");
       onSuccess?.();
     },
@@ -469,7 +509,14 @@ Return a JSON array of note objects. Each object must have:
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    createMutation.mutate(form);
+    const pipeline_updates = Object.entries(pipelineUpdates)
+      .filter(([clientId, stage]) => stage && form.linked_clients.includes(clientId))
+      .map(([clientId, stage]) => ({
+        client_id: clientId,
+        client_name: clients.find((c) => c.id === clientId)?.name || "",
+        stage,
+      }));
+    createMutation.mutate({ ...form, pipeline_updates });
   };
 
   return (
@@ -558,6 +605,46 @@ Return a JSON array of note objects. Each object must have:
           {clients.map(c => <ClientChip key={c.id} client={c} selected={form.linked_clients.includes(c.id)} onToggle={toggleClient} />)}
         </div>
       </Section>
+
+      {/* ③b Pipeline — stage updates driven by this conversation */}
+      {(() => {
+        const pipelineCompany = form.company_type === "TradeAccount"
+          ? tradeAccounts.find(a => a.id === form.company_id)
+          : null;
+        if (!pipelineCompany || !isPipelineEligible(pipelineCompany) || form.linked_clients.length === 0) return null;
+        return (
+          <Section title="Pipeline">
+            <p className="text-xs text-faint -mt-1 mb-2 flex items-center gap-1.5">
+              <KanbanSquare className="w-3.5 h-3.5" />
+              Did this conversation move {pipelineCompany.name} for any client? Leave as “No change” otherwise.
+            </p>
+            <div className="space-y-2">
+              {form.linked_clients.map(clientId => {
+                const client = clients.find(c => c.id === clientId);
+                if (!client || client.is_internal) return null;
+                const pair = pipelineLinks.find(l => l.client_id === clientId && l.trade_account_id === pipelineCompany.id);
+                const current = pair ? (pair.closed_status ? `Closed: ${pair.closed_status}` : pair.stage) : "Not in pipeline";
+                return (
+                  <div key={clientId} className="flex items-center gap-3">
+                    <span className="text-sm text-ink w-40 truncate">{client.name}</span>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${pair && !pair.closed_status ? STAGE_TONES[pair.stage] || "" : "text-faint border-line"}`}>
+                      {current}
+                    </span>
+                    <select
+                      value={pipelineUpdates[clientId] || ""}
+                      onChange={(e) => setPipelineUpdates(prev => ({ ...prev, [clientId]: e.target.value }))}
+                      className="ml-auto h-8 text-xs rounded-lg border border-line bg-surface px-2 text-ink"
+                    >
+                      <option value="">No change</option>
+                      {STAGES.map(s => <option key={s} value={s}>→ {s}</option>)}
+                    </select>
+                  </div>
+                );
+              })}
+            </div>
+          </Section>
+        );
+      })()}
 
       {/* ④ Internal team */}
       <Section title="WDT Team">

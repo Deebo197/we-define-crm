@@ -27,6 +27,8 @@ import {
   Settings,
   ListTodo,
   Crosshair,
+  KanbanSquare,
+  Grid3X3,
 } from "lucide-react";
 
 export const navGroups = [
@@ -41,6 +43,8 @@ export const navGroups = [
       { label: "Other Partners", icon: Globe, path: "/other-partners" },
       { label: "People", icon: Users, path: "/contacts" },
       { label: "Targeting", icon: Crosshair, path: "/targeting" },
+      { label: "Pipeline", icon: KanbanSquare, path: "/pipeline" },
+      { label: "Gap Matrix", icon: Grid3X3, path: "/pipeline/matrix" },
       { label: "Interactions", icon: MessageSquare, path: "/interactions" },
       { label: "Actions", icon: CheckSquare, path: "/actions" },
       { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
@@ -99,6 +103,7 @@ export function isItemActive(item, pathname) {
     (item.path !== "/" &&
       item.path !== "/expenses" &&
       item.path !== "/competitor-analysis" &&
+      item.path !== "/pipeline" &&
       pathname.startsWith(item.path))
   );
 }

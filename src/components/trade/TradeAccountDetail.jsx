@@ -22,6 +22,47 @@ import {
   expandThroughGroupLinks, groupRelationsFor,
 } from "@/lib/targeting";
 import { TempCoverDialog, FillSeatDialog } from "@/components/crm/SeatFillDialog";
+import {
+  STAGE_TONES, CLOSED_TONE, isPipelineEligible,
+  useClients, usePipelineLinks,
+} from "@/api/pipeline";
+
+/** Per-client pipeline stage chips shown in the company header. */
+function PipelineChips({ account }) {
+  const { data: clients = [] } = useClients();
+  const { data: links = [] } = usePipelineLinks();
+  if (!isPipelineEligible(account)) return null;
+  const activeClients = clients.filter((c) => !c.is_internal);
+  if (activeClients.length === 0) return null;
+  return (
+    <div className="flex flex-wrap items-center gap-1.5 mt-2">
+      <span className="text-[10px] uppercase tracking-wider text-faint font-semibold">Pipeline</span>
+      {activeClients.map((c) => {
+        const link = links.find(
+          (l) => l.trade_account_id === account.id && l.client_id === c.id
+        );
+        const label = link
+          ? link.closed_status || link.stage
+          : "—";
+        const tone = link
+          ? link.closed_status
+            ? CLOSED_TONE
+            : STAGE_TONES[link.stage] || ""
+          : "text-faint border-line border-dashed";
+        return (
+          <Link
+            key={c.id}
+            to="/pipeline"
+            title={`${c.name}: ${link ? label : "not in pipeline"}`}
+            className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${tone} hover:ring-1 hover:ring-primary/30`}
+          >
+            {c.name.split(" ")[0]} · {label}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 const INTERACTION_ICONS = {
   "Meeting (In-Person)": "🤝",
@@ -327,6 +368,7 @@ export default function TradeAccountDetail({ account, onBack, onEdit }) {
             </p>
           )}
           <div className="flex flex-wrap gap-1.5 mt-2">
+            {account.bonded_agency && <Tag tone="primary">Bonded Agency</Tag>}
             {account.sector && <Tag>{account.sector}</Tag>}
             {(account.destinations ?? []).map((d) => (
               <Tag key={d.destination} tone={d.strength === "Core" ? "success" : "neutral"}>
@@ -337,6 +379,7 @@ export default function TradeAccountDetail({ account, onBack, onEdit }) {
               <Tag key={s} tone="primary">{s}</Tag>
             ))}
           </div>
+          <PipelineChips account={account} />
           <div className="flex items-center gap-3 mt-2 flex-wrap">
             {account.website && (
               <a href={externalHref(account.website)} target="_blank" rel="noopener noreferrer"

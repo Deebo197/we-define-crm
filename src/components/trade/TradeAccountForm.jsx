@@ -34,6 +34,7 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
     name: account?.name ?? "",
     type: account?.type ?? "Tour Operator",
     tier: account?.tier ?? "",
+    bonded_agency: account?.bonded_agency ?? false,
     sector: account?.sector ?? "",
     specialisms: account?.specialisms ?? [],
     destinations: account?.destinations ?? [],
@@ -159,8 +160,31 @@ export default function TradeAccountForm({ account, onSubmit, onCancel, isLoadin
             </Select>
           </div>
           <div>
-            <Label className="text-muted text-xs mb-1.5">Tier</Label>
-            <Input value={form.tier} onChange={e => setForm(f => ({ ...f, tier: e.target.value }))} className={inputClass} placeholder="e.g. Tier 1" />
+            <Label className="text-muted text-xs mb-1.5">Partner Tier</Label>
+            <Select value={form.tier || NONE} onValueChange={v => setForm(f => ({ ...f, tier: v === NONE ? "" : v }))}>
+              <SelectTrigger className={inputClass}><SelectValue placeholder="Select tier..." /></SelectTrigger>
+              <SelectContent className="bg-surface-elevated border-line">
+                <SelectItem value={NONE}>None</SelectItem>
+                {form.tier && !["Bronze", "Silver", "Gold", "Platinum"].includes(form.tier) && (
+                  <SelectItem value={form.tier}>{form.tier} (legacy)</SelectItem>
+                )}
+                {["Platinum", "Gold", "Silver", "Bronze"].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-end pb-1">
+            <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+              <input
+                type="checkbox"
+                checked={!!form.bonded_agency}
+                onChange={e => setForm(f => ({ ...f, bonded_agency: e.target.checked }))}
+                className="w-4 h-4 rounded border-line text-primary focus:ring-primary/30"
+              />
+              <span>
+                Bonded Agency
+                <span className="block text-xs text-faint">Bonded to operate as a tour operator in its own right — makes it pipeline-eligible</span>
+              </span>
+            </label>
           </div>
           <div>
             <Label className="text-muted text-xs mb-1.5">Sector</Label>

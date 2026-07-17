@@ -5,8 +5,9 @@ import { base44 } from "@/api/base44Client";
 import { listActivePeople } from "@/api/people";
 import {
   ArrowLeft, Building2, Users, MessageSquare, CheckSquare,
-  Megaphone, FileText, Pencil, Calendar, Clock, ChevronRight
+  Megaphone, FileText, Pencil, Calendar, Clock, ChevronRight, KanbanSquare
 } from "lucide-react";
+import { STAGE_TONES, CLOSED_TONE, STAGES, usePipelineLinks } from "@/api/pipeline";
 import { Button } from "@/components/ui/button";
 import { format, isPast } from "date-fns";
 import StatusBadge from "@/components/ui/StatusBadge";
@@ -67,6 +68,8 @@ export default function ClientDetail() {
     queryFn: () => base44.entities.Interaction.list("-date", 200),
   });
 
+  const { data: pipelineLinks = [] } = usePipelineLinks();
+
   const { data: allActions = [], isLoading: loadingActions } = useQuery({
     queryKey: ["actions"],
     queryFn: () => base44.entities.Action.list("-created_date", 200),
@@ -96,6 +99,14 @@ export default function ClientDetail() {
 
   // Filter related data
   const contacts = allContacts.filter(c => c.coverage?.some(cv => cv.clients?.includes(id)));
+  const clientPipeline = pipelineLinks
+    .filter(l => l.client_id === id)
+    .sort((a, b) => {
+      const stageIdx = (l) => (l.closed_status ? 99 : STAGES.indexOf(l.stage));
+      return stageIdx(b) - stageIdx(a) === 0
+        ? (a.trade_account_name || "").localeCompare(b.trade_account_name || "")
+        : stageIdx(b) - stageIdx(a);
+    });
   const interactions = allInteractions.filter(i => i.linked_clients?.includes(id)).slice(0, 8);
   const openActions = allActions.filter(a => a.linked_client === id && a.status !== "Completed" && a.status !== "Cancelled");
   const campaigns = allCampaigns.filter(c => c.linked_clients?.includes(id));
@@ -184,6 +195,29 @@ export default function ClientDetail() {
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left column: interactions + actions */}
         <div className="lg:col-span-2 space-y-6">
+
+          {/* Connected tour operators (pipeline) */}
+          <div className="bg-surface rounded-2xl shadow-card border border-line p-5">
+            <SectionHeader icon={KanbanSquare} label="Tour Operator Pipeline" count={clientPipeline.length} to="/pipeline" />
+            {clientPipeline.length === 0 ? (
+              <p className="text-faint text-sm py-2">No operators in this client's pipeline yet</p>
+            ) : (
+              <div className="flex flex-wrap gap-1.5">
+                {clientPipeline.map(l => (
+                  <Link
+                    key={l.id}
+                    to="/pipeline"
+                    title={l.contacts?.length ? l.contacts.map(c => `${c.person_name} (${c.role})`).join(", ") : undefined}
+                    className={`text-xs font-medium px-2.5 py-1 rounded-full border hover:ring-1 hover:ring-primary/30 ${
+                      l.closed_status ? CLOSED_TONE : STAGE_TONES[l.stage] || ""
+                    }`}
+                  >
+                    {l.trade_account_name} · {l.closed_status || l.stage}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Recent Interactions */}
           <div className="bg-surface rounded-2xl shadow-card border border-line p-5">

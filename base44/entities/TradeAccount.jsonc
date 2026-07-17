@@ -13,11 +13,17 @@
     "tier": {
       "type": "string",
       "enum": [
-        "Key",
-        "Mid",
-        "Long-tail"
+        "Bronze",
+        "Silver",
+        "Gold",
+        "Platinum"
       ],
-      "description": "Global tier \u2014 account-level size/importance, independent of any one client"
+      "description": "Partner tier \u2014 projected volume, size and distribution, independent of any one client"
+    },
+    "bonded_agency": {
+      "type": "boolean",
+      "default": false,
+      "description": "Bonded agency \u2014 a travel agency licensed/bonded to operate as a tour operator in its own right (makes it pipeline-eligible)"
     },
     "sector": {
       "type": "string",

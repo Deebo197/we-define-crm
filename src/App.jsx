@@ -28,6 +28,8 @@ import Todos from '@/pages/Todos';
 import CompanyPage from '@/pages/CompanyPage';
 import PersonPage from '@/pages/PersonPage';
 import Targeting from '@/pages/Targeting';
+import Pipeline from '@/pages/Pipeline';
+import PipelineMatrix from '@/pages/PipelineMatrix';
 import ReferenceLists from '@/pages/ReferenceLists';
 
 // Document library
@@ -90,6 +92,8 @@ const AuthenticatedApp = () => {
         <Route path="/contacts" element={<Contacts />} />
         <Route path="/contacts/:id" element={<PersonPage />} />
         <Route path="/targeting" element={<Targeting />} />
+        <Route path="/pipeline" element={<Pipeline />} />
+        <Route path="/pipeline/matrix" element={<PipelineMatrix />} />
         <Route path="/settings/lists" element={<AdminRoute><ReferenceLists /></AdminRoute>} />
         <Route path="/interactions" element={<Interactions />} />
         <Route path="/interactions/:id" element={<InteractionDetail />} />

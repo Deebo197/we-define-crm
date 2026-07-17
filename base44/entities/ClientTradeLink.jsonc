@@ -18,6 +18,89 @@
       "type": "string",
       "description": "Denormalized Client name"
     },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "Targeted",
+        "Approached",
+        "In Discussion",
+        "Featuring Agreed",
+        "Rates Agreed",
+        "Contracted",
+        "Trading",
+        "Dormant"
+      ],
+      "default": "Targeted",
+      "description": "Pipeline stage for this client-operator pair"
+    },
+    "closed_status": {
+      "type": "string",
+      "enum": [
+        "Declined",
+        "Cancelled",
+        "Not Viable"
+      ],
+      "description": "Set when the pair is closed: they declined, cancelled working with us, or we cannot work with them. Empty = open."
+    },
+    "closed_reason": {
+      "type": "string",
+      "description": "Why the pair was closed"
+    },
+    "closed_from_stage": {
+      "type": "string",
+      "description": "The stage the pair was at when it was closed"
+    },
+    "contacts": {
+      "type": "array",
+      "description": "People at the operator driving this client relationship",
+      "items": {
+        "type": "object",
+        "properties": {
+          "person_id": {
+            "type": "string"
+          },
+          "person_name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role on this relationship e.g. Product Manager, Commercial Manager, Marketing Manager, Head of Product"
+          }
+        }
+      }
+    },
+    "stage_history": {
+      "type": "array",
+      "description": "Every stage change, newest last",
+      "items": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "by": {
+            "type": "string",
+            "description": "Email of the user who made the change"
+          },
+          "interaction_id": {
+            "type": "string",
+            "description": "Interaction that drove this change, if any"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "last_activity_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the most recent interaction or stage change for this pair"
+    },
     "tier_for_client": {
       "type": "string",
       "enum": [

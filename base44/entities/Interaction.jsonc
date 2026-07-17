@@ -130,6 +130,24 @@
           }
         }
       }
+    },
+    "pipeline_updates": {
+      "type": "array",
+      "description": "Pipeline stage changes made while logging this interaction",
+      "items": {
+        "type": "object",
+        "properties": {
+          "client_id": {
+            "type": "string"
+          },
+          "client_name": {
+            "type": "string"
+          },
+          "stage": {
+            "type": "string"
+          }
+        }
+      }
     }
   },
   "required": [
