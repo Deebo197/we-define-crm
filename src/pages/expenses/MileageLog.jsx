@@ -15,7 +15,7 @@ import ClientSplitInput from "@/components/expenses/ClientSplitInput";
 import ReimbursementBadge from "@/components/expenses/ReimbursementBadge";
 import PersonAvatar from "@/components/expenses/PersonAvatar";
 import CategoryBadge from "@/components/expenses/CategoryBadge";
-import { VEHICLE_TYPES, PAID_BY_CODES, formatCurrency, formatDateUK, formatMonth, isReimbursementRequired, getCategoriesForClient, getMileageRate, getVehicleLabel } from "@/lib/constants";
+import { VEHICLE_TYPES, PAID_BY_CODES, formatCurrency, formatDateUK, formatMonth, isReimbursementRequired, getCategoriesForClient, getMileageRate, getVehicleLabel, getTaxYearStart, computeMileageCost, MILEAGE_RATE_THRESHOLD } from "@/lib/constants";
 import CategorySelectItem from "@/components/expenses/CategorySelectItem";
 import { toast } from "sonner";
 import { generateReceiptCode } from "@/lib/receiptCodeGenerator";
@@ -42,6 +42,16 @@ export default function MileageLog() {
         j.created_by === user?.email ||
         j.staff_member === user?.email
       );
+
+  // Cumulative business miles already logged by this staff member in the same
+  // tax year, up to the given date — drives the 10,000-mile rate threshold.
+  const milesThisTaxYear = (staffCode, dateStr) => {
+    if (!staffCode || !dateStr) return 0;
+    const start = getTaxYearStart(dateStr);
+    return journeys
+      .filter(j => j.staff_member === staffCode && j.date && j.date >= start && j.date <= dateStr)
+      .reduce((s, j) => s + (j.total_miles || 0), 0);
+  };
 
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState(getDefaultForm());
@@ -130,8 +140,11 @@ export default function MileageLog() {
       let miles = Math.round((distanceMetres / 1609.34) * 10) / 10;
 
       if (form.return_journey) miles = Math.round(miles * 2 * 10) / 10;
-      const rate = getMileageRate(form.vehicle_type, form.date);
-      const cost = Math.round(miles * rate * 100) / 100;
+      const priorMiles = milesThisTaxYear(form.paid_by, form.date);
+      const { cost, milesAtReducedRate } = computeMileageCost(form.vehicle_type, form.date, priorMiles, miles);
+      if (milesAtReducedRate > 0) {
+        toast.info(`Over the ${MILEAGE_RATE_THRESHOLD.toLocaleString()}-mile tax-year threshold — ${milesAtReducedRate} of these miles are at the reduced rate.`);
+      }
 
       setForm(f => ({
         ...f,
@@ -166,10 +179,18 @@ export default function MileageLog() {
       const year = new Date(form.date).getFullYear();
       const paidByEntry = PAID_BY_CODES.find(p => p.code === form.paid_by);
 
+      // Store the effective per-mile rate (cost ÷ miles) so threshold-blended
+      // journeys export accurately; fall back to the standard rate.
+      const savedMiles = parseFloat(form.total_miles) || 0;
+      const savedCost = parseFloat(form.total_cost) || 0;
+      const effectiveRate = savedMiles > 0 && savedCost > 0
+        ? Math.round((savedCost / savedMiles) * 10000) / 10000
+        : getMileageRate(form.vehicle_type, form.date);
+
       const journey = await base44.entities.MileageJourney.create({
         date: form.date,
         vehicle_type: form.vehicle_type,
-        rate_per_mile: getMileageRate(form.vehicle_type, form.date),
+        rate_per_mile: effectiveRate,
         purpose: form.purpose,
         staff_member: form.paid_by,
         staff_member_name: paidByEntry?.label || form.paid_by,

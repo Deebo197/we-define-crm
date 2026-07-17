@@ -62,9 +62,21 @@ export default function Contacts() {
     },
   });
 
+  // Soft-archive the person and their seats — interactions and pipeline
+  // contacts keep valid references and the record stays recoverable.
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.Contact.delete(id),
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["contacts"] }); setConfirmDelete(null); },
+    mutationFn: async (id) => {
+      await base44.entities.Contact.update(id, { archived: true });
+      const personSeats = await base44.entities.RoleSeat.filter({ person_id: id });
+      await Promise.all(
+        personSeats.filter(s => !s.archived).map(s => base44.entities.RoleSeat.update(s.id, { archived: true }))
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["contacts"] });
+      queryClient.invalidateQueries({ queryKey: ["role-seats"] });
+      setConfirmDelete(null);
+    },
   });
 
   const handleSubmit = (data, seatTitle) => {

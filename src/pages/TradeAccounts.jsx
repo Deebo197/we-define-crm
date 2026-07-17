@@ -408,8 +408,10 @@ export default function TradeAccounts() {
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }); setEditing(null); setShowForm(false); setViewing(null); },
   });
 
+  // Soft-archive rather than hard delete — pipeline pairs, seats and
+  // interactions keep valid references and the record stays recoverable.
   const deleteMutation = useMutation({
-    mutationFn: (id) => base44.entities.TradeAccount.delete(id),
+    mutationFn: (id) => base44.entities.TradeAccount.update(id, { archived: true, archive_reason: "Deleted in app" }),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["trade-accounts"] }); setConfirmDelete(null); setViewing(null); },
   });
 
@@ -518,12 +520,12 @@ export default function TradeAccounts() {
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-surface rounded-2xl shadow-card border border-line p-6 max-w-sm w-full mx-4 shadow-2xl">
-            <h3 className="text-ink font-medium mb-2">Delete Company</h3>
-            <p className="text-muted text-sm mb-5">Are you sure you want to delete <span className="text-ink font-medium">{confirmDelete.name}</span>?</p>
+            <h3 className="text-ink font-medium mb-2">Archive Company</h3>
+            <p className="text-muted text-sm mb-5">Archive <span className="text-ink font-medium">{confirmDelete.name}</span>? It disappears from all lists but its history, pipeline pairs and contacts stay intact. An admin can restore or purge it from the Base44 dashboard.</p>
             <div className="flex gap-3 justify-end">
               <button type="button" onClick={() => setConfirmDelete(null)} className="px-4 py-2 text-sm text-faint hover:text-ink transition-colors">Cancel</button>
               <button type="button" onClick={() => deleteMutation.mutate(confirmDelete.id)} disabled={deleteMutation.isPending} className="px-5 py-2 text-sm bg-danger hover:bg-danger/80 text-white rounded-xl">
-                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+                {deleteMutation.isPending ? "Archiving..." : "Archive"}
               </button>
             </div>
           </div>

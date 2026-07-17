@@ -175,10 +175,35 @@ ${csvText}`,
       }
       txns = validTxns;
 
+      // Re-import protection: fingerprint every transaction already in the
+      // system (account + date + description + amount) so importing the same
+      // statement twice doesn't duplicate anything. Existing records may hold
+      // either the raw bank description or an alias-edited one, so incoming
+      // rows are checked under both.
+      const fingerprint = (source, date, desc, amount) =>
+        `${source}|${date}|${(desc || "").trim().toLowerCase()}|${Number(amount).toFixed(2)}`;
+      const existing = await fetchAllRecords(base44.entities.BankTransaction, "-created_date");
+      const existingKeys = new Set(
+        existing.map(t => fingerprint(t.account_source, t.transaction_date, t.description, t.amount))
+      );
+
       let paymentCount = 0;
+      let duplicateCount = 0;
+      let importedCount = 0;
       for (const txn of txns) {
+        const rawDescription = txn.description;
         // Apply saved alias if exists
         if (descAliases[txn.description]) txn.description = descAliases[txn.description];
+
+        const candidateKeys = [rawDescription, txn.description].map(d =>
+          fingerprint(accountSource, txn.date, d, Math.abs(txn.amount))
+        );
+        if (candidateKeys.some(k => existingKeys.has(k))) {
+          duplicateCount++;
+          continue;
+        }
+        // Deliberately NOT added back into the set: two genuinely identical
+        // rows within one statement (e.g. two same-day coffees) both import.
 
         // Detect credit card payments (e.g. "Payment Received Thank You") — not expenses
         const isCardPayment = /payment received|card payment|payment thank you|direct debit payment/i.test(txn.description);
@@ -197,6 +222,7 @@ ${csvText}`,
         };
 
         const created = await base44.entities.BankTransaction.create(record);
+        importedCount++;
 
         if (isCardPayment) {
           paymentCount++;
@@ -228,7 +254,11 @@ ${csvText}`,
       queryClient.invalidateQueries({ queryKey: ["bankTransactions"] });
       queryClient.invalidateQueries({ queryKey: ["allExpenses"] });
       const paymentNote = paymentCount > 0 ? ` (${paymentCount} card payment(s) logged)` : "";
-      setImportMessage({ type: "success", text: `Successfully imported ${txns.length} transaction(s).${paymentNote}` });
+      const dupeNote = duplicateCount > 0 ? ` ${duplicateCount} already-imported row(s) skipped.` : "";
+      setImportMessage({
+        type: "success",
+        text: `Successfully imported ${importedCount} transaction(s).${paymentNote}${dupeNote}`,
+      });
     }
 
     setImporting(false);

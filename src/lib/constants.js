@@ -72,6 +72,35 @@ export function getVehicleLabel(vehicleType, dateStr) {
   return `${vehicleType} — ${Math.round(rate * 100)}p/mile`;
 }
 
+// UK tax year runs 6 April – 5 April
+export function getTaxYearStart(dateStr) {
+  const d = new Date(dateStr);
+  const y = d >= new Date(`${d.getFullYear()}-04-06`) ? d.getFullYear() : d.getFullYear() - 1;
+  return `${y}-04-06`;
+}
+
+export const MILEAGE_RATE_THRESHOLD = 10000;
+
+/**
+ * HMRC-style rate threshold: after 10,000 business miles in a tax year the
+ * per-mile rate drops to the vehicle's over-10k rate (25p for cars). A journey
+ * that straddles the threshold is costed at the standard rate up to 10,000
+ * cumulative miles and the reduced rate beyond.
+ * Returns { cost, effectiveRate, milesAtReducedRate }.
+ */
+export function computeMileageCost(vehicleType, dateStr, priorMilesThisTaxYear, journeyMiles) {
+  const v = VEHICLE_TYPES.find(x => x.type === vehicleType) || VEHICLE_TYPES[0];
+  const standardRate = getMileageRate(vehicleType, dateStr);
+  const reducedRate = v.rateOver10k ?? standardRate;
+  const prior = Math.max(0, priorMilesThisTaxYear || 0);
+  const miles = Math.max(0, journeyMiles || 0);
+  const milesAtStandard = Math.max(0, Math.min(miles, MILEAGE_RATE_THRESHOLD - prior));
+  const milesAtReducedRate = Math.round((miles - milesAtStandard) * 10) / 10;
+  const cost = Math.round((milesAtStandard * standardRate + milesAtReducedRate * reducedRate) * 100) / 100;
+  const effectiveRate = miles > 0 ? Math.round((cost / miles) * 10000) / 10000 : standardRate;
+  return { cost, effectiveRate, milesAtReducedRate };
+}
+
 export const REIMBURSEMENT_CODES = ["CB", "ST", "DJ"];
 
 export const STAFF_MEMBERS = [

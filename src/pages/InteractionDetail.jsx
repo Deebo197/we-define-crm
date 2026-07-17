@@ -36,9 +36,21 @@ export default function InteractionDetail() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => base44.entities.Interaction.delete(id),
+    mutationFn: async () => {
+      // Clear this interaction's references from pipeline stage history first,
+      // so history entries don't link to a deleted record.
+      const links = await base44.entities.ClientTradeLink.list("-updated_date", 5000);
+      const affected = links.filter(l => (l.stage_history || []).some(h => h.interaction_id === id));
+      await Promise.all(affected.map(l =>
+        base44.entities.ClientTradeLink.update(l.id, {
+          stage_history: l.stage_history.map(h => h.interaction_id === id ? { ...h, interaction_id: "" } : h),
+        })
+      ));
+      await base44.entities.Interaction.delete(id);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["interactions"] });
+      queryClient.invalidateQueries({ queryKey: ["client-trade-links"] });
       navigate("/interactions");
     },
   });
