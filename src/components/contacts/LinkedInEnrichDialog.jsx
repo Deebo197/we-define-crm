@@ -13,31 +13,27 @@ import { Button } from "@/components/ui/button";
 export default function LinkedInEnrichDialog({ contact, onClose }) {
   const queryClient = useQueryClient();
   const [results, setResults] = useState(null);
+  const [fetchingPhoto, setFetchingPhoto] = useState(false);
+  const [manualPhotoUrl, setManualPhotoUrl] = useState("");
   const [accepted, setAccepted] = useState({ photo_url: false, role: false, linkedin_headline: false });
 
   const searchMutation = useMutation({
     mutationFn: async () => {
-      const prompt = `Search the web for this person's LinkedIn profile page. I need you to find as much information as possible, especially their profile photo.
+      const prompt = `Search the web for this person's LinkedIn profile page and extract their basic details.
 
 Person: ${contact.name}
 Company: ${contact.company_name || "(unknown)"}
 LinkedIn URL: ${contact.linkedin || "(not recorded)"}
 
-CRITICAL — Profile Photo:
-Search specifically for this person's LinkedIn profile photo. LinkedIn profile photos are hosted on media.licdn.com (e.g. https://media.licdn.com/dms/image/...). Look for:
-  • The og:image meta tag URL from their LinkedIn profile page
-  • Any media.licdn.com image URL associated with their profile
-  • The profile picture URL from their LinkedIn page content
-Do NOT leave photo_url empty if you can find any image URL on their LinkedIn profile. Try searching for "${contact.name} ${contact.company_name || ""} LinkedIn profile photo" if needed.
-
-Also extract:
+Extract the following from their LinkedIn profile:
+  • linkedin_url — the full URL of their LinkedIn profile (e.g. https://www.linkedin.com/in/username)
   • full_name, first_name, last_name
   • job_title — their current role/title at their company
   • headline — their full LinkedIn headline text
   • location — city/country from their profile
   • confidence — how sure you are this is the right person (high/medium/low)
 
-Return verified public information only. If you truly cannot find a field, use an empty string.`;
+Return verified public information only. If you cannot find a field, use an empty string.`;
 
       const res = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -51,12 +47,29 @@ Return verified public information only. If you truly cannot find a field, use a
             last_name: { type: "string" },
             job_title: { type: "string" },
             headline: { type: "string" },
-            photo_url: { type: "string" },
+            linkedin_url: { type: "string" },
             location: { type: "string" },
             confidence: { type: "string" },
           },
         },
       });
+
+      // If the LLM didn't return a photo, fetch the LinkedIn page directly
+      // to extract the og:image meta tag (the LLM can't see raw HTML)
+      const linkedinUrl = res.linkedin_url || contact.linkedin;
+      if (linkedinUrl && !res.photo_url) {
+        setFetchingPhoto(true);
+        try {
+          const photoRes = await base44.functions.invoke('fetchLinkedInPhoto', { url: linkedinUrl });
+          if (photoRes.data?.photo_url) {
+            res.photo_url = photoRes.data.photo_url;
+          }
+        } catch (e) {
+          // Photo fetch failed — user can still accept the other fields
+        }
+        setFetchingPhoto(false);
+      }
+
       return res;
     },
     onSuccess: (data) => {
@@ -134,7 +147,11 @@ Return verified public information only. If you truly cannot find a field, use a
                 {searchMutation.isPending ? (
                   <div className="flex flex-col items-center gap-3">
                     <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                    <p className="text-muted text-sm">Searching the web for {contact.name}'s LinkedIn profile…</p>
+                    <p className="text-muted text-sm">
+                      {fetchingPhoto
+                        ? `Found ${contact.name} — extracting profile photo…`
+                        : `Searching the web for ${contact.name}'s LinkedIn profile…`}
+                    </p>
                   </div>
                 ) : searchMutation.isError ? (
                   <div className="flex flex-col items-center gap-3">
@@ -193,6 +210,39 @@ Return verified public information only. If you truly cannot find a field, use a
                       <ImageIcon className="w-6 h-6 text-faint" />
                     </div>
                   </EnrichField>
+                )}
+
+                {/* Manual photo URL — fallback when automatic extraction fails */}
+                {!results.photo_url && (
+                  <div className="p-3 rounded-xl bg-canvas border border-line">
+                    <p className="text-faint text-[10px] uppercase tracking-wider font-medium mb-2">Profile Photo — not found automatically</p>
+                    <p className="text-muted text-xs mb-2">
+                      Open their LinkedIn profile in your browser, right-click the photo, and select "Copy image address". Then paste it here:
+                    </p>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={manualPhotoUrl}
+                        onChange={(e) => {
+                          setManualPhotoUrl(e.target.value);
+                          if (e.target.value) {
+                            setResults({ ...results, photo_url: e.target.value });
+                            setAccepted((prev) => ({ ...prev, photo_url: true }));
+                          }
+                        }}
+                        placeholder="https://media.licdn.com/..."
+                        className="flex-1 h-9 rounded-md border border-input bg-transparent px-3 text-sm placeholder:text-faint focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                      />
+                      {manualPhotoUrl && (
+                        <img
+                          src={manualPhotoUrl}
+                          alt="Preview"
+                          className="w-9 h-9 rounded-md object-cover border border-line"
+                          onError={(e) => { e.target.style.opacity = "0.2"; }}
+                        />
+                      )}
+                    </div>
+                  </div>
                 )}
 
                 {/* Job title */}
