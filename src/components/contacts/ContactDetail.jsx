@@ -20,6 +20,7 @@ import { useCompanies, useRoleSeats, useAllActions, useAllInteractions, usePeopl
 import { currentSeatFor, syncSeatTitle } from "@/api/seats";
 import { effectiveDestinations, hasDestinationOverride, effectiveSector, effectiveSpecialisms } from "@/lib/targeting";
 import { MovePersonDialog, MarkVacantDialog } from "@/components/crm/MovePersonDialog";
+import ContactPipeline from "@/components/contacts/ContactPipeline";
 
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
@@ -307,6 +308,9 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
               </div>
             )}
           </div>
+
+          {/* Pipeline entries where this person is a contact */}
+          <ContactPipeline contactId={contact.id} />
 
           <div className="grid sm:grid-cols-2 gap-5">
             {/* Contact Info */}
