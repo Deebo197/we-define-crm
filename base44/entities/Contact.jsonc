@@ -141,6 +141,14 @@
       "type": "string",
       "description": "LinkedIn URL"
     },
+    "photo_url": {
+      "type": "string",
+      "description": "Profile photo URL (enriched from LinkedIn \u2014 always confirmed by a team member before saving)"
+    },
+    "linkedin_headline": {
+      "type": "string",
+      "description": "LinkedIn headline text (enriched \u2014 confirmed before saving)"
+    },
     "birthday": {
       "type": "string",
       "format": "date"

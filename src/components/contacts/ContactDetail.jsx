@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import {
   ArrowLeft, Mail, Phone, Smartphone, Linkedin, MapPin, Pencil, Trash2,
   Calendar, Users, MessageSquare, CheckSquare, Building2, Globe, ExternalLink,
-  MoreHorizontal, Briefcase, AlertTriangle, Crosshair, UserX, ArrowRightLeft,
+  MoreHorizontal, Briefcase, AlertTriangle, Crosshair, UserX, ArrowRightLeft, Search,
 } from "lucide-react";
 import { format, isPast, parseISO } from "date-fns";
 import { Link } from "react-router-dom";
@@ -21,6 +21,7 @@ import { currentSeatFor, syncSeatTitle } from "@/api/seats";
 import { effectiveDestinations, hasDestinationOverride, effectiveSector, effectiveSpecialisms } from "@/lib/targeting";
 import { MovePersonDialog, MarkVacantDialog } from "@/components/crm/MovePersonDialog";
 import ContactPipeline from "@/components/contacts/ContactPipeline";
+import LinkedInEnrichDialog from "@/components/contacts/LinkedInEnrichDialog";
 
 function InfoRow({ icon: Icon, label, value }) {
   if (!value) return null;
@@ -54,6 +55,7 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [moveDialog, setMoveDialog] = useState(false);
   const [vacantDialog, setVacantDialog] = useState(false);
+  const [enriching, setEnriching] = useState(false);
   const queryClient = useQueryClient();
 
   const { data: allContacts = [] } = usePeople();
@@ -138,6 +140,9 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
           <span className="text-sm">People</span>
         </button>
         <div className="flex gap-2">
+          <Button type="button" variant="ghost" onClick={() => setEnriching(true)} className="text-muted hover:text-ink gap-1.5 text-sm h-9">
+            <Search className="w-4 h-4" /> Enrich
+          </Button>
           <Button type="button" variant="ghost" onClick={() => setEditing(true)} className="text-muted hover:text-ink gap-1.5 text-sm h-9">
             <Pencil className="w-4 h-4" /> Edit
           </Button>
@@ -191,7 +196,18 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
           {/* Identity hero */}
           <div className="bg-surface rounded-2xl shadow-card border border-line p-6 mb-5">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-2xl bg-primary-soft flex items-center justify-center shrink-0">
+              {contact.photo_url ? (
+                <img
+                  src={contact.photo_url}
+                  alt={contact.name}
+                  className="w-16 h-16 rounded-2xl object-cover border border-line shrink-0"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                    e.target.nextSibling.style.display = "flex";
+                  }}
+                />
+              ) : null}
+              <div className="w-16 h-16 rounded-2xl bg-primary-soft items-center justify-center shrink-0" style={{ display: contact.photo_url ? "none" : "flex" }}>
                 <span className="text-primary font-bold text-2xl">{contact.name?.charAt(0)?.toUpperCase()}</span>
               </div>
               <div className="min-w-0">
@@ -477,6 +493,9 @@ export default function ContactDetail({ contact, onBack, onDeleted, onViewContac
           )}
         </motion.div>
       )}
+
+      {/* LinkedIn enrichment */}
+      {enriching && <LinkedInEnrichDialog contact={contact} onClose={() => setEnriching(false)} />}
 
       {/* Person-move dialogs */}
       {moveDialog && <MovePersonDialog person={contact} onClose={() => setMoveDialog(false)} />}
