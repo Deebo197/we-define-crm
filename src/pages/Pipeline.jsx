@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -25,8 +26,31 @@ import {
   moveStage,
   closeLink,
   updateLinkContacts,
+  updateLinkOwner,
   daysSince,
 } from "@/api/pipeline";
+
+function useTeamMembers() {
+  return useQuery({
+    queryKey: ["team-members"],
+    queryFn: () => base44.entities.TeamMember.filter({ status: "Active" }),
+    staleTime: 10 * 60 * 1000,
+  });
+}
+
+/** Small initials chip for the responsible team member. */
+function OwnerChip({ owner }) {
+  if (!owner) return null;
+  const initials = owner.split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
+  return (
+    <span
+      title={`Owner: ${owner}`}
+      className="w-5 h-5 rounded-full bg-primary-soft text-primary text-[9px] font-bold flex items-center justify-center flex-shrink-0"
+    >
+      {initials}
+    </span>
+  );
+}
 
 function TierBadge({ tier }) {
   if (!tier) return null;
@@ -56,22 +80,27 @@ function LinkCard({ link, company, onOpen }) {
     <div
       role="button"
       onClick={onOpen}
-      className="w-full text-left bg-surface rounded-xl border border-line p-3 shadow-card hover:border-line-strong transition-all space-y-1.5 cursor-pointer select-none"
+      className="w-full text-left bg-surface rounded-xl border border-line p-2 shadow-card hover:border-line-strong transition-all space-y-1 cursor-pointer select-none"
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-sm font-medium text-ink truncate">{link.trade_account_name}</span>
+      <div className="flex items-center justify-between gap-1.5">
+        <span className="text-xs font-medium text-ink truncate" title={link.trade_account_name}>
+          {link.trade_account_name}
+        </span>
         <TierBadge tier={company?.tier} />
       </div>
       {link.contacts?.length > 0 && (
-        <p className="text-xs text-muted truncate">
+        <p className="text-[10px] text-muted truncate">
           {link.contacts.map((c) => c.person_name).join(", ")}
         </p>
       )}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-1">
         <ActivityAge dateStr={link.last_activity_date} />
-        {company?.bonded_agency && (
-          <span className="text-[10px] text-faint">Bonded Agency</span>
-        )}
+        <div className="flex items-center gap-1">
+          {company?.bonded_agency && (
+            <span className="text-[9px] text-faint">Bonded</span>
+          )}
+          <OwnerChip owner={link.owner} />
+        </div>
       </div>
     </div>
   );
@@ -173,6 +202,12 @@ function LinkDetailDialog({ link, company, people, onClose }) {
 
   const companyPeople = people.filter((p) => p.company_id === link.trade_account_id);
   const history = [...(link.stage_history || [])].reverse();
+  const { data: teamMembers = [] } = useTeamMembers();
+  const ownerMutation = useMutation({
+    mutationFn: (owner) => updateLinkOwner(link, owner),
+    onSuccess: invalidate,
+    onError: (e) => toast.error(e.message || "Failed to set owner"),
+  });
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -206,16 +241,36 @@ function LinkDetailDialog({ link, company, people, onClose }) {
             </Button>
           </div>
         ) : (
-          <div>
-            <Label className="text-xs uppercase tracking-wider text-faint">Stage</Label>
-            <Select value={link.stage} onValueChange={(s) => stageMutation.mutate(s)}>
-              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {STAGES.map((s) => (
-                  <SelectItem key={s} value={s}>{s}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-faint">Stage</Label>
+              <Select value={link.stage} onValueChange={(s) => stageMutation.mutate(s)}>
+                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {STAGES.map((s) => (
+                    <SelectItem key={s} value={s}>{s}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs uppercase tracking-wider text-faint">Owner</Label>
+              <Select
+                value={link.owner || "__none__"}
+                onValueChange={(v) => ownerMutation.mutate(v === "__none__" ? "" : v)}
+              >
+                <SelectTrigger className="mt-1"><SelectValue placeholder="Unassigned" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none__">Unassigned</SelectItem>
+                  {link.owner && !teamMembers.some((m) => m.full_name === link.owner) && (
+                    <SelectItem value={link.owner}>{link.owner}</SelectItem>
+                  )}
+                  {teamMembers.map((m) => (
+                    <SelectItem key={m.id} value={m.full_name}>{m.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
 
@@ -300,7 +355,8 @@ function AddOperatorDialog({ client, companies, existingIds, onClose }) {
   );
 
   const addMutation = useMutation({
-    mutationFn: (company) => createLink({ client, company, stage, by: user?.email }),
+    mutationFn: (company) =>
+      createLink({ client, company, stage, by: user?.email, owner: user?.full_name }),
     onSuccess: (_, company) => {
       queryClient.invalidateQueries({ queryKey: ["client-trade-links"] });
       toast.success(`${company.name} added to ${client.name}'s pipeline`);
@@ -445,7 +501,8 @@ export default function Pipeline() {
         <div className="py-20 text-center text-muted text-sm">Loading pipeline…</div>
       ) : (
         <DragDropContext onDragEnd={onDragEnd}>
-          <div className="flex gap-3 overflow-x-auto pb-4">
+          {/* Mobile: horizontal scroll. Desktop: all 7 columns fit on one screen. */}
+          <div className="flex gap-3 overflow-x-auto pb-4 lg:grid lg:grid-cols-7 lg:gap-2 lg:overflow-visible">
             {STAGES.map((stage) => {
               const stageLinks = openLinks.filter((l) => l.stage === stage);
               return (
@@ -454,15 +511,18 @@ export default function Pipeline() {
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
-                      className={`w-60 flex-shrink-0 rounded-2xl border p-2 transition-colors ${
+                      className={`w-60 flex-shrink-0 lg:w-auto lg:min-w-0 rounded-2xl border p-1.5 transition-colors ${
                         snapshot.isDraggingOver ? "border-primary bg-primary-soft/40" : "border-line bg-canvas"
                       }`}
                     >
-                      <div className="flex items-center justify-between px-2 py-1.5">
-                        <span className={`text-xs font-semibold px-2 py-0.5 rounded-full border ${STAGE_TONES[stage]}`}>
+                      <div className="flex items-center justify-between gap-1 px-1 py-1.5">
+                        <span
+                          title={stage}
+                          className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border truncate min-w-0 ${STAGE_TONES[stage]}`}
+                        >
                           {stage}
                         </span>
-                        <span className="text-xs text-faint">{stageLinks.length}</span>
+                        <span className="text-xs text-faint flex-shrink-0">{stageLinks.length}</span>
                       </div>
                       <div className="space-y-2 min-h-[40px]">
                         {stageLinks.map((link, index) => (

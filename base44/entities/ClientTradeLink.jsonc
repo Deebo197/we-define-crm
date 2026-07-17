@@ -22,7 +22,6 @@
       "type": "string",
       "enum": [
         "Targeted",
-        "Approached",
         "In Discussion",
         "Featuring Agreed",
         "Rates Agreed",
@@ -31,16 +30,19 @@
         "Dormant"
       ],
       "default": "Targeted",
-      "description": "Pipeline stage for this client-operator pair"
+      "description": "Pipeline stage for this client-operator pair. In Discussion covers approached-through-discussing; Dormant includes operators who declined during the process."
+    },
+    "owner": {
+      "type": "string",
+      "description": "WDT team member responsible for this pipeline entry (full name) — set manually or stamped from the interaction logger"
     },
     "closed_status": {
       "type": "string",
       "enum": [
-        "Declined",
         "Cancelled",
         "Not Viable"
       ],
-      "description": "Set when the pair is closed: they declined, cancelled working with us, or we cannot work with them. Empty = open."
+      "description": "Set when the pair is closed: they cancelled working with us, or we cannot work with them. Declined-during-process pairs go to the Dormant stage instead. Empty = open."
     },
     "closed_reason": {
       "type": "string",

@@ -31,7 +31,6 @@ const TIER_ORDER = { Platinum: 0, Gold: 1, Silver: 2, Bronze: 3 };
 
 const STAGE_ABBREV = {
   Targeted: "Targeted",
-  Approached: "Approached",
   "In Discussion": "Discussing",
   "Featuring Agreed": "Featuring",
   "Rates Agreed": "Rates",

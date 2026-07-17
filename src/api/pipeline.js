@@ -8,7 +8,6 @@ import { base44 } from "./base44Client";
 
 export const STAGES = [
   "Targeted",
-  "Approached",
   "In Discussion",
   "Featuring Agreed",
   "Rates Agreed",
@@ -17,7 +16,17 @@ export const STAGES = [
   "Dormant",
 ];
 
-export const CLOSED_STATUSES = ["Declined", "Cancelled", "Not Viable"];
+export const CLOSED_STATUSES = ["Cancelled", "Not Viable"];
+
+/** Map records created under the original stage set onto the current one. */
+function normaliseLink(link) {
+  let l = link;
+  if (l.stage === "Approached") l = { ...l, stage: "In Discussion" };
+  if (l.closed_status === "Declined") {
+    l = { ...l, stage: "Dormant", closed_status: null };
+  }
+  return l;
+}
 
 export const TIERS = ["Bronze", "Silver", "Gold", "Platinum"];
 
@@ -33,7 +42,6 @@ export const CONTACT_ROLES = [
 // early = blue (new/waiting), mid = amber (in progress), live = green, dormant = grey.
 export const STAGE_TONES = {
   Targeted: "bg-canvas text-muted border-line",
-  Approached: "bg-info/10 text-info border-info/20",
   "In Discussion": "bg-info/10 text-info border-info/20",
   "Featuring Agreed": "bg-warning/10 text-warning border-warning/20",
   "Rates Agreed": "bg-warning/10 text-warning border-warning/20",
@@ -69,6 +77,7 @@ export function usePipelineLinks() {
     queryKey: ["client-trade-links"],
     queryFn: () => base44.entities.ClientTradeLink.list("-updated_date", 5000),
     staleTime: 60 * 1000,
+    select: (links) => links.map(normaliseLink),
   });
 }
 
@@ -84,17 +93,22 @@ function historyEntry(stage, { by, interactionId, note } = {}) {
   };
 }
 
-export async function createLink({ client, company, stage = "Targeted", contacts = [], by }) {
+export async function createLink({ client, company, stage = "Targeted", contacts = [], by, owner }) {
   return base44.entities.ClientTradeLink.create({
     client_id: client.id,
     client_name: client.name,
     trade_account_id: company.id,
     trade_account_name: company.name,
     stage,
+    owner: owner || "",
     contacts,
     stage_history: [historyEntry(stage, { by })],
     last_activity_date: today(),
   });
+}
+
+export async function updateLinkOwner(link, owner) {
+  return base44.entities.ClientTradeLink.update(link.id, { owner: owner || "" });
 }
 
 /** Move an open pair to a new stage (also reopens a closed pair). */
@@ -133,7 +147,7 @@ export async function updateLinkContacts(link, contacts) {
  * the given stage; existing pairs move stage only if one was chosen,
  * otherwise just refresh last_activity_date.
  */
-export async function applyInteractionToPair({ links, client, company, stage, by, interactionId }) {
+export async function applyInteractionToPair({ links, client, company, stage, by, ownerName, interactionId }) {
   const existing = links.find(
     (l) => l.client_id === client.id && l.trade_account_id === company.id
   );
@@ -143,17 +157,25 @@ export async function applyInteractionToPair({ links, client, company, stage, by
       client_name: client.name,
       trade_account_id: company.id,
       trade_account_name: company.name,
-      stage: stage || "Approached",
+      stage: stage || "In Discussion",
+      owner: ownerName || "",
       contacts: [],
-      stage_history: [historyEntry(stage || "Approached", { by, interactionId })],
+      stage_history: [historyEntry(stage || "In Discussion", { by, interactionId })],
       last_activity_date: today(),
     });
   }
+  // The interaction logger becomes owner of previously unowned pairs
+  const ownerPatch = !existing.owner && ownerName ? { owner: ownerName } : {};
   if (stage && stage !== existing.stage) {
-    return moveStage(existing, stage, { by, interactionId });
+    const moved = await moveStage(existing, stage, { by, interactionId });
+    if (ownerPatch.owner) {
+      return base44.entities.ClientTradeLink.update(existing.id, ownerPatch);
+    }
+    return moved;
   }
   return base44.entities.ClientTradeLink.update(existing.id, {
     last_activity_date: today(),
+    ...ownerPatch,
   });
 }
 

@@ -344,6 +344,7 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
               company,
               stage: u.stage,
               by: user?.email,
+              ownerName: user?.full_name,
               interactionId,
             });
           } catch (err) {
