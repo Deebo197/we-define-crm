@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2, FileSpreadsheet, FileText, Eye } from "lucide-react";
 import { formatCurrency, formatDateUK, formatMonth, getPaidByLabel, COMPANY_INFO } from "@/lib/constants";
 import MonthEndReadiness from "@/components/expenses/MonthEndReadiness";
+import { safePdfUrl } from "@/lib/pdfSecurity";
 
 function getMileagePaidByLabel(journey) {
   // Mileage uses staff_member email — map to name
@@ -275,7 +276,14 @@ export default function AccountantExport() {
           pdf.text(pdf.splitTextToSize((item.category || "—").replace(/^(WDT - |Client Expenses - )/, ""), cols.paidBy - cols.cat - 3)[0], cols.cat + 1, y + 5);
           pdf.text(pdf.splitTextToSize(getPaidByLabel(item.paid_by) || item.paid_by || "—", cols.receipt - cols.paidBy - 3)[0], cols.paidBy + 1, y + 5);
 
-          const receiptUrl = item.receipt_files?.[0]?.public_receipt_url || item.primary_receipt_file_url || item.receipt_url || item.receipt_files?.[0]?.file_url || item.receipt_file || null;
+          const receiptUrl = safePdfUrl(
+            item.receipt_files?.[0]?.public_receipt_url
+              || item.primary_receipt_file_url
+              || item.receipt_url
+              || item.receipt_files?.[0]?.file_url
+              || item.receipt_file
+              || null,
+          );
           if (receiptUrl && item.receipt_code) {
             pdf.setTextColor(200, 16, 46);
             pdf.text(item.receipt_code, cols.receipt + 1, y + 5);

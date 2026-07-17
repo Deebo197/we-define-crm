@@ -9,6 +9,7 @@ import { Loader2, FileDown, Eye } from "lucide-react";
 import { getClientName, formatCurrency, formatForeignCurrency, formatDateUK, formatMonth, COMPANY_INFO } from "@/lib/constants";
 import { useExpenseClients } from "@/hooks/useExpenseClients";
 import { downloadSoMaldivesExcel } from "@/lib/soMaldivesExcel";
+import { safePdfUrl } from "@/lib/pdfSecurity";
 
 export default function ClientReport() {
   const { clients: expenseClients } = useExpenseClients();
@@ -191,9 +192,10 @@ export default function ClientReport() {
         pdf.text(descText[0], cols.desc + 1, y + 5); // single line in table
 
         // Receipt — prefer Google Drive public URL, fall back to base44 storage
-        const receiptUrl = item.type === "mileage"
+        const rawReceiptUrl = item.type === "mileage"
           ? (item.route_image_url || null)
           : (item.receipt_files?.[0]?.public_receipt_url || item.primary_receipt_file_url || item.receipt_url || item.receipt_files?.[0]?.file_url || item.receipt_file || null);
+        const receiptUrl = safePdfUrl(rawReceiptUrl);
         const receiptLabel = item.type === "mileage"
           ? (item.route_image_code || item.receipt_code || "Map")
           : (item.receipt_code || "");
