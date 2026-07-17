@@ -50,11 +50,13 @@ function ActivityAge({ dateStr }) {
 }
 
 function LinkCard({ link, company, onOpen }) {
+  // Deliberately not a <button>: dnd blocks drags starting on interactive
+  // elements, and this whole card doubles as the drag handle.
   return (
-    <button
-      type="button"
+    <div
+      role="button"
       onClick={onOpen}
-      className="w-full text-left bg-surface rounded-xl border border-line p-3 shadow-card hover:border-line-strong transition-all space-y-1.5"
+      className="w-full text-left bg-surface rounded-xl border border-line p-3 shadow-card hover:border-line-strong transition-all space-y-1.5 cursor-pointer select-none"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-sm font-medium text-ink truncate">{link.trade_account_name}</span>
@@ -71,7 +73,7 @@ function LinkCard({ link, company, onOpen }) {
           <span className="text-[10px] text-faint">Bonded Agency</span>
         )}
       </div>
-    </button>
+    </div>
   );
 }
 
@@ -464,7 +466,12 @@ export default function Pipeline() {
                       </div>
                       <div className="space-y-2 min-h-[40px]">
                         {stageLinks.map((link, index) => (
-                          <Draggable draggableId={link.id} index={index} key={link.id}>
+                          <Draggable
+                            draggableId={link.id}
+                            index={index}
+                            key={link.id}
+                            disableInteractiveElementBlocking
+                          >
                             {(dragProvided) => (
                               <div
                                 ref={dragProvided.innerRef}
