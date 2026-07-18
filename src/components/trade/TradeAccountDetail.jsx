@@ -22,6 +22,7 @@ import {
   expandThroughGroupLinks, groupRelationsFor,
 } from "@/lib/targeting";
 import { TempCoverDialog, FillSeatDialog } from "@/components/crm/SeatFillDialog";
+import CompanyTimeline from "@/components/trade/CompanyTimeline";
 import {
   STAGE_TONES, CLOSED_TONE, isPipelineEligible,
   useClients, usePipelineLinks,
@@ -551,39 +552,8 @@ export default function TradeAccountDetail({ account, onBack, onEdit }) {
           </div>
         )}
 
-        {/* ── Recent company interactions ── */}
-        <div className="bg-surface rounded-2xl shadow-card border border-line p-5">
-          <SectionHeader icon={MessageSquare} label="Recent Interactions" />
-          {companyInteractions.length === 0 ? (
-            <p className="text-faint text-sm">No interactions recorded yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {companyInteractions.map((interaction) => (
-                <div
-                  key={interaction.id}
-                  className="flex items-start gap-3 p-3 rounded-xl bg-canvas border border-line hover:border-line-strong transition-all cursor-pointer group"
-                  onClick={() => navigate(`/interactions/${interaction.id}`)}
-                >
-                  <span className="text-base mt-0.5">{INTERACTION_ICONS[interaction.type] || "💬"}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-ink text-sm font-medium truncate group-hover:text-primary transition-colors">{interaction.title}</p>
-                    <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                      <span className="text-faint text-xs">{interaction.type}</span>
-                      {interaction.contact_names?.length > 0 && (
-                        <span className="text-faint text-xs">· {interaction.contact_names.join(", ")}</span>
-                      )}
-                    </div>
-                  </div>
-                  {interaction.date && (
-                    <span className="text-faint text-xs shrink-0">
-                      {format(parseISO(interaction.date), "d MMM yyyy")}
-                    </span>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {/* ── Activity timeline: interactions + pipeline moves + training + events ── */}
+        <CompanyTimeline account={account} />
       </div>
 
       {/* Seat dialogs */}

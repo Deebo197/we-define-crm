@@ -117,6 +117,23 @@ export default function Accounts() {
     queryFn: () => fetchAllRecords(base44.entities.Expense, "-date"),
   });
 
+  // Pending bank rows that look like an expense someone already submitted
+  // (same amount, dates within 2 days) — probably already claimed manually.
+  const expenseMatchFor = useMemo(() => {
+    const byAmount = new Map();
+    for (const e of allExpensesForDupes) {
+      if (e.source === "csv_import") continue; // bank-derived expenses would always self-match
+      const key = (e.paid_amount ?? 0).toFixed(2);
+      if (!byAmount.has(key)) byAmount.set(key, []);
+      byAmount.get(key).push(e);
+    }
+    return (txn) => {
+      const candidates = byAmount.get((txn.amount ?? 0).toFixed(2)) || [];
+      const t = new Date(txn.transaction_date).getTime();
+      return candidates.find((e) => Math.abs(new Date(e.date).getTime() - t) <= 2 * 86400000) || null;
+    };
+  }, [allExpensesForDupes]);
+
   const handleCSVImport = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -255,9 +272,11 @@ ${csvText}`,
       queryClient.invalidateQueries({ queryKey: ["allExpenses"] });
       const paymentNote = paymentCount > 0 ? ` (${paymentCount} card payment(s) logged)` : "";
       const dupeNote = duplicateCount > 0 ? ` ${duplicateCount} already-imported row(s) skipped.` : "";
+      // Reconciliation: the parsed statement total should equal imported + skipped.
+      const statementTotal = txns.reduce((s, t) => s + Math.abs(t.amount || 0), 0);
       setImportMessage({
         type: "success",
-        text: `Successfully imported ${importedCount} transaction(s).${paymentNote}${dupeNote}`,
+        text: `Successfully imported ${importedCount} transaction(s).${paymentNote}${dupeNote} Statement total parsed: ${formatCurrency(statementTotal)} across ${txns.length} row(s) — check this against the statement's own total.`,
       });
     }
 
@@ -457,6 +476,17 @@ ${csvText}`,
                               was: {reverseAliases[txn.description]}
                             </span>
                           )}
+                          {txn.status === "pending" && (() => {
+                            const match = expenseMatchFor(txn);
+                            return match ? (
+                              <span
+                                className="inline-block mt-0.5 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300"
+                                title={`An expense for the same amount already exists: "${match.description}" on ${formatDateUK(match.date)} (${match.submitted_by_name || match.submitted_by || "unknown"}). It may already be claimed — Ignore this row if so.`}
+                              >
+                                ⚠ possible expense match
+                              </span>
+                            ) : null;
+                          })()}
                         </>
                         )}
                     </td>

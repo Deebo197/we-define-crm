@@ -157,6 +157,17 @@ export async function updateLinkContacts(link, contacts) {
   return base44.entities.ClientTradeLink.update(link.id, { contacts });
 }
 
+/** Booking evidence per period — makes tiers and Trading status evidence-based. */
+export async function updateLinkBookings(link, bookings) {
+  return base44.entities.ClientTradeLink.update(link.id, { bookings });
+}
+
+/** Default booking period label for today, e.g. "2026-Q3". */
+export function currentQuarterLabel() {
+  const d = new Date();
+  return `${d.getFullYear()}-Q${Math.floor(d.getMonth() / 3) + 1}`;
+}
+
 /**
  * Interaction integration: ensure a pair exists for (client, company) and
  * apply a stage change driven by an interaction. Creates missing pairs at

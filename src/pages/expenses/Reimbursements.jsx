@@ -33,6 +33,51 @@ export default function Reimbursements() {
     queryFn: () => fetchAllRecords(base44.entities.MileageJourney, "-date"),
   });
 
+  // Pay run: settle every pending item for one person in a single action
+  const payRun = useMutation({
+    mutationFn: async (items) => {
+      for (const item of items) {
+        if (item.type === "Expense") {
+          await base44.entities.Expense.update(item.id, { reimbursement_paid: true });
+        } else {
+          await base44.entities.MileageJourney.update(item.id, { reimbursement_paid: true });
+        }
+      }
+      return items.length;
+    },
+    onSuccess: (count) => {
+      queryClient.invalidateQueries({ queryKey: ["allExpenses"] });
+      queryClient.invalidateQueries({ queryKey: ["allMileage"] });
+    },
+  });
+
+  const exportRunCSV = (person, items) => {
+    const rows = items.map(i => [
+      formatDateUK(i.date),
+      i.type,
+      `"${(i.description || i.purpose || "").replace(/"/g, '""')}"`,
+      `"${(i.category || "").replace(/"/g, '""')}"`,
+      (i.client_allocations || []).map(a => a.client_code).join("; "),
+      i.receipt_code || "",
+      (i.paid_amount || 0).toFixed(2),
+      i.reimbursement_paid ? "Paid" : "Pending",
+    ]);
+    const total = items.reduce((s, i) => s + (i.paid_amount || 0), 0);
+    const csv = [
+      `Reimbursement run — ${person}`,
+      ["Date", "Type", "Description", "Category", "Clients", "Receipt", "Amount", "Status"].join(","),
+      ...rows.map(r => r.join(",")),
+      `,,,,,,${total.toFixed(2)},TOTAL`,
+    ].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `WDT-Reimbursement-Run-${person.replace(/[^a-zA-Z0-9]/g, "-")}-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const togglePaid = useMutation({
     mutationFn: async ({ type, id, paid }) => {
       if (type === "expense") {
@@ -163,14 +208,37 @@ export default function Reimbursements() {
         <div className="space-y-6">
           {Object.entries(grouped).map(([person, items]) => {
             const total = items.reduce((s, i) => s + (i.paid_amount || 0), 0);
+            const pending = items.filter(i => !i.reimbursement_paid);
+            const pendingTotal = pending.reduce((s, i) => s + (i.paid_amount || 0), 0);
             return (
               <div key={person} className="bg-card rounded-xl border border-border overflow-hidden">
-                <div className="flex items-center justify-between px-5 py-4 bg-muted/30 border-b border-border">
+                <div className="flex items-center justify-between gap-3 flex-wrap px-5 py-4 bg-muted/30 border-b border-border">
                   <div className="flex items-center gap-2">
                     <PersonAvatar code={items[0]?.paidByCode} size="sm" />
                     <h3 className="font-semibold">{person}</h3>
                   </div>
-                  <span className="text-lg font-bold text-primary">{formatCurrency(total)}</span>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => exportRunCSV(person, items)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium border border-border text-muted-foreground hover:bg-accent hover:text-foreground transition-colors"
+                    >
+                      Export run CSV
+                    </button>
+                    {pending.length > 0 && (
+                      <button
+                        disabled={payRun.isPending}
+                        onClick={() => {
+                          if (confirm(`Mark all ${pending.length} pending item(s) for ${person} as paid (${formatCurrency(pendingTotal)})?`)) {
+                            payRun.mutate(pending);
+                          }
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+                      >
+                        {payRun.isPending ? "Marking…" : `Mark ${pending.length} paid — ${formatCurrency(pendingTotal)}`}
+                      </button>
+                    )}
+                    <span className="text-lg font-bold text-primary">{formatCurrency(total)}</span>
+                  </div>
                 </div>
                 <div className="divide-y divide-border">
                   {items.map(item => (

@@ -30,6 +30,9 @@ import PersonPage from '@/pages/PersonPage';
 import Targeting from '@/pages/Targeting';
 import Pipeline from '@/pages/Pipeline';
 import PipelineMatrix from '@/pages/PipelineMatrix';
+import MyWeek from '@/pages/MyWeek';
+import Trainings from '@/pages/Trainings';
+import MonthlyPack from '@/pages/MonthlyPack';
 import ReferenceLists from '@/pages/ReferenceLists';
 
 // Document library
@@ -94,6 +97,8 @@ const AuthenticatedApp = () => {
         <Route path="/targeting" element={<Targeting />} />
         <Route path="/pipeline" element={<Pipeline />} />
         <Route path="/pipeline/matrix" element={<PipelineMatrix />} />
+        <Route path="/my-week" element={<MyWeek />} />
+        <Route path="/trainings" element={<Trainings />} />
         <Route path="/settings/lists" element={<AdminRoute><ReferenceLists /></AdminRoute>} />
         <Route path="/interactions" element={<Interactions />} />
         <Route path="/interactions/:id" element={<InteractionDetail />} />
@@ -103,6 +108,7 @@ const AuthenticatedApp = () => {
         <Route path="/events" element={<Events />} />
         <Route path="/events/:id" element={<EventEditor />} />
         <Route path="/reports" element={<Reports />} />
+        <Route path="/reports/pack" element={<MonthlyPack />} />
         <Route path="/team" element={<TeamMembers />} />
         <Route path="/todos" element={<Todos />} />
         <Route path="/documents" element={<Documents />} />

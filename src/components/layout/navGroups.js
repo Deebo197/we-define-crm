@@ -29,6 +29,9 @@ import {
   Crosshair,
   KanbanSquare,
   Grid3X3,
+  CalendarClock,
+  GraduationCap,
+  Package,
 } from "lucide-react";
 
 export const navGroups = [
@@ -38,6 +41,7 @@ export const navGroups = [
     home: "/",
     items: [
       { label: "Dashboard", icon: LayoutDashboard, path: "/" },
+      { label: "My Week", icon: CalendarClock, path: "/my-week" },
       { label: "Clients", icon: Building2, path: "/clients" },
       { label: "Companies", icon: Handshake, path: "/trade-accounts" },
       { label: "Other Partners", icon: Globe, path: "/other-partners" },
@@ -46,6 +50,7 @@ export const navGroups = [
       { label: "Pipeline", icon: KanbanSquare, path: "/pipeline" },
       { label: "Gap Matrix", icon: Grid3X3, path: "/pipeline/matrix" },
       { label: "Interactions", icon: MessageSquare, path: "/interactions" },
+      { label: "Trade Training", icon: GraduationCap, path: "/trainings" },
       { label: "Actions", icon: CheckSquare, path: "/actions" },
       { label: "Campaigns", icon: Megaphone, path: "/campaigns" },
       { label: "Events", icon: CalendarDays, path: "/events" },
@@ -58,7 +63,10 @@ export const navGroups = [
     label: "Reporting",
     icon: FileText,
     home: "/reports",
-    items: [{ label: "Reports", icon: FileText, path: "/reports" }],
+    items: [
+      { label: "Reports", icon: FileText, path: "/reports" },
+      { label: "Monthly Pack", icon: Package, path: "/reports/pack" },
+    ],
   },
   {
     label: "Competitor Analysis",
@@ -104,6 +112,7 @@ export function isItemActive(item, pathname) {
       item.path !== "/expenses" &&
       item.path !== "/competitor-analysis" &&
       item.path !== "/pipeline" &&
+      item.path !== "/reports" &&
       pathname.startsWith(item.path))
   );
 }

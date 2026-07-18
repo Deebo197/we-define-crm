@@ -1,0 +1,60 @@
+{
+  "name": "TrainingSession",
+  "type": "object",
+  "properties": {
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "When the training was delivered"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "TradeAccount trained (agency, operator or network)"
+    },
+    "company_name": {
+      "type": "string",
+      "description": "Denormalised company name"
+    },
+    "client_ids": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "WDT clients whose product was covered"
+    },
+    "client_names": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Denormalised client names"
+    },
+    "format": {
+      "type": "string",
+      "enum": ["In-person", "Virtual", "Webinar", "Event / Roadshow"],
+      "description": "How the training was delivered"
+    },
+    "attendee_count": {
+      "type": "number",
+      "description": "How many frontline sellers attended"
+    },
+    "attendee_names": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Named attendees, where captured"
+    },
+    "product_covered": {
+      "type": "string",
+      "description": "What was trained — e.g. Hard Rock family product, SAii honeymoons"
+    },
+    "delivered_by": {
+      "type": "string",
+      "description": "WDT team member who delivered it"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Anything worth remembering — reaction, follow-ups, objections"
+    },
+    "interaction_id": {
+      "type": "string",
+      "description": "Optional link to the logged interaction for this session"
+    }
+  },
+  "required": ["date", "company_name"]
+}

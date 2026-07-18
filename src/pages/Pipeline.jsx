@@ -29,6 +29,8 @@ import {
   closeLink,
   updateLinkContacts,
   updateLinkOwner,
+  updateLinkBookings,
+  currentQuarterLabel,
   resolveOwnerName,
   daysSince,
 } from "@/api/pipeline";
@@ -174,6 +176,98 @@ function ContactsEditor({ link, companyPeople, onSave, saving }) {
   );
 }
 
+function BookingsEditor({ link, onSave, saving }) {
+  const [adding, setAdding] = useState(false);
+  const [entry, setEntry] = useState({ period: currentQuarterLabel(), bookings: "", revenue: "", note: "" });
+  const { user } = useAuth();
+  const bookings = link.bookings || [];
+
+  const add = () => {
+    onSave([
+      ...bookings,
+      {
+        period: entry.period.trim(),
+        bookings: parseFloat(entry.bookings) || 0,
+        revenue: parseFloat(entry.revenue) || 0,
+        note: entry.note.trim(),
+        added_by: user?.email || "",
+        added_date: new Date().toISOString().split("T")[0],
+      },
+    ]);
+    setAdding(false);
+    setEntry({ period: currentQuarterLabel(), bookings: "", revenue: "", note: "" });
+  };
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs uppercase tracking-wider text-faint">Bookings</Label>
+        <Button variant="ghost" size="sm" className="h-7 text-xs" onClick={() => setAdding(!adding)}>
+          <Plus className="w-3.5 h-3.5 mr-1" /> Add
+        </Button>
+      </div>
+      {bookings.map((b, i) => (
+        <div key={`${b.period}-${i}`} className="flex items-center gap-2 text-sm">
+          <span className="text-xs font-medium text-ink w-16">{b.period}</span>
+          <span className="text-xs text-muted">{b.bookings || 0} bookings</span>
+          {b.revenue > 0 && (
+            <span className="text-xs text-muted">
+              · {new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP", maximumFractionDigits: 0 }).format(b.revenue)}
+            </span>
+          )}
+          {b.note && <span className="text-xs text-faint truncate">{b.note}</span>}
+          <button
+            type="button"
+            className="ml-auto text-faint hover:text-danger"
+            disabled={saving}
+            onClick={() => onSave(bookings.filter((_, idx) => idx !== i))}
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      ))}
+      {bookings.length === 0 && !adding && (
+        <p className="text-xs text-faint">No booking evidence yet — even a rough quarterly count makes the tier defensible</p>
+      )}
+      {adding && (
+        <div className="space-y-2">
+          <div className="flex gap-2">
+            <Input
+              className="h-8 text-xs w-24"
+              value={entry.period}
+              onChange={(e) => setEntry({ ...entry, period: e.target.value })}
+              placeholder="2026-Q3"
+            />
+            <Input
+              className="h-8 text-xs w-24"
+              type="number" min="0"
+              value={entry.bookings}
+              onChange={(e) => setEntry({ ...entry, bookings: e.target.value })}
+              placeholder="Bookings"
+            />
+            <Input
+              className="h-8 text-xs w-28"
+              type="number" min="0"
+              value={entry.revenue}
+              onChange={(e) => setEntry({ ...entry, revenue: e.target.value })}
+              placeholder="Revenue £"
+            />
+          </div>
+          <div className="flex gap-2">
+            <Input
+              className="h-8 text-xs flex-1"
+              value={entry.note}
+              onChange={(e) => setEntry({ ...entry, note: e.target.value })}
+              placeholder="Note (optional — e.g. per PM's trading call)"
+            />
+            <Button size="sm" className="h-8" disabled={!entry.period.trim() || saving} onClick={add}>Add</Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function LinkDetailDialog({ link, company, people, onClose }) {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -192,6 +286,11 @@ function LinkDetailDialog({ link, company, people, onClose }) {
     mutationFn: (contacts) => updateLinkContacts(link, contacts),
     onSuccess: invalidate,
     onError: (e) => toast.error(e.message || "Failed to update contacts"),
+  });
+  const bookingsMutation = useMutation({
+    mutationFn: (bookings) => updateLinkBookings(link, bookings),
+    onSuccess: invalidate,
+    onError: (e) => toast.error(e.message || "Failed to update bookings"),
   });
   const closeMutation = useMutation({
     mutationFn: () => closeLink(link, { status: closeStatus, reason: closeReason, by: user?.email }),
@@ -311,6 +410,12 @@ function LinkDetailDialog({ link, company, people, onClose }) {
           companyPeople={companyPeople}
           onSave={(contacts) => contactsMutation.mutate(contacts)}
           saving={contactsMutation.isPending}
+        />
+
+        <BookingsEditor
+          link={link}
+          onSave={(bookings) => bookingsMutation.mutate(bookings)}
+          saving={bookingsMutation.isPending}
         />
 
         {!link.closed_status && (

@@ -122,6 +122,37 @@
     "notes": {
       "type": "string",
       "description": "Relationship notes specific to this client-account pairing"
+    },
+    "bookings": {
+      "type": "array",
+      "description": "Booking evidence per period — makes tiers and Trading status evidence-based",
+      "items": {
+        "type": "object",
+        "properties": {
+          "period": {
+            "type": "string",
+            "description": "Period label, e.g. 2026-Q3 or 2026-07"
+          },
+          "bookings": {
+            "type": "number",
+            "description": "Number of bookings in the period"
+          },
+          "revenue": {
+            "type": "number",
+            "description": "Booking revenue (GBP) in the period, if known"
+          },
+          "note": {
+            "type": "string"
+          },
+          "added_by": {
+            "type": "string"
+          },
+          "added_date": {
+            "type": "string",
+            "format": "date"
+          }
+        }
+      }
     }
   },
   "required": [
