@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap, Search, Plus, User, KanbanSquare } from "lucide-react";
+import { Sparkles, Loader2, X, ChevronDown, ChevronUp, Zap, Search, Plus, User, KanbanSquare, Mic, MicOff } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/AuthContext";
 import {
@@ -261,6 +261,11 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
   const queryClient = useQueryClient();
   const [aiLoading, setAiLoading] = useState(false);
   const [showTranscript, setShowTranscript] = useState(!interaction);
+  // Built-in dictation (Web Speech API). Wispr Flow needs no wiring — it
+  // types into the focused transcript box like a keyboard.
+  const [dictating, setDictating] = useState(false);
+  const recognitionRef = useRef(null);
+  const dictationBaseRef = useRef("");
   const [showCampaigns, setShowCampaigns] = useState((interaction?.linked_campaigns?.length || 0) > 0);
 
   const { data: clients = [] } = useQuery({ queryKey: ["clients"], queryFn: () => base44.entities.Client.list() });
@@ -338,6 +343,44 @@ export default function InteractionFormContent({ interaction, onSuccess }) {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  // Stop any live dictation when the form unmounts
+  useEffect(() => () => { try { recognitionRef.current?.stop(); } catch { /* already stopped */ } }, []);
+
+  const toggleDictation = () => {
+    if (dictating) {
+      try { recognitionRef.current?.stop(); } catch { /* already stopped */ }
+      return;
+    }
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      toast.error("Built-in dictation isn't supported in this browser — dictate with Wispr Flow straight into the box, or type.");
+      return;
+    }
+    const rec = new SR();
+    rec.lang = "en-GB";
+    rec.continuous = true;
+    rec.interimResults = true;
+    // Append to whatever's already in the box rather than replacing it
+    dictationBaseRef.current = form.raw_transcript ? form.raw_transcript.trimEnd() + "\n" : "";
+    rec.onresult = (e) => {
+      let text = "";
+      for (let i = 0; i < e.results.length; i++) text += e.results[i][0].transcript + (e.results[i].isFinal ? " " : "");
+      setForm((f) => ({ ...f, raw_transcript: (dictationBaseRef.current + text).trimEnd() }));
+    };
+    rec.onerror = (e) => {
+      if (e.error === "not-allowed" || e.error === "service-not-allowed") {
+        toast.error("Microphone access was blocked — allow it in your browser settings, or dictate with Wispr Flow.");
+      } else if (e.error !== "no-speech" && e.error !== "aborted") {
+        toast.error(`Dictation stopped: ${e.error}`);
+      }
+    };
+    rec.onend = () => setDictating(false);
+    recognitionRef.current = rec;
+    setShowTranscript(true);
+    rec.start();
+    setDictating(true);
+  };
 
   const createMutation = useMutation({
     mutationFn: (data) => interaction
@@ -756,17 +799,38 @@ Return a JSON array of note objects. Each object must have:
           </Button>
         }
       >
-        <button type="button" onClick={() => setShowTranscript(v => !v)} className="flex items-center gap-2 text-ink font-medium text-sm">
-          {showTranscript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          Paste Notes / Transcript
-        </button>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <button type="button" onClick={() => setShowTranscript(v => !v)} className="flex items-center gap-2 text-ink font-medium text-sm">
+            {showTranscript ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            Paste / Dictate Notes
+          </button>
+          <button
+            type="button"
+            onClick={toggleDictation}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border transition-all ${
+              dictating
+                ? "bg-danger/10 text-danger border-danger/30 animate-pulse"
+                : "bg-canvas text-muted border-line hover:border-line-strong hover:text-ink"
+            }`}
+          >
+            {dictating ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5" />}
+            {dictating ? "Stop dictating" : "Dictate"}
+          </button>
+        </div>
         {showTranscript && (
-          <Textarea
-            value={form.raw_transcript}
-            onChange={(e) => setForm({ ...form, raw_transcript: e.target.value })}
-            className={`${inputClass} min-h-[140px]`}
-            placeholder="Paste raw transcript, voice notes, or bullet points. AI will rewrite into clean paragraphs and split by client…"
-          />
+          <>
+            <Textarea
+              value={form.raw_transcript}
+              onChange={(e) => setForm({ ...form, raw_transcript: e.target.value })}
+              className={`${inputClass} min-h-[140px] ${dictating ? "border-danger/40 ring-1 ring-danger/20" : ""}`}
+              placeholder="Talk, paste or type — raw transcript, voice notes, bullet points. AI will rewrite into clean paragraphs and split by client…"
+            />
+            <p className="text-faint text-[11px]">
+              {dictating
+                ? "Listening… speak naturally, then Stop dictating and hit AI Parse & Rewrite."
+                : "Dictate uses your browser's speech recognition. Using Wispr Flow? Just tap into the box and dictate — it types straight in. Either way, finish with AI Parse & Rewrite."}
+            </p>
+          </>
         )}
         {form.raw_transcript && !showTranscript && (
           <p className="text-faint text-xs">Transcript saved · <button type="button" className="text-primary hover:underline" onClick={() => setShowTranscript(true)}>show</button></p>
@@ -791,7 +855,7 @@ Return a JSON array of note objects. Each object must have:
         {form.notes.length === 0 && (
           <div className="text-center py-8 rounded-2xl border border-dashed border-line">
             <Zap className="w-5 h-5 text-faint mx-auto mb-2" />
-            <p className="text-faint text-sm">Paste notes above and click <span className="text-primary">AI Parse & Rewrite</span>,</p>
+            <p className="text-faint text-sm">Dictate or paste notes above and click <span className="text-primary">AI Parse & Rewrite</span>,</p>
             <p className="text-faint text-sm">or add notes manually using the buttons above.</p>
           </div>
         )}
